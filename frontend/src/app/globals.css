@@ -146,3 +146,15 @@ body {
   background: var(--background);
   color: var(--foreground);
 }
+
+/* Hide number input spinners for elements using the no-number-spinner class */
+.no-number-spinner::-webkit-outer-spin-button,
+.no-number-spinner::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.no-number-spinner {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}

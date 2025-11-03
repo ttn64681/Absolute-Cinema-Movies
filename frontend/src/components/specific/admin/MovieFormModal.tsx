@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { formatDateInput, formatTimeInput, parseScore } from "@/components/specific/admin/movieFormUtils";
 
 type Showtime = {
   date: string;
@@ -24,6 +25,7 @@ export type AdminMovie = {
     cast?: string;
     reviews?: string;
     rating?: string;
+    score?: number;
     showtimes?: Showtime[];
   };
 };
@@ -47,6 +49,7 @@ export default function MovieFormModal({ isOpen, onClose, onSaved, initialMovie 
   const [cast, setCast] = useState("");
   const [reviews, setReviews] = useState("");
   const [rating, setRating] = useState("");
+  const [score, setScore] = useState<string>("");
   const [showtimes, setShowtimes] = useState<Showtime[]>([{ date: "", time: "", ampm: "AM" }]);
   const [saving, setSaving] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -66,15 +69,26 @@ export default function MovieFormModal({ isOpen, onClose, onSaved, initialMovie 
       setCast(initialMovie._meta?.cast || "");
       setReviews(initialMovie._meta?.reviews || "");
       setRating(initialMovie._meta?.rating || "");
+      setScore(
+        typeof initialMovie._meta?.score === "number"
+          ? String(initialMovie._meta.score)
+          : ""
+      );
 
       if (initialMovie._meta?.showtimes && initialMovie._meta.showtimes.length > 0) {
         setShowtimes(initialMovie._meta.showtimes);
       } else {
+        let ampmValue: "AM" | "PM" = "AM";
+        if (initialMovie.time.includes("AM")) {
+          ampmValue = "AM";
+        } else {
+          ampmValue = "PM";
+        }
         setShowtimes([
           {
             date: initialMovie.date,
             time: initialMovie.time.split(":").slice(0, 2).join(":"),
-            ampm: initialMovie.time.includes("AM") ? "AM" : "PM",
+            ampm: ampmValue,
           },
         ]);
       }
@@ -92,25 +106,44 @@ export default function MovieFormModal({ isOpen, onClose, onSaved, initialMovie 
       setCast("");
       setReviews("");
       setRating("");
+      setScore("");
       setShowtimes([{ date: "", time: "", ampm: "AM" }]);
     }
   }, [isOpen, initialMovie]);
 
   const handleAddShowtime = () => setShowtimes((prev) => [...prev, { date: "", time: "", ampm: "AM" }]);
   const handleRemoveShowtime = (index: number) => setShowtimes((prev) => prev.filter((_, i) => i !== index));
-  const updateShowtime = (index: number, field: keyof Showtime, value: string) =>
-    setShowtimes((prev) => prev.map((s, i) => (i === index ? { ...s, [field]: value } : s)));
-
-  const formatDate = (value: string) => {
-    const digits = value.replace(/\D/g, "");
-    if (digits.length <= 2) return digits;
-    if (digits.length <= 4) return `${digits.slice(0, 2)}/${digits.slice(2)}`;
-    return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4, 8)}`;
+  const updateShowtime = (index: number, field: keyof Showtime, value: string) => {
+    setShowtimes((previousShowtimes) =>
+      previousShowtimes.map((showtime, i) => (i === index ? { ...showtime, [field]: value } : showtime))
+    );
   };
-  const formatTime = (value: string) => {
-    const cleaned = value.replace(/[^\d]/g, "").slice(0, 4);
-    if (cleaned.length <= 2) return cleaned;
-    return `${cleaned.slice(0, 2)}:${cleaned.slice(2, 4)}`;
+
+  // Display helpers 
+  const getHeaderTitle = () => {
+    if (editingId) return "Edit Movie";
+    return "Add Movie";
+  };
+  const getPosterNameClass = () => {
+    if (posterFile) return "text-white";
+    return "opacity-80";
+  };
+  const getPosterDisplayText = () => {
+    if (posterFile) return posterFile.name;
+    return "Select File";
+  };
+  const isSaveDisabled = () => {
+    if (saving) return true;
+    if (!formValid()) return true;
+    return false;
+  };
+  const getSaveOpacity = () => {
+    if (isSaveDisabled()) return 0.6;
+    return 1;
+  };
+  const getSaveButtonLabel = () => {
+    if (saving) return "Saving...";
+    return "Save";
   };
 
   const formValid = () => {
@@ -123,9 +156,8 @@ export default function MovieFormModal({ isOpen, onClose, onSaved, initialMovie 
     if (!formValid()) return;
     setSaving(true);
 
-    try {
-      const existing = typeof window !== "undefined" ? sessionStorage.getItem("movies") : null;
-      const parsed: AdminMovie[] = existing ? JSON.parse(existing) : [];
+    const existing = typeof window !== "undefined" ? sessionStorage.getItem("movies") : null;
+    const parsed: AdminMovie[] = existing ? JSON.parse(existing) : [];
 
       const primary = showtimes[0];
       const movieData: AdminMovie = {
@@ -144,28 +176,30 @@ export default function MovieFormModal({ isOpen, onClose, onSaved, initialMovie 
           cast,
           reviews,
           rating,
+          score: parseScore(score),
           showtimes,
         },
       };
 
-      let updated: AdminMovie[];
-      if (editingId) {
-        updated = parsed.some((m) => m.id === editingId)
-          ? parsed.map((m) => (m.id === editingId ? movieData : m))
-          : [...parsed, movieData];
+    let updated: AdminMovie[];
+    if (editingId) {
+      const exists = parsed.some((m) => m.id === editingId);
+      if (exists) {
+        updated = parsed.map((m) => {
+          if (m.id === editingId) return movieData;
+          return m;
+        });
       } else {
         updated = [...parsed, movieData];
       }
-
-      sessionStorage.setItem("movies", JSON.stringify(updated));
-      onSaved(movieData);
-      onClose();
-    } catch (e) {
-      // eslint-disable-next-line no-console
-      console.log("save error:", e);
-    } finally {
-      setSaving(false);
+    } else {
+      updated = [...parsed, movieData];
     }
+
+    sessionStorage.setItem("movies", JSON.stringify(updated));
+    onSaved(movieData);
+    onClose();
+    setSaving(false);
   };
 
   if (!isOpen) return null;
@@ -183,7 +217,7 @@ export default function MovieFormModal({ isOpen, onClose, onSaved, initialMovie 
           ×
         </button>
 
-        <div className="mb-4 text-white font-red-rose text-2xl">{editingId ? "Edit Movie" : "Add Movie"}</div>
+        <div className="mb-4 text-white font-red-rose text-2xl">{getHeaderTitle()}</div>
 
         <div className="grid grid-cols-1 sm:grid-cols-[2fr_1fr] gap-6 mb-6">
           <div>
@@ -224,7 +258,8 @@ export default function MovieFormModal({ isOpen, onClose, onSaved, initialMovie 
               <select
                 value={genre}
                 onChange={(e) => setGenre(e.target.value)}
-                className="w-full pl-4 pr-4 py-3 rounded-md bg-white/10 border border-white/20 text-white focus:outline-none focus:ring-1 focus:ring-[#FF478B] focus:border-transparent appearance-none cursor-pointer"
+                className="w-full pl-4 pr-4 py-3 rounded-md bg-white/10 border border-white/20 text-white focus:outline-none 
+                focus:ring-1 focus:ring-[#FF478B] focus:border-transparent appearance-none cursor-pointer"
               >
                 <option value="">-Select-</option>
                 <option value="Action">Action</option>
@@ -245,8 +280,8 @@ export default function MovieFormModal({ isOpen, onClose, onSaved, initialMovie 
           <div>
             <label className="block text-sm mb-2 font-afacad text-white">Poster</label>
             <label className="w-full px-4 py-3 rounded-md bg-white/10 border border-white/20 text-white block cursor-pointer">
-              <span className={posterFile ? "text-white" : "opacity-80"}>
-                {posterFile ? posterFile.name : "Select File"}
+              <span className={getPosterNameClass()}>
+                {getPosterDisplayText()}
               </span>
               <input
                 type="file"
@@ -338,14 +373,14 @@ export default function MovieFormModal({ isOpen, onClose, onSaved, initialMovie 
                     type="text"
                     placeholder="mm/dd/yyyy"
                     value={s.date}
-                    onChange={(e) => updateShowtime(idx, "date", formatDate(e.target.value))}
+                  onChange={(e) => updateShowtime(idx, "date", formatDateInput(e.target.value))}
                     className="w-40 px-3 py-2 rounded-md bg-white/10 border border-white/20 text-white placeholder-white/60 focus:outline-none focus:ring-1 focus:ring-[#FF478B] focus:border-transparent"
                   />
                   <input
                     type="text"
                     placeholder="hh:mm"
                     value={s.time}
-                    onChange={(e) => updateShowtime(idx, "time", formatTime(e.target.value))}
+                  onChange={(e) => updateShowtime(idx, "time", formatTimeInput(e.target.value))}
                     className="w-28 px-3 py-2 rounded-md bg-white/10 border border-white/20 text-white placeholder-white/60 focus:outline-none focus:ring-1 focus:ring-[#FF478B] focus:border-transparent"
                   />
                   <div className="relative">
@@ -401,6 +436,26 @@ export default function MovieFormModal({ isOpen, onClose, onSaved, initialMovie 
                 </svg>
               </div>
             </div>
+          <div className="mt-6">
+            <label className="block text-sm mb-2 font-afacad text-white">Score (1-100%)</label>
+            <div className="flex items-center gap-2">
+              <input
+                type="number"
+                min={1}
+                max={100}
+                inputMode="numeric"
+                value={score}
+                onChange={(e) => {
+                  const raw = e.target.value;
+                  const parsed = parseScore(raw);
+                  setScore(parsed ? String(parsed) : "");
+                }}
+                placeholder="85%"
+                className="w-full px-4 py-3 rounded-md bg-white/10 border border-white/20 text-white placeholder-white/60 focus:outline-none focus:ring-1 focus:ring-[#FF478B] focus:border-transparent no-number-spinner"
+              />
+              <span className="text-white/80">%</span>
+            </div>
+          </div>
           </div>
         </div>
 
@@ -415,11 +470,11 @@ export default function MovieFormModal({ isOpen, onClose, onSaved, initialMovie 
           <button
             type="button"
             onClick={onSave}
-            disabled={saving || !formValid()}
+            disabled={isSaveDisabled()}
             className="px-8 py-2 rounded-full font-afacad font-bold text-black"
-            style={{ background: "linear-gradient(to right, #FF478B, #FF5C33)", opacity: saving || !formValid() ? 0.6 : 1 }}
+            style={{ background: "linear-gradient(to right, #FF478B, #FF5C33)", opacity: getSaveOpacity() }}
           >
-            {saving ? "Saving..." : "Save"}
+            {getSaveButtonLabel()}
           </button>
         </div>
       </div>
