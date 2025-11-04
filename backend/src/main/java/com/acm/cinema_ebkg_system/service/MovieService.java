@@ -118,6 +118,12 @@ public class MovieService {
         }
     }
 
+    public Movie createMovie(Movie movie) {
+
+        // Save movie to database
+        return movieRepository.save(movie);
+    }
+
 
 
 

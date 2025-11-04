@@ -1,14 +1,18 @@
 package com.acm.cinema_ebkg_system.controller;
 
 import com.acm.cinema_ebkg_system.dto.movie.MovieSummary;
+import com.acm.cinema_ebkg_system.dto.movie.MovieInfo;
 import com.acm.cinema_ebkg_system.model.Movie;
+import com.acm.cinema_ebkg_system.model.PaymentCard;
 import com.acm.cinema_ebkg_system.model.ShowTime;
 import com.acm.cinema_ebkg_system.service.MovieService;
 import com.acm.cinema_ebkg_system.service.ShowTimeService;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -108,8 +112,28 @@ public class MovieController {
      * Create a new movie (placeholder).
      */
     @PostMapping("/create")
-    public String postMovie() {
-        return "Posted movie.";
+    public ResponseEntity<?> createMovie(@RequestBody MovieInfo dto) {
+        try {
+            // Create a new Movie object
+            Movie newMovie = new Movie();
+            newMovie.setTitle(dto.getTitle());
+            newMovie.setStatus("UPCOMING");
+            newMovie.setGenres(dto.getGenres());
+            newMovie.setRating(dto.getRating());
+            newMovie.setRelease_date(dto.getRelease_date());
+            newMovie.setSynopsis(dto.getSynopsis());
+            newMovie.setTrailer_link(dto.getTrailer_link());
+            newMovie.setPoster_link(dto.getPoster_link());
+            newMovie.setCast_names(dto.getCast_names());
+            newMovie.setDirectors(dto.getDirectors());
+            newMovie.setProducers(dto.getProducers());
+
+            Movie created = movieService.createMovie(newMovie);
+            return ResponseEntity.ok(created);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Error creating movie: " + e.getMessage());
+        }
+
     }
 
     /**
