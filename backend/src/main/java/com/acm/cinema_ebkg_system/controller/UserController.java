@@ -4,8 +4,11 @@ import com.acm.cinema_ebkg_system.model.User;
 import com.acm.cinema_ebkg_system.model.Address;
 import com.acm.cinema_ebkg_system.service.UserService;
 import com.acm.cinema_ebkg_system.service.AddressService;
-import com.acm.cinema_ebkg_system.dto.user.UserInfo;
+import com.acm.cinema_ebkg_system.dto.user.UserUpdateRequest;
+import com.acm.cinema_ebkg_system.dto.user.PasswordChangeRequest;
 import com.acm.cinema_ebkg_system.dto.user.UserProfileDTO;
+import com.acm.cinema_ebkg_system.dto.auth.AuthResponse;
+import com.acm.cinema_ebkg_system.mapper.UserDtoFactory;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -41,25 +44,38 @@ public class UserController {
     @GetMapping("/user/profile")
     public UserProfileDTO getUserProfile(@org.springframework.web.bind.annotation.RequestParam Long userId) {
         User user = userService.getUserById(userId);
-        Optional<Address> homeAddress = addressService.getUserHomeAddress(userId);
+        Optional<Address> homeAddressOpt = addressService.getUserHomeAddress(userId);
         
-        UserProfileDTO dto = new UserProfileDTO();
-        dto.setUser(user);
-        dto.setHomeAddress(homeAddress.orElse(null));
+        // Convert User entity to UserDto using factory method (excludes sensitive data)
+        AuthResponse.UserDto userDto = UserDtoFactory.fromUser(user);
         
-        return dto;
+        // Convert Address entity to AddressDTO if present
+        UserProfileDTO.AddressDTO addressDto = null;
+        if (homeAddressOpt.isPresent()) {
+            Address homeAddress = homeAddressOpt.get();
+            addressDto = new UserProfileDTO.AddressDTO(
+                homeAddress.getId(),
+                homeAddress.getStreet(),
+                homeAddress.getCity(),
+                homeAddress.getState(),
+                homeAddress.getZip(),
+                homeAddress.getCountry()
+            );
+        }
+        
+        return new UserProfileDTO(userDto, addressDto);
     }
     
     // PUT /api/user/info - Update current user's personal information
     @PutMapping("/user/info")
-    public User updateCurrentUserInfo(@org.springframework.web.bind.annotation.RequestParam Long userId, @RequestBody UserInfo userInfo) {
-        return userService.updatePersonalInfo(userId, userInfo);
+    public User updateCurrentUserInfo(@org.springframework.web.bind.annotation.RequestParam Long userId, @RequestBody UserUpdateRequest userUpdateRequest) {
+        return userService.updatePersonalInfo(userId, userUpdateRequest);
     }
     
     // PUT /api/user/change-password - Change current user's password
     @PutMapping("/user/change-password")
-    public User changeCurrentUserPassword(@org.springframework.web.bind.annotation.RequestParam Long userId, @RequestBody UserInfo userInfo) {
-        return userService.changePassword(userId, userInfo);
+    public User changeCurrentUserPassword(@org.springframework.web.bind.annotation.RequestParam Long userId, @RequestBody PasswordChangeRequest passwordChangeRequest) {
+        return userService.changePassword(userId, passwordChangeRequest);
     }
 
     // GET /api/users - Return list of all users (for admin use)
@@ -83,20 +99,20 @@ public class UserController {
 
     // PUT /api/users/{userId}/info - Update a user's personal information
     @PutMapping("/users/{userId}/info")
-    public User updateUser(@PathVariable Long userId, @RequestBody UserInfo user) {
-        return userService.updatePersonalInfo(userId, user);
+    public User updateUser(@PathVariable Long userId, @RequestBody UserUpdateRequest userUpdateRequest) {
+        return userService.updatePersonalInfo(userId, userUpdateRequest);
     }
 
     // PUT /api/users/{userId}/forgot-password - Reset a user's forgotten password (Login)
     @PutMapping("/users/{userId}/forgot-password")
-    public User resetPassword(@PathVariable Long userId, @RequestBody UserInfo user) {
-        return userService.resetForgottenPassword(userId, user);
+    public User resetPassword(@PathVariable Long userId, @RequestBody PasswordChangeRequest passwordChangeRequest) {
+        return userService.resetForgottenPassword(userId, passwordChangeRequest);
     }
 
     // PUT /api/users/{userId}/change-password - Change a user's password (Edit Profile)
     @PutMapping("/users/{userId}/change-password")
-    public User changePassword(@PathVariable Long userId, @RequestBody UserInfo user) {
-        return userService.changePassword(userId, user);
+    public User changePassword(@PathVariable Long userId, @RequestBody PasswordChangeRequest passwordChangeRequest) {
+        return userService.changePassword(userId, passwordChangeRequest);
     }
     
 }

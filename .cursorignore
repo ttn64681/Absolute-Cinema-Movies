@@ -1,0 +1,38 @@
+# Build outputs
+backend/target/
+backend/build/
+frontend/.next/
+frontend/out/
+frontend/node_modules/
+node_modules/
+
+# IDE files
+.idea/
+.vscode/
+*.iml
+*.swp
+*.swo
+
+# Environment files (these contain secrets)
+set_env.ps1
+set_env.sh
+*.env
+*.env.local
+
+# Database backups
+db_backup/backups/
+db_backup/logs/
+
+# Temporary files
+*.tmp
+*.log
+*.cache
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Documentation that changes frequently (to avoid noise)
+REFACTORING_PLAN.md
+DTO_CONSOLIDATION_ANALYSIS.md
+

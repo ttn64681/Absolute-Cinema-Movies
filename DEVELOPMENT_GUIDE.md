@@ -19,21 +19,63 @@
 
 #### `POST /api/auth/register`
 
-**Returns**: `{ accessToken: string, user: UserInfo }`
+**Returns**: `AuthResponse` - `{ success: boolean, message: string, token?: string, refreshToken?: string, user?: UserDto }`
 **Called by**: Registration form submission
 **Consumed by**: `AuthContext.login()`
 
 #### `POST /api/auth/login`
 
-**Returns**: `{ accessToken: string, user: UserInfo }`
+**Returns**: `AuthResponse` - `{ success: boolean, message: string, token: string, refreshToken: string, user: UserDto }`
 **Called by**: Login form submission
 **Consumed by**: `AuthContext.login()`
 
 #### `POST /api/auth/refresh`
 
-**Returns**: `UserInfo` if token valid
+**Returns**: `AuthResponse` - `{ success: boolean, message: string, token: string, refreshToken: string, user: UserDto }`
+**Query Params**: `refreshToken` - Valid refresh token
 **Called by**: App startup, protected route access
 **Consumed by**: `AuthContext.checkAuthStatus()`
+
+#### `POST /api/auth/verify-email`
+
+**Returns**: `AuthResponse` - `{ success: boolean, message: string, token: string, refreshToken: string, user: UserDto }`
+**Query Params**: `token` - Email verification token
+**Called by**: Email verification link click
+**Consumed by**: Email verification page
+
+#### `POST /api/auth/resend-verification`
+
+**Returns**: `AuthResponse` - `{ success: boolean, message: string }`
+**Query Params**: `email` - User's email address
+**Called by**: Resend verification button
+**Consumed by**: Resend verification page
+
+#### `POST /api/auth/forgot-password`
+
+**Returns**: `AuthResponse` - `{ success: boolean, message: string }`
+**Query Params**: `email` - User's email address
+**Called by**: Forgot password form submission
+**Consumed by**: Forgot password page
+
+#### `POST /api/auth/reset-password`
+
+**Returns**: `AuthResponse` - `{ success: boolean, message: string }`
+**Body**: `ResetPasswordRequest` - `{ token: string, newPassword: string }`
+**Called by**: Reset password form submission
+**Consumed by**: Reset password page
+
+#### `POST /api/auth/check-email`
+
+**Returns**: `AuthResponse` - `{ success: boolean, message: string }`
+**Query Params**: `email` - Email address to check
+**Called by**: Email availability check during registration
+**Consumed by**: Registration form validation
+
+#### `POST /api/auth/logout`
+
+**Returns**: `AuthResponse` - `{ success: boolean, message: string }`
+**Called by**: Logout button click
+**Consumed by**: `AuthContext.logout()`
 
 ### Movie Endpoints
 
@@ -83,6 +125,38 @@
 
 ### User Endpoints
 
+#### `GET /api/user/info`
+
+**Parameters**: `userId` (query param)
+**Returns**: `User` - Current user's information
+**Called by**: User profile page
+**Consumed by**: User profile component
+
+#### `GET /api/user/profile`
+
+**Parameters**: `userId` (query param)
+**Returns**: `UserProfileDTO` - `{ user: UserDto, homeAddress: AddressDTO | null }`
+**Called by**: User profile page
+**Consumed by**: Frontend user profile display
+**Note**: Returns DTOs (not entities) for security - excludes password hash
+
+#### `PUT /api/user/info`
+
+**Parameters**: `userId` (query param), `UserUpdateRequest` (request body)
+**Request Body**: `UserUpdateRequest` - `{ firstName?, lastName?, phoneNumber?, enrolledForPromotions?, profileImageLink?, homeStreet?, homeCity?, homeState?, homeZip?, homeCountry? }`
+**Returns**: `User` - Updated user entity
+**Called by**: Edit profile page
+**Used for**: Updating user profile information (name, phone, address, etc.)
+**Note**: All fields optional - only provided fields will be updated
+
+#### `PUT /api/user/change-password`
+
+**Parameters**: `userId` (query param), `PasswordChangeRequest` (request body)
+**Request Body**: `PasswordChangeRequest` - `{ currentPassword: string, newPassword: string }`
+**Returns**: `User` - Updated user entity
+**Called by**: Change password page
+**Used for**: Changing password when user knows current password
+
 #### `GET /api/users/`
 
 **Returns**: `User[]` - All users (admin only)
@@ -94,6 +168,28 @@
 **Returns**: `User` - User details
 **Called by**: User profile page
 **Consumed by**: User profile component
+
+#### `PUT /api/users/{userId}/info`
+
+**Parameters**: `userId` (path param), `UserUpdateRequest` (request body)
+**Request Body**: Same as `PUT /api/user/info`
+**Returns**: `User` - Updated user entity
+**Called by**: Admin user management (admin updating user profiles)
+
+#### `PUT /api/users/{userId}/forgot-password`
+
+**Parameters**: `userId` (path param), `PasswordChangeRequest` (request body)
+**Request Body**: `PasswordChangeRequest` - `{ newPassword: string }` (currentPassword can be null)
+**Returns**: `User` - Updated user entity
+**Called by**: Password reset flow
+**Used for**: Resetting forgotten password (doesn't require current password)
+
+#### `PUT /api/users/{userId}/change-password`
+
+**Parameters**: `userId` (path param), `PasswordChangeRequest` (request body)
+**Request Body**: Same as `PUT /api/user/change-password`
+**Returns**: `User` - Updated user entity
+**Called by**: Admin or user changing password
 
 ---
 
@@ -129,20 +225,75 @@
 
 #### `AuthResponse`
 
-**Returns**: `{ accessToken: string, user: UserInfo }`
-**Used by**: Login/register endpoints
-**Consumed by**: `AuthContext` for token storage
+**Returns**: `{ success: boolean, message: string, token?: string, refreshToken?: string, user?: UserDto }`
+**Used by**: All authentication endpoints
+**Consumed by**: `AuthContext` for token storage and user state
+
+**UserDto Structure**:
+
+- `id`: Long - User's unique identifier
+- `email`: String - User's email address
+- `firstName`: String - User's first name
+- `lastName`: String - User's last name
+- `phoneNumber`: String - User's phone number (optional)
+- `address`: String - User's street address (optional)
+- `state`: String - User's state/province (optional)
+- `country`: String - User's country (optional)
+
+**Note**: `UserDto` is a pure data container with a single constructor. Creation is handled by `UserDtoFactory` (located in `mapper/` package) using Factory Method pattern:
+
+- `UserDtoFactory.fromUser(user)` - Creates UserDto from User entity (basic info, no address)
+- `UserDtoFactory.fromUserWithAddress(user, address)` - Creates UserDto with address information
+- `UserDtoFactory.fromAdmin(admin)` - Creates UserDto from Admin entity (uses "Admin" as default names)
+
+This eliminates constructor overloading ambiguity and encapsulates creation logic.
 
 #### `LoginRequest`
 
-**Fields**: `email`, `password`
+**Fields**: `email`, `password`, `rememberMe` (optional)
 **Validation**: Email format, password min 8 chars
 **Used by**: Login endpoint
 
 #### `RegisterRequest`
 
-**Fields**: `email`, `password`, `firstName`, `lastName`, `phoneNumber`, `state`, `country`
+**Fields**: `email`, `password`, `firstName`, `lastName`, `phoneNumber`, `enrolledForPromotions`, `homeAddress`, `homeCity`, `homeState`, `homeZip`, `homeCountry`, `paymentCards[]`
 **Used by**: Registration endpoint
+**Payment Cards**: Optional array of `{ cardNumber, cardholderName, cardType, expirationDate, billingStreet, billingCity, billingState, billingZip, isDefault }`
+
+#### `ResetPasswordRequest`
+
+**Fields**: `token`, `newPassword`
+**Used by**: Reset password endpoint
+
+#### `UserUpdateRequest`
+
+**Fields**: `firstName?`, `lastName?`, `phoneNumber?`, `enrolledForPromotions?`, `profileImageLink?`, `homeStreet?`, `homeCity?`, `homeState?`, `homeZip?`, `homeCountry?`
+**Used by**: `PUT /api/user/info`, `PUT /api/users/{userId}/info`
+**Purpose**: Update user profile information (name, phone, address, preferences)
+**Note**: All fields optional - follows Single Responsibility Principle (only handles profile updates, not password changes)
+
+#### `PasswordChangeRequest`
+
+**Fields**: `currentPassword?`, `newPassword`
+**Used by**: `PUT /api/user/change-password`, `PUT /api/users/{userId}/change-password`, `PUT /api/users/{userId}/forgot-password`
+**Purpose**: Change or reset user password
+**Note**: `currentPassword` is required for password change, optional (null) for password reset. Follows Single Responsibility Principle (only handles password changes, not profile updates)
+
+#### `UserProfileDTO`
+
+**Fields**: `user: UserDto`, `homeAddress: AddressDTO | null`
+**Used by**: `GET /api/user/profile`
+**Purpose**: Return user profile with address information
+**Note**: Returns DTOs (not entities) for security. Uses `UserDto` from `AuthResponse` for consistency, created via `UserDtoFactory.fromUser(user)`
+
+**AddressDTO Structure**:
+
+- `id`: Long - Address ID
+- `street`: String - Street address
+- `city`: String - City
+- `state`: String - State/province
+- `zip`: String - ZIP/postal code
+- `country`: String - Country
 
 ---
 
@@ -194,16 +345,18 @@
 - **Logged in**: Shows user's name and dropdown menu with logout option
 
 **Features**:
+
 - Search bar with search button
 - Filter button that opens global FiltersPopUp (calls `setIsFiltersOpen(true)`)
 - Responsive navigation links
 - User menu dropdown when authenticated
 
 **Used by**: Every page (added in root layout)
-**Gets data from**: 
+**Gets data from**:
+
 - `AuthContext` (user info, login status)
 - `FiltersContext` (filter popup state, selected filters)
-**Uses Hook**: `useAuth()` for authentication, `useFilters()` for filter state
+  **Uses Hook**: `useAuth()` for authentication, `useFilters()` for filter state
 
 #### `AuthFormContainer`
 
@@ -243,11 +396,12 @@
 **Used by**: Rendered globally via `FiltersContext.createPortal` into `document.body`
 **Uses from Context**: `FiltersContext` - `selectedGenres`, `selectedDate`, `setSelectedGenres()`, `setSelectedDate()`
 **Uses Hook**: `useGenres()` for genre options
-**Calls**: 
+**Calls**:
+
 - `FiltersContext.setSelectedGenres()` - Updates selected genres
 - `FiltersContext.setSelectedDate()` - Updates date filter
 - `setIsClosed(true)` - Closes the popup when filters applied
-**Features**: Full-screen blur overlay (z-[999]), popup on top (z-[1000])
+  **Features**: Full-screen blur overlay (z-[999]), popup on top (z-[1000])
 
 #### `CinemaLayout`
 
@@ -266,13 +420,14 @@
 **Uses Hook**: Local state with `useState` for carousel index
 **Uses Library**: `framer-motion` for slide animations
 **Features**:
+
 - Auto-advances every 5 seconds via `setInterval`
 - Left/right arrow buttons for manual navigation
 - Carousel indicators for direct slide selection
 - Animated slide transitions with blur effects
 - Content animations synced with slides
-**Data Source**: `heroPromotions` array from `constants/movieData.ts`
-**API Integration**: Ready for dynamic `GET /api/promotions/hero` endpoint
+  **Data Source**: `heroPromotions` array from `constants/movieData.ts`
+  **API Integration**: Ready for dynamic `GET /api/promotions/hero` endpoint
 
 ---
 
@@ -432,12 +587,14 @@
 5. Search API call includes the selected filters
 
 **Architecture**:
+
 - Uses `createPortal` to render FiltersPopUp globally
 - Popup state managed in context (not local component state)
 - Single popup instance shared across entire app
 - Full-screen blur overlay when open
 
 **Used by**:
+
 - `FiltersPopUp`: Reads and sets the filter values
 - `NavBar`: Calls `setIsFiltersOpen(true)` to open popup
 - `MoviesSearchSection`: Calls `setIsFiltersOpen(true)` to open popup
@@ -554,7 +711,7 @@ const contextValue = useMemo(
 // WHY MATTERS: Prevents function recreation on every re-render
 const resetFilters = useCallback(() => {
   setSelectedGenres(new Set());
-  setSelectedDate({ month: '', day: '', year: '' });
+  setSelectedDate({ month: "", day: "", year: "" });
 }, []);
 
 // CACHES: Context value object - persists across FiltersProvider re-renders

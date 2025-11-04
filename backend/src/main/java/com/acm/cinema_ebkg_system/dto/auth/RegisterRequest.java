@@ -5,8 +5,16 @@ import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import java.util.List;
 
+import com.acm.cinema_ebkg_system.dto.payment.PaymentCardDTO;
 import com.acm.cinema_ebkg_system.enums.*;
 
+/**
+ * Registration Request DTO
+ * 
+ * Design Decision: Uses PaymentCardDTO instead of nested class
+ * to follow DRY principle and maintain single source of truth
+ * for payment card structure.
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -25,21 +33,7 @@ public class RegisterRequest {
     private String homeZip;
     private String homeCountry;
     
-    private List<PaymentCardInfo> paymentCards; // Up to 3 payment cards
-    
-    // Nested class for payment card information
-    @Data
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class PaymentCardInfo {
-        private PaymentCardType cardType;
-        private String cardNumber; // Note: CVV is NOT sent to backend for security
-        private String expirationDate;
-        private String cardholderName;
-        private String billingStreet;
-        private String billingCity;
-        private String billingState;
-        private String billingZip;
-        private Boolean isDefault;
-    }
+    // Use PaymentCardDTO instead of nested class (DRY principle)
+    // Note: userId will be set by backend after user creation
+    private List<PaymentCardDTO> paymentCards; // Up to 3 payment cards
 }

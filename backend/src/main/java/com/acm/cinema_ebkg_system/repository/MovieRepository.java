@@ -188,3 +188,5 @@ public interface MovieRepository extends JpaRepository<Movie, Long> {
     """, nativeQuery = true)
     List<String> findAllDistinctGenres();
 } 
+
+
