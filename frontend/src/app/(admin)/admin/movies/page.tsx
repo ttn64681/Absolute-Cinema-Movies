@@ -5,6 +5,7 @@ import { PiPencilSimple, PiX } from 'react-icons/pi';
 import { useState, useEffect } from 'react';
 import AdminNavBar from '@/components/common/navBar/AdminNavBar';
 import { Movie } from '@/types/admin';
+import MovieFormModal, { AdminMovie } from '@/components/specific/admin/MovieFormModal';
 
 // hardcoded movies for now
 const moviesList: Movie[] = [
@@ -23,23 +24,24 @@ const moviesList: Movie[] = [
 
 export default function AdminMoviesPage() {
   const [movies, setMovies] = useState(moviesList);
+  const [showModal, setShowModal] = useState(false);
+  const [editingMovie, setEditingMovie] = useState<AdminMovie | null>(null);
 
-  // load saved movies on mount
   useEffect(() => {
-    // Check if we're on the client side before accessing sessionStorage
     if (typeof window === 'undefined') return;
 
     const savedMovies = sessionStorage.getItem('movies');
     if (savedMovies) {
       try {
         const parsedMovies = JSON.parse(savedMovies);
-        const allMovies = [...moviesList];
+        const baselineById = new Map(moviesList.map(m => [m.id, m]));
         parsedMovies.forEach((savedMovie: Movie) => {
-          if (!moviesList.some((movie) => movie.id === savedMovie.id)) {
-            allMovies.push(savedMovie);
-          }
+          baselineById.set(savedMovie.id, savedMovie as AdminMovie);
         });
-        setMovies(allMovies);
+        const merged = Array.from(baselineById.values());
+        const savedOnly = parsedMovies.filter((s: Movie) => !moviesList.some(b => b.id === s.id));
+        const result = [...merged, ...savedOnly];
+        setMovies(result);
       } catch (error) {
         console.log('error parsing movies:', error);
       }
@@ -53,10 +55,60 @@ export default function AdminMoviesPage() {
     const nonInitialMovies = updatedMovies.filter(
       (movie) => !moviesList.some((initialMovie) => initialMovie.id === movie.id)
     );
-    // Only set sessionStorage on client side
     if (typeof window !== 'undefined') {
       sessionStorage.setItem('movies', JSON.stringify(nonInitialMovies));
     }
+  };
+
+  const openAddModal = () => {
+    setEditingMovie(null);
+    setShowModal(true);
+  };
+
+  const openEditModal = (movie: Movie) => {
+    const existingShowtimes = movie._meta?.showtimes;
+    const defaultShowtime = {
+      date: movie.date,
+      time: movie.time.replace(/\s?(AM|PM)$/i, '').trim(),
+      ampm: movie.time.toUpperCase().includes('AM') ? 'AM' : 'PM',
+    };
+    
+    setEditingMovie({
+      id: movie.id,
+      title: movie.title,
+      date: movie.date,
+      time: movie.time,
+      _meta: {
+        ...movie._meta,
+        showtimes: existingShowtimes || [defaultShowtime],
+      },
+    });
+    setShowModal(true);
+  };
+
+  const onMovieSaved = (savedMovie: AdminMovie) => {
+    setMovies((prevMovies) => {
+      const existingIndex = prevMovies.findIndex((m) => m.id === savedMovie.id);
+      let updated: AdminMovie[];
+      
+      if (existingIndex >= 0) {
+        // Update existing movie
+        updated = [...prevMovies];
+        updated[existingIndex] = savedMovie;
+      } else {
+        // Add new movie
+        updated = [...prevMovies, savedMovie];
+      }
+      
+      if (typeof window !== 'undefined') {
+        const nonInitialMovies = updated.filter(
+          (movie) => !moviesList.some((initialMovie) => initialMovie.id === movie.id)
+        );
+        sessionStorage.setItem('movies', JSON.stringify(nonInitialMovies));
+      }
+      
+      return updated;
+    });
   };
 
   return (
@@ -121,16 +173,19 @@ export default function AdminMoviesPage() {
                     <div className="flex items-center gap-3 text-gray-300 px-25 ml-auto min-w-[4rem]">
                       {isFirst && (
                         <>
-                          <Link href={`/admin/movies/add?edit=${movie.id}`}>
-                            <button title="Edit movie" className="hover:text-white transition-colors">
-                              <PiPencilSimple className="text-xl" />
-                            </button>
-                          </Link>
+                          <button
+                            title="Edit movie"
+                            className="hover:text-white transition-colors"
+                            onClick={() => openEditModal(movie)}
+                            style={{ background: 'none', border: 'none', cursor: 'pointer' }}
+                          >
+                            <PiPencilSimple className="text-xl" />
+                          </button>
                           <button
                             title="Remove"
                             className="hover:text-white transition-colors"
                             onClick={() => remove(movie.id)}
-                            style={{ background: 'none', border: 'none' }}
+                            style={{ background: 'none', border: 'none', cursor: 'pointer' }}
                           >
                             <PiX className="text-xl" />
                           </button>
@@ -147,17 +202,23 @@ export default function AdminMoviesPage() {
 
       {/* Add movie button */}
       <div className="flex justify-center mt-8">
-        <Link href="/admin/movies/add">
-          <button
-            type="button"
-            title="Add movie"
-            className="text-black px-5 py-2 rounded-full transition-colors hover:opacity-90 font-afacad font-bold"
-            style={{ background: 'linear-gradient(to right, #FF478B, #FF5C33)' }}
-          >
-            Add Movie
-          </button>
-        </Link>
+        <button
+          type="button"
+          title="Add movie"
+          onClick={openAddModal}
+          className="text-black px-5 py-2 rounded-full transition-colors hover:opacity-90 font-afacad font-bold"
+          style={{ background: 'linear-gradient(to right, #FF478B, #FF5C33)' }}
+        >
+          Add Movie
+        </button>
       </div>
+
+      <MovieFormModal
+        isOpen={showModal}
+        onClose={() => setShowModal(false)}
+        onSaved={onMovieSaved}
+        initialMovie={editingMovie}
+      />
     </div>
   );
 }
