@@ -2,6 +2,7 @@ package com.acm.cinema_ebkg_system.controller;
 
 import com.acm.cinema_ebkg_system.dto.auth.AuthResponse;
 import com.acm.cinema_ebkg_system.dto.auth.LoginRequest;
+import com.acm.cinema_ebkg_system.mapper.UserDtoFactory;
 import com.acm.cinema_ebkg_system.model.Admin;
 import com.acm.cinema_ebkg_system.service.AdminService;
 import com.acm.cinema_ebkg_system.util.JwtUtil;
@@ -92,17 +93,8 @@ public class AdminController {
             String token = jwtUtil.generateToken(admin.getEmail(), admin.getId(), "ADMIN", request.isRememberMe());
             String refreshToken = jwtUtil.generateRefreshToken(admin.getEmail(), admin.getId(), "ADMIN", request.isRememberMe());
 
-            // Step 3: Create admin DTO (excludes sensitive data like password)
-            AuthResponse.UserDto adminDto = new AuthResponse.UserDto(
-                admin.getId(),
-                admin.getEmail(),
-                "Admin", // firstName - default for admin
-                "Admin", // lastName - default for admin
-                null, // phoneNumber not applicable for admin
-                null, // address - not applicable for admin
-                null, // state - not applicable for admin
-                null  // country - not applicable for admin
-            );
+            // Step 3: Create admin DTO using factory method (Factory Method pattern)
+            AuthResponse.UserDto adminDto = UserDtoFactory.fromAdmin(admin);
 
             // Step 4: Return success response with tokens and admin data
             AuthResponse response = new AuthResponse(true, "Admin login successful", token, refreshToken, adminDto);
