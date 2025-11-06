@@ -2,8 +2,10 @@ package com.acm.cinema_ebkg_system.service;
 
 import com.acm.cinema_ebkg_system.dto.movie.MovieSummary;
 import com.acm.cinema_ebkg_system.model.Movie;
+import com.acm.cinema_ebkg_system.model.PaymentCard;
 import com.acm.cinema_ebkg_system.repository.MovieRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors; // For converting List<Movie> to List<MovieSummary>
@@ -118,10 +120,27 @@ public class MovieService {
         }
     }
 
+    // Creates a new movie.
     public Movie createMovie(Movie movie) {
-
         // Save movie to database
         return movieRepository.save(movie);
+    }
+
+    // Deletes a movie.
+    public void deleteMovie(Long movieId) {
+        // Get the movie by id
+        Movie movie = movieRepository.findById(movieId)
+            .orElseThrow(() -> new RuntimeException("Movie not found"));
+        
+        // If the movie has no MovieShows, allow it to be deleted
+        System.out.println(movie.getStatus());
+        // if (movie.getStatus() == "UPCOMING") {
+            movieRepository.deleteById(movieId);
+        /* } else {
+            System.out.println("hohohoho, no!");
+            throw new RuntimeException("Cannot delete a movie that is still playing");
+        }*/
+        
     }
 
 

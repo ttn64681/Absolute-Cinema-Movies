@@ -28,5 +28,7 @@ public class MovieInfo {
     private String cast_names;
     private String directors;
     private String producers;
+    private int score;
+    private int duration;
     
 }
