@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { PiPencilSimple, PiX, PiPlus } from 'react-icons/pi';
 import { useState } from 'react';
 import AdminNavBar from '@/components/common/navBar/AdminNavBar';
+import { formatDateInput } from '@/components/specific/admin/movieFormUtils';
 
 export default function AdminPricingPage() {
   // modals
@@ -12,13 +13,14 @@ export default function AdminPricingPage() {
 
   // promotions
   const [promotions, setPromotions] = useState([
-    { id: 1, name: 'Promotion 1', value: '% off' },
-    { id: 2, name: 'Promotion 2', value: '$$ off' },
+    { id: 1, name: 'Promotion 1', value: '% off', expirationDate: '12/31/2025' },
+    { id: 2, name: 'Promotion 2', value: '$$ off', expirationDate: '01/15/2026' },
   ]);
   const [promotionForm, setPromotionForm] = useState({
     image: '',
     name: '',
     discount: '',
+    expirationDate: '',
   });
   const [editingPromotionId, setEditingPromotionId] = useState<number | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -44,13 +46,13 @@ export default function AdminPricingPage() {
   const [editingBookingFeeId, setEditingBookingFeeId] = useState<number | null>(null);
 
   const handlePromotionSubmit = () => {
-    if (!promotionForm.name || !promotionForm.discount) return;
+    if (!promotionForm.name || !promotionForm.discount || !promotionForm.expirationDate) return;
 
     if (editingPromotionId) {
       setPromotions(
         promotions.map((promo) => {
           if (promo.id === editingPromotionId) {
-            return { ...promo, name: promotionForm.name, value: promotionForm.discount };
+            return { ...promo, name: promotionForm.name, value: promotionForm.discount, expirationDate: promotionForm.expirationDate };
           }
           return promo;
         })
@@ -62,12 +64,13 @@ export default function AdminPricingPage() {
           id: Date.now(),
           name: promotionForm.name,
           value: promotionForm.discount,
+          expirationDate: promotionForm.expirationDate,
         },
       ]);
     }
 
     setShowPromotionModal(false);
-    setPromotionForm({ image: '', name: '', discount: '' });
+    setPromotionForm({ image: '', name: '', discount: '', expirationDate: '' });
     setImagePreview(null);
     setImageName('');
     setEditingPromotionId(null);
@@ -75,17 +78,18 @@ export default function AdminPricingPage() {
 
   const closeModal = () => {
     setShowPromotionModal(false);
-    setPromotionForm({ image: '', name: '', discount: '' });
+    setPromotionForm({ image: '', name: '', discount: '', expirationDate: '' });
     setImagePreview(null);
     setImageName('');
     setEditingPromotionId(null);
   };
 
-  const editPromotion = (promo: { id: number; name: string; value: string }) => {
+  const editPromotion = (promo: { id: number; name: string; value: string; expirationDate?: string }) => {
     setPromotionForm({
       image: '',
       name: promo.name,
       discount: promo.value,
+      expirationDate: promo.expirationDate || '',
     });
     setEditingPromotionId(promo.id);
     setShowPromotionModal(true);
@@ -93,6 +97,29 @@ export default function AdminPricingPage() {
 
   const deletePromotion = (promoId: number) => {
     setPromotions(promotions.filter((promo) => promo.id !== promoId));
+  };
+
+  // Check if a promotion is active (not past expiration date)
+  const isPromotionActive = (expirationDate: string): boolean => {
+    if (!expirationDate) return false;
+    
+    // Parse mm/dd/yyyy format
+    const parts = expirationDate.split('/');
+    if (parts.length !== 3) return false;
+    
+    const month = parseInt(parts[0], 10) - 1; // Month is 0-indexed in Date
+    const day = parseInt(parts[1], 10);
+    const year = parseInt(parts[2], 10);
+    
+    if (isNaN(month) || isNaN(day) || isNaN(year)) return false;
+    
+    const expiration = new Date(year, month, day);
+    expiration.setHours(23, 59, 59, 999); // End of expiration day
+    
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    return expiration >= today;
   };
 
   const handleBookingFeeSubmit = () => {
@@ -340,33 +367,38 @@ export default function AdminPricingPage() {
             className="rounded-md overflow-hidden shadow-lg h-48 overflow-y-auto"
             style={{ backgroundColor: '#242424' }}
           >
-            {promotions.map((promo) => (
-              <div key={promo.id} className="flex items-center justify-between px-5 py-4 border-b border-white/10">
-                <div className="flex-1 font-afacad flex items-center">
-                  <span className="w-32">{promo.name}:</span>
-                  <span>{promo.value}</span>
+            {promotions.map((promo) => {
+              const isActive = isPromotionActive(promo.expirationDate || '');
+              return (
+                <div key={promo.id} className="flex items-center justify-between px-5 py-4 border-b border-white/10">
+                  <div className="flex-1 font-afacad flex items-center gap-4">
+                    <span className="w-32">{promo.name}:</span>
+                    <span className="w-32">{promo.value}</span>
+                    <span className="w-40 text-white/60 text-sm">Expires: {promo.expirationDate || 'N/A'}</span>
+                  </div>
+                  <div className="w-24 text-center"></div>
+                  <div className="flex items-center gap-4 text-gray-300">
+                    <span className="text-gray-400 text-sm">{isActive ? 'Active' : 'Inactive'}</span>
+                    <button
+                      title="Edit"
+                      type="button"
+                      className="hover:text-white transition-colors"
+                      onClick={() => editPromotion(promo)}
+                    >
+                      <PiPencilSimple className="text-lg" />
+                    </button>
+                    <button
+                      title="Delete"
+                      type="button"
+                      className="hover:text-white transition-colors"
+                      onClick={() => deletePromotion(promo.id)}
+                    >
+                      <PiX className="text-lg" />
+                    </button>
+                  </div>
                 </div>
-                <div className="w-24 text-center"></div>
-                <div className="flex items-center gap-4 text-gray-300">
-                  <button
-                    title="Edit"
-                    type="button"
-                    className="hover:text-white transition-colors"
-                    onClick={() => editPromotion(promo)}
-                  >
-                    <PiPencilSimple className="text-lg" />
-                  </button>
-                  <button
-                    title="Delete"
-                    type="button"
-                    className="hover:text-white transition-colors"
-                    onClick={() => deletePromotion(promo.id)}
-                  >
-                    <PiX className="text-lg" />
-                  </button>
-                </div>
-              </div>
-            ))}
+              );
+            })}
             <div className="flex items-center justify-end py-5 pr-5">
               <button
                 type="button"
@@ -450,13 +482,25 @@ export default function AdminPricingPage() {
                 />
               </div>
 
-              {/* Save Button */}
+              {/* Expiration Date Field */}
+              <div>
+                <label className="block text-white text-sm mb-2">Expiration Date:</label>
+                <input
+                  type="text"
+                  value={promotionForm.expirationDate}
+                  onChange={(e) => setPromotionForm({ ...promotionForm, expirationDate: formatDateInput(e.target.value) })}
+                  placeholder="mm/dd/yyyy"
+                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-[#FF478B] focus:border-transparent"
+                />
+              </div>
+
+              {/* Save/Send Button */}
               <div className="flex justify-end">
                 <button
                   onClick={handlePromotionSubmit}
                   className="text-white hover:text-gray-300 transition-colors font-medium"
                 >
-                  Save
+                  {editingPromotionId ? 'Save' : 'Send'}
                 </button>
               </div>
             </div>
