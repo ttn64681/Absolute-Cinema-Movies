@@ -4,6 +4,7 @@ import com.acm.cinema_ebkg_system.dto.auth.AuthResponse;
 import com.acm.cinema_ebkg_system.dto.auth.LoginRequest;
 import com.acm.cinema_ebkg_system.dto.auth.RegisterRequest;
 import com.acm.cinema_ebkg_system.dto.auth.ResetPasswordRequest;
+import com.acm.cinema_ebkg_system.mapper.UserDtoFactory;
 import com.acm.cinema_ebkg_system.model.User;
 import com.acm.cinema_ebkg_system.model.Address;
 import com.acm.cinema_ebkg_system.model.PaymentCard;
@@ -108,16 +109,16 @@ public class AuthController {
             
             // Step 4: Create payment cards and billing addresses if provided
             if (request.getPaymentCards() != null && !request.getPaymentCards().isEmpty()) {
-                for (RegisterRequest.PaymentCardInfo cardInfo : request.getPaymentCards()) {
+                for (com.acm.cinema_ebkg_system.dto.payment.PaymentCardDTO cardDto : request.getPaymentCards()) {
                     // Create billing address for this payment card
                     Address billingAddress = new Address();
                     billingAddress.setUser(savedUser);
                     billingAddress.setAddressType(AddressType.billing);
-                    billingAddress.setStreet(cardInfo.getBillingStreet());
-                    billingAddress.setCity(cardInfo.getBillingCity());
-                    billingAddress.setState(cardInfo.getBillingState());
-                    billingAddress.setZip(cardInfo.getBillingZip());
-                    billingAddress.setCountry("US"); // Default to US
+                    billingAddress.setStreet(cardDto.getBillingStreet());
+                    billingAddress.setCity(cardDto.getBillingCity());
+                    billingAddress.setState(cardDto.getBillingState());
+                    billingAddress.setZip(cardDto.getBillingZip());
+                    billingAddress.setCountry(cardDto.getBillingCountry() != null ? cardDto.getBillingCountry() : "US");
                     
                     Address savedAddress = addressService.createAddress(billingAddress);
                     
@@ -125,14 +126,14 @@ public class AuthController {
                     PaymentCard paymentCard = new PaymentCard();
                     paymentCard.setUser(savedUser);
                     paymentCard.setAddress(savedAddress);
-                    paymentCard.setCardNumber(cardInfo.getCardNumber()); // Should be encrypted in production
-                    paymentCard.setCardholderName(cardInfo.getCardholderName());
-                    paymentCard.setPaymentCardType(cardInfo.getCardType());
-                    paymentCard.setExpirationDate(cardInfo.getExpirationDate());
+                    paymentCard.setCardNumber(cardDto.getCardNumber()); // Should be encrypted in production
+                    paymentCard.setCardholderName(cardDto.getCardholderName());
+                    paymentCard.setPaymentCardType(cardDto.getCardType());
+                    paymentCard.setExpirationDate(cardDto.getExpirationDate());
                     
                     // Set is_default flag
-                    if (cardInfo.getIsDefault() != null) {
-                        paymentCard.setIsDefault(cardInfo.getIsDefault());
+                    if (cardDto.getIsDefault() != null) {
+                        paymentCard.setIsDefault(cardDto.getIsDefault());
                     } else {
                         paymentCard.setIsDefault(false);
                     }
@@ -189,14 +190,8 @@ public class AuthController {
             String token = jwtUtil.generateToken(user.getEmail(), user.getId(), request.isRememberMe());
             String refreshToken = jwtUtil.generateRefreshToken(user.getEmail(), user.getId(), request.isRememberMe());
 
-            // Step 4: Create user DTO (excludes sensitive data like password)
-            AuthResponse.UserDto userDto = new AuthResponse.UserDto(
-                user.getId(),
-                user.getEmail(),
-                user.getFirstName(),
-                user.getLastName(),
-                user.getPhoneNumber()
-            );
+            // Step 4: Create user DTO using factory method (Factory Method pattern)
+            AuthResponse.UserDto userDto = UserDtoFactory.fromUser(user);
 
             // Step 5: Return success response with tokens and user data
             AuthResponse response = new AuthResponse(true, "Login successful", token, refreshToken, userDto);
@@ -239,14 +234,8 @@ public class AuthController {
             // Step 3: Generate new access token with same user information and remember me preference
             String newToken = jwtUtil.generateToken(email, userId, rememberMe != null ? rememberMe : false);
 
-            // Step 4: Create user DTO
-            AuthResponse.UserDto userDto = new AuthResponse.UserDto(
-                user.getId(),
-                user.getEmail(),
-                user.getFirstName(),
-                user.getLastName(),
-                user.getPhoneNumber()
-            );
+            // Step 4: Create user DTO using factory method
+            AuthResponse.UserDto userDto = UserDtoFactory.fromUser(user);
 
             // Step 5: Return new access token with user information (refresh token stays the same)
             AuthResponse response = new AuthResponse(true, "Token refreshed successfully", newToken, refreshToken, userDto);
@@ -275,14 +264,8 @@ public class AuthController {
             String jwtToken = jwtUtil.generateToken(user.getEmail(), user.getId(), true);
             String refreshToken = jwtUtil.generateRefreshToken(user.getEmail(), user.getId(), true);
             
-            // Step 3: Create user DTO
-            AuthResponse.UserDto userDto = new AuthResponse.UserDto(
-                user.getId(),
-                user.getEmail(),
-                user.getFirstName(),
-                user.getLastName(),
-                user.getPhoneNumber()
-            );
+            // Step 3: Create user DTO using factory method
+            AuthResponse.UserDto userDto = UserDtoFactory.fromUser(user);
             
             // Step 4: Return success response with tokens
             AuthResponse response = new AuthResponse(true, "Email verified successfully! You can now use all features.", jwtToken, refreshToken, userDto);
