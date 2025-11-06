@@ -38,8 +38,6 @@ import java.time.LocalDateTime;
  */
 @Service
 public class UserService {
-
-    // ========== DEPENDENCY INJECTION ==========
     
     @Autowired
     private UserRepository userRepository;
@@ -187,42 +185,42 @@ public class UserService {
     /**
      * Update user's personal information
      * 
-     * This method updates a user's personal information based on the provided UserInfo DTO.
-     * It also handles the home address in the address table.
+     * Follows Single Responsibility Principle: Only handles profile updates.
+     * Password changes use separate method (changePassword).
      * 
      * @param userId User ID to update
-     * @param userInfo UserInfo DTO containing updated information
+     * @param userUpdateRequest UserUpdateRequest DTO containing updated information
      * @return User Updated user object
      * @throws RuntimeException if user not found
      */
-    @Transactional // Ensures all profile updates (user + address + payment card) succeed or fail together
-    public User updatePersonalInfo(Long userId, com.acm.cinema_ebkg_system.dto.user.UserInfo userInfo) {
+    @Transactional // Ensures all profile updates (user + address) succeed or fail together
+    public User updatePersonalInfo(Long userId, com.acm.cinema_ebkg_system.dto.user.UserUpdateRequest userUpdateRequest) {
         User user = getUserById(userId);
         
         // Update fields if provided
-        if (userInfo.getFirstName() != null) {
-            user.setFirstName(userInfo.getFirstName());
+        if (userUpdateRequest.getFirstName() != null) {
+            user.setFirstName(userUpdateRequest.getFirstName());
         }
-        if (userInfo.getLastName() != null) {
-            user.setLastName(userInfo.getLastName());
+        if (userUpdateRequest.getLastName() != null) {
+            user.setLastName(userUpdateRequest.getLastName());
         }
-        if (userInfo.getPhoneNumber() != null) {
-            user.setPhoneNumber(userInfo.getPhoneNumber());
+        if (userUpdateRequest.getPhoneNumber() != null) {
+            user.setPhoneNumber(userUpdateRequest.getPhoneNumber());
         }
         // Handle profile picture
-        if (userInfo.getProfileImageLink() != null) {
-            user.setProfileImageLink(userInfo.getProfileImageLink());
+        if (userUpdateRequest.getProfileImageLink() != null) {
+            user.setProfileImageLink(userUpdateRequest.getProfileImageLink());
         }
         
         // Handle enrolled_for_promotions preference
         boolean wasEnrolledForPromotions = user.isEnrolledForPromotions();
-        if (userInfo.getEnrolledForPromotions() != null) {
-            user.setEnrolledForPromotions(userInfo.getEnrolledForPromotions());
+        if (userUpdateRequest.getEnrolledForPromotions() != null) {
+            user.setEnrolledForPromotions(userUpdateRequest.getEnrolledForPromotions());
         }
         
         // Handle home address in the address table
-        if (userInfo.getHomeStreet() != null || userInfo.getHomeCity() != null || 
-            userInfo.getHomeState() != null || userInfo.getHomeZip() != null) {
+        if (userUpdateRequest.getHomeStreet() != null || userUpdateRequest.getHomeCity() != null || 
+            userUpdateRequest.getHomeState() != null || userUpdateRequest.getHomeZip() != null) {
             
             // Check if user already has a home address
             List<Address> homeAddresses = addressRepository.findByUserIdAndAddressType(userId, AddressType.home);
@@ -232,20 +230,20 @@ public class UserService {
                 // Update existing home address
                 homeAddress = homeAddresses.get(0);
                 
-                if (userInfo.getHomeStreet() != null) {
-                    homeAddress.setStreet(userInfo.getHomeStreet());
+                if (userUpdateRequest.getHomeStreet() != null) {
+                    homeAddress.setStreet(userUpdateRequest.getHomeStreet());
                 }
-                if (userInfo.getHomeCity() != null) {
-                    homeAddress.setCity(userInfo.getHomeCity());
+                if (userUpdateRequest.getHomeCity() != null) {
+                    homeAddress.setCity(userUpdateRequest.getHomeCity());
                 }
-                if (userInfo.getHomeState() != null) {
-                    homeAddress.setState(userInfo.getHomeState());
+                if (userUpdateRequest.getHomeState() != null) {
+                    homeAddress.setState(userUpdateRequest.getHomeState());
                 }
-                if (userInfo.getHomeZip() != null) {
-                    homeAddress.setZip(userInfo.getHomeZip());
+                if (userUpdateRequest.getHomeZip() != null) {
+                    homeAddress.setZip(userUpdateRequest.getHomeZip());
                 }
-                if (userInfo.getHomeCountry() != null) {
-                    homeAddress.setCountry(userInfo.getHomeCountry());
+                if (userUpdateRequest.getHomeCountry() != null) {
+                    homeAddress.setCountry(userUpdateRequest.getHomeCountry());
                 } else {
                     homeAddress.setCountry("US"); // default
                 }
@@ -255,11 +253,11 @@ public class UserService {
                 homeAddress.setUser(user);
                 homeAddress.setAddressType(AddressType.home);
                 
-                homeAddress.setStreet(userInfo.getHomeStreet() != null ? userInfo.getHomeStreet() : "");
-                homeAddress.setCity(userInfo.getHomeCity() != null ? userInfo.getHomeCity() : "");
-                homeAddress.setState(userInfo.getHomeState() != null ? userInfo.getHomeState() : "");
-                homeAddress.setZip(userInfo.getHomeZip() != null ? userInfo.getHomeZip() : "");
-                homeAddress.setCountry(userInfo.getHomeCountry() != null ? userInfo.getHomeCountry() : "US");
+                homeAddress.setStreet(userUpdateRequest.getHomeStreet() != null ? userUpdateRequest.getHomeStreet() : "");
+                homeAddress.setCity(userUpdateRequest.getHomeCity() != null ? userUpdateRequest.getHomeCity() : "");
+                homeAddress.setState(userUpdateRequest.getHomeState() != null ? userUpdateRequest.getHomeState() : "");
+                homeAddress.setZip(userUpdateRequest.getHomeZip() != null ? userUpdateRequest.getHomeZip() : "");
+                homeAddress.setCountry(userUpdateRequest.getHomeCountry() != null ? userUpdateRequest.getHomeCountry() : "US");
             }
             
             addressRepository.save(homeAddress);
@@ -269,9 +267,9 @@ public class UserService {
         emailService.sendEditProfileConfirmationEmail(user.getEmail(), user.getFirstName());
         
         // Send promotion enrollment email if user just opted in
-        if (userInfo.getEnrolledForPromotions() != null && 
+        if (userUpdateRequest.getEnrolledForPromotions() != null && 
             !wasEnrolledForPromotions && 
-            userInfo.getEnrolledForPromotions()) {
+            userUpdateRequest.getEnrolledForPromotions()) {
             emailService.sendPromotionEnrollmentEmail(user.getEmail(), user.getFirstName());
         }
 
@@ -285,17 +283,17 @@ public class UserService {
      * This method resets a user's password when they have forgotten it and need it to log in.
      * 
      * @param userId User ID to update
-     * @param userInfo UserInfo DTO containing updated information
+     * @param passwordChangeRequest PasswordChangeRequest DTO containing new password
      * @return User Updated user object
      * @throws RuntimeException if user not found
      */
 
-    public User resetForgottenPassword(Long userId, com.acm.cinema_ebkg_system.dto.user.UserInfo userInfo) {
+    public User resetForgottenPassword(Long userId, com.acm.cinema_ebkg_system.dto.user.PasswordChangeRequest passwordChangeRequest) {
         // Identify the registered user
         User user = getUserById(userId);
 
         // Get the new password from the DTO
-        String newPassword = userInfo.getNewPassword();
+        String newPassword = passwordChangeRequest.getNewPassword();
 
         // Hash the plain text password using BCrypt
         String hashedPassword = passwordEncoder.encode(newPassword);
@@ -320,18 +318,18 @@ public class UserService {
      * This method changes a user's password when they request to reset it.
      * 
      * @param userId User ID to update
-     * @param userInfo UserInfo DTO containing updated information
+     * @param passwordChangeRequest PasswordChangeRequest DTO containing current and new password
      * @return User Updated user object
-     * @throws RuntimeException if user not found
+     * @throws RuntimeException if user not found or current password incorrect
      */
 
-    public User changePassword(Long userId, com.acm.cinema_ebkg_system.dto.user.UserInfo userInfo) {
+    public User changePassword(Long userId, com.acm.cinema_ebkg_system.dto.user.PasswordChangeRequest passwordChangeRequest) {
         // Identify the logged-in user
         User user = getUserById(userId);
 
         // Get the current password and new password input from the DTO
-        String currentPassword = userInfo.getCurrentPassword();
-        String newPassword = userInfo.getNewPassword();
+        String currentPassword = passwordChangeRequest.getCurrentPassword();
+        String newPassword = passwordChangeRequest.getNewPassword();
 
         // Validate that the current password is correct
         if (!passwordEncoder.matches(currentPassword, user.getPassword())) {

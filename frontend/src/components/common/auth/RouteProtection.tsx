@@ -24,19 +24,24 @@ export default function RouteProtection({ children, requiredRole }: RouteProtect
 
       if (requiredRole === 'admin') {
         // Admin routes require admin token
-        setHasRequiredRole(hasAdminToken);
-
         if (!isAuthenticated || !hasAdminToken) {
+          setHasRequiredRole(false);
           router.push(isAuthenticated ? '/' : '/auth/login');
+        } else {
+          setHasRequiredRole(true);
         }
       } else {
-        // User routes require regular user (no admin token)
-        setHasRequiredRole(!hasAdminToken);
-
+        // User routes require regular user (NO admin token)
         if (!isAuthenticated) {
+          setHasRequiredRole(false);
           router.push('/auth/login');
         } else if (hasAdminToken) {
+          // Admin trying to access user route - redirect immediately
+          setHasRequiredRole(false);
           router.push('/admin/users');
+        } else {
+          // Regular user accessing user route - allow
+          setHasRequiredRole(true);
         }
       }
     }
