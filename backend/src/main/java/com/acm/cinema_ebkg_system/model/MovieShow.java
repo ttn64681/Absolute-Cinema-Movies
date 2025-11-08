@@ -48,6 +48,11 @@ public class MovieShow {
     @OneToMany(mappedBy = "movieShow", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonIgnoreProperties({"movieShow"})
     private List<ShowSeat> seats;
+
+    // Each MovieShow is associated with one ShowTime
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "show_time_id", nullable = false)
+    private ShowTime showTime;
     
     @Column(name = "created_at")
     private LocalDateTime createdAt;
