@@ -103,29 +103,26 @@ public interface MovieRepository extends JpaRepository<Movie, Long> {
     @Query(value = """
       SELECT m.* FROM movie m
       INNER JOIN movie_show ms ON ms.movie_id = m.movie_id
+      LEFT JOIN show_time st ON st.movie_show_id = ms.id
       WHERE m.status = 'now_playing'
         AND (:title IS NULL OR LOWER(m.title) LIKE LOWER(CONCAT('%', :title, '%')))
         AND (:genresCsv IS NULL OR EXISTS (
-             SELECT 1 FROM unnest(string_to_array(:genresCsv, ',')) g
-             WHERE LOWER(m.genres) LIKE LOWER(CONCAT('%', trim(g), '%'))
+          SELECT 1 FROM unnest(string_to_array(:genresCsv, ',')) g
+          WHERE LOWER(m.genres) LIKE LOWER(CONCAT('%', trim(g), '%'))
         ))
         AND (
           (:month IS NULL AND :day IS NULL AND :year IS NULL) OR
           EXISTS (
-            SELECT 1 FROM show_time st 
-            INNER JOIN movie_show ms2 ON st.movie_show_id = ms2.id
+            SELECT 1 FROM show_time st2 
+            INNER JOIN movie_show ms2 ON st2.movie_show_id = ms2.id
             WHERE ms2.movie_id = m.movie_id 
-              AND (:month IS NULL OR EXTRACT(MONTH FROM st.show_time) = :month)
-              AND (:day IS NULL OR EXTRACT(DAY FROM st.show_time) = :day)
-              AND (:year IS NULL OR EXTRACT(YEAR FROM st.show_time) = :year)
+            AND (:month IS NULL OR EXTRACT(MONTH FROM st2.show_time) = :month)
+            AND (:day IS NULL OR EXTRACT(DAY FROM st2.show_time) = :day)
+            AND (:year IS NULL OR EXTRACT(YEAR FROM st2.show_time) = :year)
           )
         )
-      ORDER BY (
-        SELECT MIN(st.show_time) 
-        FROM show_time st 
-        INNER JOIN movie_show ms3 ON st.movie_show_id = ms3.id
-        WHERE ms3.movie_id = m.movie_id
-      ) ASC
+      GROUP BY m.movie_id, m.title, m.status, m.genres, m.release_date, m.rating, m.synopsis, m.trailer_link, m.poster_link, m.cast_names, m.directors, m.producers, m.score, m.duration
+      ORDER BY MIN(st.show_time) ASC
     """, nativeQuery = true)
     List<Movie> searchNowPlayingOrdered(@Param("title") String title,
                                         @Param("genresCsv") String genresCsv,
