@@ -60,7 +60,7 @@ public class MovieService {
      */
     public List<Movie> getUpcomingOrdered() {
         // Use repository custom query to get UPCOMING movies ordered by show date
-        return movieRepository.findUpcomingOrderedByFirstShowDate();
+        return movieRepository.findUpcoming();
     }
 
     /**

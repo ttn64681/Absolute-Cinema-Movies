@@ -1,12 +1,20 @@
 package com.acm.cinema_ebkg_system.model;
 
+import com.acm.cinema_ebkg_system.enums.MovieStatus;
+
 import jakarta.persistence.Entity;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Column;
 import jakarta.persistence.Table;
+import jakarta.persistence.EnumType;
 import java.time.LocalDate;
+
+import com.acm.cinema_ebkg_system.enums.TicketType;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
@@ -39,9 +47,12 @@ public class Movie {
     @NotBlank
     @Column(nullable = false, columnDefinition = "TEXT")
     private String title;
-    @NotBlank
-    @Column(nullable = false)
-    private String status; // Must be 'NOW_PLAYING' or 'UPCOMING'
+    // @NotBlank
+    // @Column(nullable = false)
+    // private String status; // Must be 'NOW_PLAYING' or 'UPCOMING'
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
+    private MovieStatus status;
     @NotBlank
     @Column(nullable = false, columnDefinition = "TEXT")
     private String genres;

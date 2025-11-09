@@ -46,9 +46,9 @@ public class MovieShowService {
      * @param status - String: "now_playing" or "upcoming"
      * @return List<MovieShow> - All shows with this status
      */
-    public List<MovieShow> getMovieShowsByStatus(String status) {
-        return movieShowRepository.findByStatus(status);
-    }
+    // public List<MovieShow> getMovieShowsByStatus(String status) {
+    //     return movieShowRepository.findByStatus(status);
+    // }
     
     /**
      * Create a new movie show (admin only)

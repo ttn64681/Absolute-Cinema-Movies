@@ -35,10 +35,6 @@ public class MovieShow {
     @JoinColumn(name = "show_room_id", nullable = false)
     private ShowRoom showRoom;
     
-    // Status: 'now_playing' or 'upcoming'
-    @Column(name = "status", nullable = false)
-    private String status;
-    
     // Available seats count
     @Column(name = "available_seats", nullable = false)
     private Integer availableSeats = 0;

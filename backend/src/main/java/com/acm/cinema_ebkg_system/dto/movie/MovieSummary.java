@@ -1,6 +1,7 @@
 package com.acm.cinema_ebkg_system.dto.movie;
 
 import com.acm.cinema_ebkg_system.model.Movie;
+import com.acm.cinema_ebkg_system.enums.MovieStatus;
 import java.time.LocalDate;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -17,7 +18,7 @@ import lombok.Setter;
 public class MovieSummary {
     private Long movie_id;
     private String title;
-    private String status;
+    private MovieStatus status;
     private String genres;
     private String rating;
     private LocalDate release_date;
@@ -25,7 +26,7 @@ public class MovieSummary {
     private String trailer_link;
     private String poster_link;
     
-    public MovieSummary(Long movie_id, String title, String status, String genres, 
+    public MovieSummary(Long movie_id, String title, MovieStatus status, String genres, 
                        String rating, LocalDate release_date, String synopsis, 
                        String trailer_link, String poster_link) {
         this.movie_id = movie_id;

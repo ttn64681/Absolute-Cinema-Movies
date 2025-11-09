@@ -6,6 +6,7 @@ import com.acm.cinema_ebkg_system.model.Movie;
 import com.acm.cinema_ebkg_system.model.PaymentCard;
 import com.acm.cinema_ebkg_system.service.MovieService;
 import com.acm.cinema_ebkg_system.service.ShowTimeService;
+import com.acm.cinema_ebkg_system.enums.MovieStatus;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -214,7 +215,7 @@ public class MovieController {
             // Create a new Movie object
             Movie newMovie = new Movie();
             newMovie.setTitle(dto.getTitle());
-            newMovie.setStatus("UPCOMING"); // default status (no movie shows scheduled)
+            newMovie.setStatus(MovieStatus.upcoming); // default status (no movie shows scheduled)
             newMovie.setGenres(dto.getGenres());
             newMovie.setRating(dto.getRating());
             newMovie.setRelease_date(dto.getRelease_date());
