@@ -5,6 +5,9 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
+
+import com.acm.cinema_ebkg_system.enums.DiscountType;
+import com.acm.cinema_ebkg_system.enums.PromotionStatus;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.validation.constraints.NotBlank;
 import java.time.LocalDateTime;
@@ -33,61 +36,55 @@ public class Promotion {
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "promotion_id")
-    private Long promotionId;
-    
+    @Column(name = "id")
+    private Long id;
     // Promotional code (e.g., "FIRST-TIME-20")
     @NotBlank
     @Column(name = "promo_code", nullable = false, unique = true)
     private String promoCode;
-    
-    // // Discount percentage or fixed amount
+
+    @NotBlank
+    @Column(name = "image_link", nullable = false)
+    private String imageLink;
+
+    // Discount percentage or fixed amount
     @Column(name = "discount_value", nullable = false, precision = 10, scale = 2)
     private java.math.BigDecimal discountValue;
-    
-//     // Discount type: 'percentage' or 'fixed'
+
+    // Discount type: 'percentage' or 'fixed'
     @Column(name = "discount_type", nullable = false, length = 20)
-    private String discountType;
-    
-//     // Promotional title/description
+    private DiscountType discountType;
+
+    // Promotional title/description
     @Column(name = "title", nullable = false)
     private String title;
-    
-//     // Description of the promotion
-    @Column(name = "description", length = 500)
+
+    // Description of the promotion
+    @Column(name = "description", length = 500, nullable = false)
     private String description;
-    
-//     // Start date of promotion validity
-    @Column(name = "start_date")
-    private LocalDateTime startDate;
-    
-//     // End date of promotion validity
-    @Column(name = "end_date")
-    private LocalDateTime endDate;
-    
-//     // Usage limit (null = unlimited)
-    @Column(name = "usage_limit")
-    private Integer usageLimit;
-    
-//     // Current usage count
-    @Column(name = "current_usage")
-    private Integer currentUsage = 0;
-    
-//     // Timestamp when record was created
-    @Column(name = "created_at")
+
+    // End date of promotion validity
+    @Column(name = "expiration_date", nullable = false)
+    private LocalDateTime expirationDate;    
+
+    // Timestamp when record was created
+    @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
-    
-//     // Timestamp when record was last updated
-    @Column(name = "updated_at")
+
+    // Timestamp when record was last updated
+    @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
+
+    @Column(name = "status", nullable = false)
+    private PromotionStatus status;
     
-//     @PrePersist
+    // @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
     }
     
-//     @PreUpdate
+    // @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
