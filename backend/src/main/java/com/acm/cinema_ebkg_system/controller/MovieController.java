@@ -2,6 +2,7 @@ package com.acm.cinema_ebkg_system.controller;
 
 import com.acm.cinema_ebkg_system.dto.movie.MovieSummary;
 import com.acm.cinema_ebkg_system.dto.movie.MovieInfo;
+import com.acm.cinema_ebkg_system.dto.movie.MovieShowtimes;
 import com.acm.cinema_ebkg_system.model.Movie;
 import com.acm.cinema_ebkg_system.model.PaymentCard;
 import com.acm.cinema_ebkg_system.service.MovieService;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -127,10 +129,9 @@ public class MovieController {
     }
 
     /**
-     * Get all available dates for a movie ordered by earliest show_date.
-     * Use when displaying the dates for a movie.
+     * Get all available showings of a movie (date and time combined).
      */
-    @GetMapping("/{movieId}/times")
+    @GetMapping("/{movieId}/showtimes")
     public List<LocalDateTime> getAvailableTimes(@PathVariable Long movieId) {
         // Frontend: call this first to populate the date dropdown for a selected movie.
         // Return format (JSON): ["2025-10-01", "2025-10-02", ...]
@@ -138,18 +139,29 @@ public class MovieController {
     }
 
     /**
-     * Get all available times for a movie on a given date ordered by start_time.
+     * Get all available dates for a movie ordered by earliest show_date.
+     * Use when displaying the dates for a movie.
+     */
+    @GetMapping("/{movieId}/dates")
+    public List<LocalDate> getAvailableDates(@PathVariable Long movieId) {
+        // Frontend: call this first to populate the date dropdown for a selected movie.
+        // Return format (JSON): ["2025-10-01", "2025-10-02", ...]
+        return showTimeService.getAvailableDatesForMovie(movieId);
+    }
+
+    /**
+     * Get all available times for a movie on a certain date.
      * Use when displaying the times for a movie.
      */
-    
-    /* @GetMapping("/{movieId}/times")
-    public List<ShowTime> getAvailableTimes(@PathVariable Long movieId, @RequestParam String date) {
+    @GetMapping("/{movieId}/times")
+    public List<LocalTime> getAvailableTimesForDate(@PathVariable Long movieId, @RequestParam String date) {
         // Frontend: when user picks a date from the dropdown, call this with that date.
         // Return format (JSON): array of ShowTime objects, e.g.
         // [{"show_time_id": 123, "show_date_id": 45, "start_time": "10:00:00", "end_time": "12:30:00", "created_at": "2025-09-26T12:00:00"}, ...]
         LocalDate showDate = LocalDate.parse(date);
+        System.out.println(showDate);
         return showTimeService.getAvailableTimesForMovieAndDate(movieId, showDate);
-    } */
+    }
 
     // @GetMapping("/{movieId}/schedule")
     // public Map<LocalDate, List<ShowTime>> getMovieSchedule(@PathVariable Long movieId) {
@@ -157,11 +169,6 @@ public class MovieController {
     //     // Return format (JSON): {"2025-10-01": [ShowTime, ...], "2025-10-02": [ShowTime, ...], ...}
     //     return showTimeService.getMovieShowSchedule(movieId);
     // }
-
-
-
-
-
 
     // ===== OPTIMIZED BROWSING ENDPOINTS =====
 
@@ -194,7 +201,6 @@ public class MovieController {
     public List<MovieSummary> getUpcomingForBrowsing() {
         return movieService.getUpcomingForBrowsing();
     }
-
 
     /**
      * Get full movie details by ID (including cast, directors, producers).

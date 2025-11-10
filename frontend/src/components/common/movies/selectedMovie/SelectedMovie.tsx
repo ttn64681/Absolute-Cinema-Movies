@@ -35,7 +35,7 @@ export default function SelectedMovie({ movie, onClose }: MovieDetailProps) {
   } = useQuery({
     queryKey: ['movie-dates', movie.movie_id], // uniqueKey for system to invalidate query if movie ID changes
     queryFn: async () => {
-      const url = buildUrl(endpoints.movies.times(movie.movie_id));
+      const url = buildUrl(endpoints.movies.dates(movie.movie_id));
       const resp = await fetch(url);
       if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
       return resp.json();
