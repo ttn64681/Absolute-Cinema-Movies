@@ -10,7 +10,7 @@ import com.acm.cinema_ebkg_system.model.ShowRoom;
 
 @Data
 public class MovieShowDTO {
-    private String movieTitle;
-    private String showRoomName;
+    private Long movieId;
+    private Long showRoomId;
     private String showTime;
 }

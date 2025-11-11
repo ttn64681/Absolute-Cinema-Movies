@@ -67,8 +67,8 @@ public class MovieShowController {
     public ResponseEntity<?> createMovieShow(@RequestBody MovieShowDTO dto) {
         try {
             
-            Movie movie = movieService.getMovieByTitle(dto.getMovieTitle());
-            ShowRoom room = showRoomService.getShowRoomByName(dto.getShowRoomName());
+            Movie movie = movieService.getMovieById(dto.getMovieId());
+            ShowRoom room = showRoomService.getShowRoomById(dto.getShowRoomId());
 
             // New MovieShow
             MovieShow newShow = new MovieShow();
