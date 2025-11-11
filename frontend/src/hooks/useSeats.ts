@@ -12,31 +12,18 @@ export function useSeats() {
   // WHY MATTERS: Minimal - array creation is fast, mostly unnecessary optimization
   const seatLetters = useMemo(() => ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'], []);
 
-  // CACHES: frontRows array with 27 seat objects - persists across useSeats hook re-runs
+  // CACHES: rows array with 50 seat objects - persists across useSeats hook re-runs
   // CHANGES: Never (seatLetters never changes) - BUT will recreate if useSeats hook unmounts/remounts
-  // WITHOUT useMemo: 27 objects recreated on every useSeats re-render (booking page changes, parent changes)
+  // WITHOUT useMemo: 50 objects recreated on every useSeats re-render (booking page changes, parent changes)
   // WHY MATTERS: Moderate - prevents unnecessary object creation, but not "expensive"
-  const frontRows = useMemo(
+  const rows = useMemo(
     () => [
-      // Row 1-3: 9 seats each
-      Array.from({ length: 9 }, (_, idx) => ({ id: `1${seatLetters[idx]}`, occupied: false })),
-      Array.from({ length: 9 }, (_, idx) => ({ id: `2${seatLetters[idx]}`, occupied: false })),
-      Array.from({ length: 9 }, (_, idx) => ({ id: `3${seatLetters[idx]}`, occupied: false })),
-    ],
-    [seatLetters]
-  ); // Include seatLetters dependency
-
-  // CACHES: backRows array with 40 seat objects - persists across useSeats hook re-runs
-  // CHANGES: Never (seatLetters never changes) - BUT will recreate if useSeats hook unmounts/remounts
-  // WITHOUT useMemo: 40 objects recreated on every useSeats re-render (booking page changes, parent changes)
-  // WHY MATTERS: Moderate - prevents unnecessary object creation, but not "expensive"
-  const backRows = useMemo(
-    () => [
-      // Row 4-7: 10 seats each
+      // Row 1-5: 10 seats each (50 seats total)
+      Array.from({ length: 10 }, (_, idx) => ({ id: `1${seatLetters[idx]}`, occupied: false })),
+      Array.from({ length: 10 }, (_, idx) => ({ id: `2${seatLetters[idx]}`, occupied: false })),
+      Array.from({ length: 10 }, (_, idx) => ({ id: `3${seatLetters[idx]}`, occupied: false })),
       Array.from({ length: 10 }, (_, idx) => ({ id: `4${seatLetters[idx]}`, occupied: false })),
       Array.from({ length: 10 }, (_, idx) => ({ id: `5${seatLetters[idx]}`, occupied: false })),
-      Array.from({ length: 10 }, (_, idx) => ({ id: `6${seatLetters[idx]}`, occupied: false })),
-      Array.from({ length: 10 }, (_, idx) => ({ id: `7${seatLetters[idx]}`, occupied: false })),
     ],
     [seatLetters]
   ); // Include seatLetters dependency
@@ -55,10 +42,9 @@ export function useSeats() {
 
   return {
     selectedSeats,
-    frontRows,
-    backRows,
+    rows,
     toggleSeat,
     resetSeats,
-    totalSeats: frontRows.length * frontRows[0].length + backRows.length * backRows[0].length,
+    totalSeats: rows.length * rows[0].length,
   };
 }
