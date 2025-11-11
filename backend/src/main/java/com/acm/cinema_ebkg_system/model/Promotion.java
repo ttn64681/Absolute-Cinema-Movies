@@ -28,7 +28,7 @@ import java.time.LocalDateTime;
 //@NoArgsConstructor
 //@AllArgsConstructor
 @Entity
-@Table(name = "promotions")
+@Table(name = "promotion")
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 // TODO: Uncomment entire class when implementing the promotion system
 public class Promotion {
@@ -52,7 +52,8 @@ public class Promotion {
     private java.math.BigDecimal discountValue;
 
     // Discount type: 'percentage' or 'fixed'
-    @Column(name = "discount_type", nullable = false, length = 20)
+    @Enumerated(EnumType.STRING)
+    @Column(name = "discount_type", nullable = false, columnDefinition = "discount_type")
     private DiscountType discountType;
 
     // Promotional title/description
@@ -64,7 +65,7 @@ public class Promotion {
     private String description;
 
     // End date of promotion validity
-    @Column(name = "expiration_date", nullable = false)
+    @Column(name = "expiration_date", nullable = false)    
     private LocalDateTime expirationDate;    
 
     // Timestamp when record was created

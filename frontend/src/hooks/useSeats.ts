@@ -24,6 +24,8 @@ export function useSeats() {
       Array.from({ length: 10 }, (_, idx) => ({ id: `3${seatLetters[idx]}`, occupied: false })),
       Array.from({ length: 10 }, (_, idx) => ({ id: `4${seatLetters[idx]}`, occupied: false })),
       Array.from({ length: 10 }, (_, idx) => ({ id: `5${seatLetters[idx]}`, occupied: false })),
+      Array.from({ length: 10 }, (_, idx) => ({ id: `5${seatLetters[idx]}`, occupied: false })),
+      Array.from({ length: 10 }, (_, idx) => ({ id: `5${seatLetters[idx]}`, occupied: false })),
     ],
     [seatLetters]
   ); // Include seatLetters dependency

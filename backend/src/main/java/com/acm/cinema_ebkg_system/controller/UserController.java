@@ -81,6 +81,7 @@ public class UserController {
     // GET /api/users - Return list of all users (for admin use)
     @GetMapping("/users")
     public List<User> getAllUsers() {
+        System.out.println("Getting all users");
         return userService.getAllUsers();
     }
 

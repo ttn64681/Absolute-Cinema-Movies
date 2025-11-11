@@ -49,7 +49,9 @@ public class PromotionService {
         promotion.setDiscountType(promotionDTO.getDiscountType());
         promotion.setCreatedAt(LocalDateTime.now());
         promotion.setUpdatedAt(LocalDateTime.now());
-        promotion.setStatus(PromotionStatus.inactive); // Default status
+        promotion.setStatus(PromotionStatus.inactive);
+        promotion.setExpirationDate(promotionDTO.getExpirationDate());
+
         return promotionRepository.save(promotion);
     }
 
@@ -57,6 +59,10 @@ public class PromotionService {
         Optional<Promotion> existingPromotion = getPromotionById(id);
         if (existingPromotion.isPresent()) {
 
+            if (existingPromotion.get().getStatus() == PromotionStatus.active) {
+                throw new RuntimeException("Cannot update an active promotion");
+            }
+            
             Promotion promotion = existingPromotion.get();
         
             // Gets all fields from DTO
@@ -66,6 +72,7 @@ public class PromotionService {
             String imageLink = updatedPromotionDTO.getImage_link();
             java.math.BigDecimal discountValue = updatedPromotionDTO.getDiscountValue();
             DiscountType discountType = updatedPromotionDTO.getDiscountType();
+            LocalDateTime expirationDate = updatedPromotionDTO.getExpirationDate();
             
             // Update only non-null fields
             if (promoCode != null) promotion.setPromoCode(promoCode);
@@ -80,6 +87,8 @@ public class PromotionService {
                 }
                 promotion.setStatus(updatedPromotionDTO.getStatus());
             }
+            if (expirationDate != null) promotion.setExpirationDate(expirationDate);
+
             promotion.setUpdatedAt(LocalDateTime.now());
 
             return promotionRepository.save(promotion);
