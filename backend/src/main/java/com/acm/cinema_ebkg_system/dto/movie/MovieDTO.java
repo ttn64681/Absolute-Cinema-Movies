@@ -15,7 +15,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class MovieInfo {
+public class MovieDTO {
     private Long movie_id;
     private String title;
     private String status;

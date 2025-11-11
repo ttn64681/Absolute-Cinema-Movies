@@ -1,12 +1,14 @@
 package com.acm.cinema_ebkg_system.repository;
 
 import com.acm.cinema_ebkg_system.model.Movie;
+import com.acm.cinema_ebkg_system.model.User;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * JpaRepository<Movie, Long>: Generic type = (EntityType, IDType)
@@ -47,6 +49,12 @@ public interface MovieRepository extends JpaRepository<Movie, Long> {
      * Return: List<Movie> (mixed now_playing/upcoming)
      * Example JSON: [ { "movie_id": 4, "status": "now_playing", ... }, { "movie_id": 9, "status": "upcoming", ... } ]
      */
+
+    // Look up a movie by title
+    @Query("SELECT m FROM Movie m WHERE m.title = :title")
+    Optional<Movie> findByTitle(@Param("title") String title);
+
+
     @Query(value =
         "SELECT DISTINCT m.* FROM movie m " +
         "LEFT JOIN movie_show ms ON ms.movie_id = m.movie_id " +

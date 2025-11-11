@@ -16,6 +16,7 @@ import jakarta.persistence.Table;            // maps to a specific table name
 import java.time.LocalDate; // (YYYY-MM-DD)
 import java.time.LocalDateTime; // date + time (timestamp)
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import lombok.Data;
@@ -31,6 +32,7 @@ public class ShowTime {
     // Each ShowTime is associated with one MovieShow
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "movie_show_id", nullable = false)
+    @JsonBackReference
     private MovieShow movieShow;
 
     @Column(name = "show_time", nullable = false)

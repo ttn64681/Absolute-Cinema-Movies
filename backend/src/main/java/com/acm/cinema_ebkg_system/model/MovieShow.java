@@ -5,6 +5,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -18,6 +20,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
+@JsonIgnoreProperties
 @Table(name = "movie_show")
 public class MovieShow {
     
@@ -48,6 +51,7 @@ public class MovieShow {
     // Each MovieShow is associated with one ShowTime
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "show_time_id", nullable = false)
+    @JsonManagedReference
     private ShowTime showTime;
     
     @Column(name = "created_at")

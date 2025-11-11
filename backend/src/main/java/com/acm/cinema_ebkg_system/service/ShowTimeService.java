@@ -1,5 +1,6 @@
 package com.acm.cinema_ebkg_system.service;
 
+import com.acm.cinema_ebkg_system.model.MovieShow;
 import com.acm.cinema_ebkg_system.model.ShowTime;
 import com.acm.cinema_ebkg_system.repository.ShowTimeRepository;
 
@@ -69,5 +70,14 @@ public class ShowTimeService {
             .map(Timestamp::toLocalDateTime)
             .collect(Collectors.toList());
     }
+
+
+    public ShowTime createShowTime(ShowTime showTime) {
+        return showTimeRepository.save(showTime);
+    }
+
+    /*public ShowTime addShowTime(Long movieShowId) {
+
+    }*/
 
 }

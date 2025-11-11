@@ -191,6 +191,15 @@ public class MovieService {
                 .orElseThrow(() -> new RuntimeException("Movie not found with id: " + movieId));
     }
 
+    /**
+     * Get full movie details by title (including cast, directors, producers).
+     * Return: Movie (full entity)
+     */
+    public Movie getMovieByTitle(String title) {
+        return movieRepository.findByTitle(title)
+                .orElseThrow(() -> new RuntimeException("Movie not found with title: " + title));
+    }
+
 }
 
 

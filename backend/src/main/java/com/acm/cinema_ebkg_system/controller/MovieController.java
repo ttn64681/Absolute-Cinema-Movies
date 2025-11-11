@@ -1,8 +1,7 @@
 package com.acm.cinema_ebkg_system.controller;
 
 import com.acm.cinema_ebkg_system.dto.movie.MovieSummary;
-import com.acm.cinema_ebkg_system.dto.movie.MovieInfo;
-import com.acm.cinema_ebkg_system.dto.movie.MovieShowtimes;
+import com.acm.cinema_ebkg_system.dto.movie.MovieDTO;
 import com.acm.cinema_ebkg_system.model.Movie;
 import com.acm.cinema_ebkg_system.model.PaymentCard;
 import com.acm.cinema_ebkg_system.service.MovieService;
@@ -129,16 +128,6 @@ public class MovieController {
     }
 
     /**
-     * Get all available showings of a movie (date and time combined).
-     */
-    @GetMapping("/{movieId}/showtimes")
-    public List<LocalDateTime> getAvailableTimes(@PathVariable Long movieId) {
-        // Frontend: call this first to populate the date dropdown for a selected movie.
-        // Return format (JSON): ["2025-10-01", "2025-10-02", ...]
-        return showTimeService.getAvailableTimesForMovie(movieId);
-    }
-
-    /**
      * Get all available dates for a movie ordered by earliest show_date.
      * Use when displaying the dates for a movie.
      */
@@ -161,6 +150,15 @@ public class MovieController {
         LocalDate showDate = LocalDate.parse(date);
         System.out.println(showDate);
         return showTimeService.getAvailableTimesForMovieAndDate(movieId, showDate);
+    }
+
+     /**
+     * Get all available showings of a movie (date and time combined).
+     */
+    @GetMapping("/{movieId}/times/combined")
+    public List<LocalDateTime> getAvailableTimes(@PathVariable Long movieId) {
+        // Included for testing. Frontend does not need this endpoint.
+        return showTimeService.getAvailableTimesForMovie(movieId);
     }
 
     // @GetMapping("/{movieId}/schedule")
@@ -212,11 +210,20 @@ public class MovieController {
     }
 
     /**
+     * Get full movie details by ID (including cast, directors, producers).
+     * Use this only when user clicks on a movie for detailed view.
+     */
+    @GetMapping("/title/{title}")
+    public Movie getMovieDetailsByTitle(@PathVariable String title) {
+        return movieService.getMovieByTitle(title);
+    }
+
+    /**
      * POST api/movies/create
      * Use when adding a new movie (when logged in as Admin).
      */
     @PostMapping("/create")
-    public ResponseEntity<?> createMovie(@RequestBody MovieInfo dto) {
+    public ResponseEntity<?> createMovie(@RequestBody MovieDTO dto) {
         try {
             // Create a new Movie object
             Movie newMovie = new Movie();
