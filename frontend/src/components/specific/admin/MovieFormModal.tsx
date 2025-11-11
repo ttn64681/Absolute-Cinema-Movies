@@ -7,6 +7,7 @@ type Showtime = {
   date: string;
   time: string;
   ampm: string;
+  room?: string;
 };
 
 export type AdminMovie = {
@@ -365,57 +366,6 @@ export default function MovieFormModal({ isOpen, onClose, onSaved, initialMovie 
 
         <div className="grid grid-cols-1 sm:grid-cols-[1fr_1fr] gap-6 mb-6">
           <div>
-            <label className="block text-sm mb-2 font-afacad text-white">Show Dates & Times</label>
-            <div className="space-y-3">
-              {showtimes.map((s, idx) => (
-                <div key={idx} className="flex items-center gap-3">
-                  <input
-                    type="text"
-                    placeholder="mm/dd/yyyy"
-                    value={s.date}
-                  onChange={(e) => updateShowtime(idx, "date", formatDateInput(e.target.value))}
-                    className="w-40 px-3 py-2 rounded-md bg-white/10 border border-white/20 text-white placeholder-white/60 focus:outline-none focus:ring-1 focus:ring-[#FF478B] focus:border-transparent"
-                  />
-                  <input
-                    type="text"
-                    placeholder="hh:mm"
-                    value={s.time}
-                  onChange={(e) => updateShowtime(idx, "time", formatTimeInput(e.target.value))}
-                    className="w-28 px-3 py-2 rounded-md bg-white/10 border border-white/20 text-white placeholder-white/60 focus:outline-none focus:ring-1 focus:ring-[#FF478B] focus:border-transparent"
-                  />
-                  <div className="relative">
-                    <select
-                      value={s.ampm}
-                      onChange={(e) => updateShowtime(idx, "ampm", e.target.value)}
-                      className="w-16 px-2 py-2 rounded-md bg-white/10 border border-white/20 text-white focus:outline-none focus:ring-1 focus:ring-[#FF478B] focus:border-transparent appearance-none cursor-pointer"
-                    >
-                      <option value="AM">AM</option>
-                      <option value="PM">PM</option>
-                    </select>
-                    <div className="absolute right-1 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                      <svg className="w-3 h-3 text-white/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                      </svg>
-                    </div>
-                  </div>
-                  {showtimes.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveShowtime(idx)}
-                      title="Remove showtime"
-                      className="px-3 py-2 text-white/80 hover:text-white text-xl font-bold"
-                    >
-                      ×
-                    </button>
-                  )}
-                </div>
-              ))}
-              <button type="button" onClick={handleAddShowtime} className="text-[#FF478B] text-sm font-afacad">
-                + Add Show Time
-              </button>
-            </div>
-          </div>
-          <div>
             <label className="block text-sm mb-2 font-afacad text-white">Rating</label>
             <div className="relative">
               <select
@@ -436,7 +386,8 @@ export default function MovieFormModal({ isOpen, onClose, onSaved, initialMovie 
                 </svg>
               </div>
             </div>
-          <div className="mt-6">
+          </div>
+          <div>
             <label className="block text-sm mb-2 font-afacad text-white">Score (1-100%)</label>
             <div className="flex items-center gap-2">
               <input
@@ -455,7 +406,6 @@ export default function MovieFormModal({ isOpen, onClose, onSaved, initialMovie 
               />
               <span className="text-white/80">%</span>
             </div>
-          </div>
           </div>
         </div>
 

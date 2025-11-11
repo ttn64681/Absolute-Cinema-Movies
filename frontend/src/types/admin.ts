@@ -10,7 +10,7 @@ export interface AdminMovie {
   date: string;
   time: string;
   _meta?: {
-    showtimes?: Array<{ date: string; time: string; ampm: string }>;
+    showtimes?: Array<{ date: string; time: string; ampm: string; room?: string }>;
   };
 }
 

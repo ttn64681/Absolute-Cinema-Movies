@@ -14,7 +14,7 @@ function SeatingPageContent() {
   const searchParams = useSearchParams(); 
   
   // Custom hook for seat management
-  const { selectedSeats:selectedSeats, frontRows, backRows, toggleSeat, resetSeats } = useSeats();
+  const { selectedSeats:selectedSeats, rows, toggleSeat, resetSeats } = useSeats();
   
   // Movie details from URL params
   const [movieTitle, setMovieTitle] = useState(searchParams.get('title') || 'Oldboy');
@@ -72,8 +72,7 @@ function SeatingPageContent() {
           <main className="flex-grow p-6">
             <div className="max-w-5xl mx-auto">
               <CinemaLayout 
-                frontRows={frontRows}
-                backRows={backRows}
+                rows={rows}
                 selectedSeats={selectedSeats}
                 onToggleSeat={toggleSeat}
               />
