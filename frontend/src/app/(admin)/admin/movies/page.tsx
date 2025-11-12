@@ -338,7 +338,7 @@ export default function AdminMoviesPage() {
       {/* Tabs */}
       <div className="flex items-center justify-center gap-10 text-[30px] font-red-rose mt-2 mb-18">
         <Link href="/admin/movies" className="relative" style={{ color: '#FF478B', fontWeight: 'bold' }}>
-          Movies & Showtimes
+          Manage Movies
           <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-acm-pink rounded-full" />
         </Link>
         <Link
@@ -346,14 +346,14 @@ export default function AdminMoviesPage() {
           className="text-gray-300 hover:text-white transition-colors"
           style={{ fontWeight: 'bold' }}
         >
-          Pricing & Promotions
+          Manage Promotions
         </Link>
         <Link
           href="/admin/users"
           className="text-gray-300 hover:text-white transition-colors"
           style={{ fontWeight: 'bold' }}
         >
-          Users & Admins
+          Manage Users
         </Link>
       </div>
 

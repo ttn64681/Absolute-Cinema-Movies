@@ -52,8 +52,10 @@ export default function AdminPricingPage() {
   const [editingBookingFee, setEditingBookingFee] = useState<BookingFee | null>(null);
 
   const [promotions, setPromotions] = useState<Promotion[]>([
-    { id: 1, name: 'Summer Sale', value: '20', expirationDate: '12/31/2025', description: 'Get 20% off on all tickets this summer!', promoCode: 'SUMMER20', discountType: '% off', sent: true, active: true },
-    { id: 2, name: 'Student Discount', value: '5.00', expirationDate: '01/15/2026', description: 'Students save $5 on every ticket purchase', promoCode: 'STUDENT5', discountType: '$ off', sent: true, active: true },
+    { id: 1, name: 'Summer Sale', value: '20', expirationDate: '12/31/2025', description: 'Get 20% off on all tickets this summer!', 
+      promoCode: 'SUMMER20', discountType: '% off', sent: true, active: true },
+    { id: 2, name: 'Student Discount', value: '5.00', expirationDate: '01/15/2026', description: 'Students save $5 on every ticket purchase', 
+      promoCode: 'STUDENT5', discountType: '$ off', sent: true, active: true },
   ]);
 
   const [ticketPrices, setTicketPrices] = useState<TicketPrices>({
@@ -157,17 +159,17 @@ export default function AdminPricingPage() {
           href="/admin/movies"
           className="text-gray-300 hover:text-white transition-colors font-bold"
         >
-          Movies & Showtimes
+          Manage Movies
         </Link>
         <Link href="/admin/pricing" className="relative text-[#FF478B] font-bold">
-          Pricing & Promotions
+          Manage Promotions
           <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-acm-pink rounded-full" />
         </Link>
         <Link
           href="/admin/users"
           className="text-gray-300 hover:text-white transition-colors font-bold"
         >
-          Users & Admins
+          Manage Users
         </Link>
       </div>
 
@@ -241,7 +243,8 @@ export default function AdminPricingPage() {
                         title="Send"
                         type="button"
                         onClick={() => sendPromotion(promo.id)}
-                        className="text-black px-4 py-1 rounded-full transition-colors hover:opacity-90 font-afacad font-bold text-sm bg-gradient-to-r from-[#FF478B] to-[#FF5C33]"
+                        className="text-black px-4 py-1 rounded-full transition-colors hover:opacity-90 font-afacad font-bold text-sm 
+                        bg-gradient-to-r from-[#FF478B] to-[#FF5C33]"
                       >
                         Send
                       </button>
