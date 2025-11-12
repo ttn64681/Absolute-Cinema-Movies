@@ -9,8 +9,16 @@ import lombok.AllArgsConstructor;
 import com.acm.cinema_ebkg_system.enums.DiscountType;
 import com.acm.cinema_ebkg_system.enums.PromotionStatus;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+import org.hibernate.annotations.JdbcType;
+//import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
+import org.hibernate.annotations.Type;
+
+
 import jakarta.validation.constraints.NotBlank;
 import java.time.LocalDateTime;
+
+
 
 /**
  * Promotion Entity - Represents promotional offers and discounts
@@ -52,6 +60,7 @@ public class Promotion {
     private java.math.BigDecimal discountValue;
 
     // Discount type: 'percentage' or 'fixed'
+    //@JdbcType(org.hibernate.type.descriptor.jdbc.EnumJdbcType.class)
     @Enumerated(EnumType.STRING)
     @Column(name = "discount_type", nullable = false, columnDefinition = "discount_type")
     private DiscountType discountType;
@@ -76,6 +85,7 @@ public class Promotion {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     private PromotionStatus status;
     

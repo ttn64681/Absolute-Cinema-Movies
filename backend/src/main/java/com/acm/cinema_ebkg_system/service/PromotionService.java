@@ -1,7 +1,6 @@
 package com.acm.cinema_ebkg_system.service;
 
 import com.acm.cinema_ebkg_system.repository.PromotionRepository;
-import com.acm.cinema_ebkg_system.model.PaymentCard;
 import com.acm.cinema_ebkg_system.model.Promotion;
 import com.acm.cinema_ebkg_system.enums.DiscountType;
 import com.acm.cinema_ebkg_system.enums.PromotionStatus;
@@ -73,6 +72,7 @@ public class PromotionService {
             java.math.BigDecimal discountValue = updatedPromotionDTO.getDiscountValue();
             DiscountType discountType = updatedPromotionDTO.getDiscountType();
             LocalDateTime expirationDate = updatedPromotionDTO.getExpirationDate();
+            PromotionStatus status = updatedPromotionDTO.getStatus();
             
             // Update only non-null fields
             if (promoCode != null) promotion.setPromoCode(promoCode);
@@ -81,13 +81,8 @@ public class PromotionService {
             if (imageLink != null) promotion.setImageLink(imageLink);
             if (discountValue != null) promotion.setDiscountValue(discountValue);
             if (discountType != null) promotion.setDiscountType(discountType);
-            if (updatedPromotionDTO.getStatus() != null) {
-                if (updatedPromotionDTO.getStatus() == PromotionStatus.active) {
-                    promotion.setExpirationDate(LocalDateTime.now().plusWeeks(1));
-                }
-                promotion.setStatus(updatedPromotionDTO.getStatus());
-            }
             if (expirationDate != null) promotion.setExpirationDate(expirationDate);
+            if (status != null) promotion.setStatus(status);
 
             promotion.setUpdatedAt(LocalDateTime.now());
 
@@ -96,8 +91,17 @@ public class PromotionService {
         throw new RuntimeException("promotion not found");
     }
 
-    public void deletePromotion(Long ids) {
-        promotionRepository.deleteById(ids);        
+    public void deletePromotion(Long id) {
+        Optional<Promotion> existingPromotion = getPromotionById(id);
+        if (existingPromotion.isPresent()) {
+            if (existingPromotion.get().getStatus() == PromotionStatus.active) {
+                throw new RuntimeException("Cannot delete an active promotion");
+            }
+        } else {
+            throw new RuntimeException("promotion not found");
+        }
+
+        promotionRepository.deleteById(id);
     }
 
     private void updatePromotionStatus(Promotion promotion) {
