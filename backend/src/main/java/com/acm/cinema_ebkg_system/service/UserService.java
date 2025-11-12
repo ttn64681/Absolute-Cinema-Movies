@@ -3,6 +3,7 @@ package com.acm.cinema_ebkg_system.service;
 import com.acm.cinema_ebkg_system.model.User;
 import com.acm.cinema_ebkg_system.model.Address;
 import com.acm.cinema_ebkg_system.enums.AddressType;
+import com.acm.cinema_ebkg_system.enums.UserStatus;
 import com.acm.cinema_ebkg_system.repository.UserRepository;
 import com.acm.cinema_ebkg_system.repository.AddressRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -457,12 +458,13 @@ public class UserService {
         LocalDateTime expirationTime = LocalDateTime.now().plusHours(24);
         user.setVerificationToken(token);
         user.setVerificationTokenExpiresAt(expirationTime);
-        user.setActive(false);
+        user.setAccountStatus(UserStatus.inactive);
         User savedUser = userRepository.save(user);
         
         // DEBUG: Log token info
         System.out.println("=== VERIFICATION TOKEN GENERATED ===");
         System.out.println("User Email: " + savedUser.getEmail());
+        System.out.println("account_status: " + savedUser.getAccountStatus());
         System.out.println("Token Generated: " + token);
         System.out.println("Token in DB: " + savedUser.getVerificationToken());
         System.out.println("Expires At: " + savedUser.getVerificationTokenExpiresAt());
@@ -493,16 +495,19 @@ public class UserService {
         
         User user = userOptional.get();
         System.out.println("Result: TOKEN FOUND for user: " + user.getEmail());
+        System.out.println("account_status before verification: " + user.getAccountStatus());
         System.out.println("===========================");
         
         if (user.getVerificationTokenExpiresAt().isBefore(LocalDateTime.now())) {
             throw new RuntimeException("Verification token has expired. Please request a new verification email.");
         }
         
-        user.setActive(true);
+        user.setAccountStatus(UserStatus.active);
         user.setVerificationToken(null);
         user.setVerificationTokenExpiresAt(null);
-        return userRepository.save(user);
+        User verifiedUser = userRepository.save(user);
+        System.out.println("Email verified - account_status updated to: " + verifiedUser.getAccountStatus());
+        return verifiedUser;
     }
 
     /**
@@ -513,7 +518,8 @@ public class UserService {
      */
     public String resendVerificationEmail(String email) {
         User user = getUserByEmail(email);
-        if (user.isActive()) {
+        System.out.println("Resending verification email - User: " + user.getEmail() + ", account_status: " + user.getAccountStatus());
+        if (user.getAccountStatus() == UserStatus.active) {
             throw new RuntimeException("User is already verified");
         }
         return generateVerificationToken(user);

@@ -9,6 +9,7 @@ import com.acm.cinema_ebkg_system.model.User;
 import com.acm.cinema_ebkg_system.model.Address;
 import com.acm.cinema_ebkg_system.model.PaymentCard;
 import com.acm.cinema_ebkg_system.enums.AddressType;
+import com.acm.cinema_ebkg_system.enums.UserStatus;
 import com.acm.cinema_ebkg_system.service.UserService;
 import com.acm.cinema_ebkg_system.service.AddressService;
 import com.acm.cinema_ebkg_system.service.PaymentCardService;
@@ -93,6 +94,9 @@ public class AuthController {
 
             // Step 2: Register user (validates email uniqueness, hashes password, saves to DB)
             User savedUser = userService.registerUser(user);
+            
+            // Log account_status after registration (defaults to inactive)
+            System.out.println("Registration successful - User: " + savedUser.getEmail() + ", account_status: " + savedUser.getAccountStatus() + " (default)");
             
             // Step 3: Create home address if provided
             if (request.getHomeAddress() != null && !request.getHomeAddress().trim().isEmpty()) {
@@ -179,9 +183,13 @@ public class AuthController {
             // Step 1: Authenticate user credentials (validates email exists and password matches)
             User user = userService.authenticateUser(request.getEmail(), request.getPassword());
             
-            // Step 2: Check if user is active (email verified)
-            if (!user.isActive()) {
-                AuthResponse response = new AuthResponse(false, "Please verify your email before logging in. Check your inbox for the verification link.");
+            // Step 2: Check account_status (email verified)
+            System.out.println("Login attempt - User: " + user.getEmail() + ", account_status: " + user.getAccountStatus());
+            if (user.getAccountStatus() != UserStatus.active) {
+                String message = user.getAccountStatus() == UserStatus.suspended 
+                    ? "Your account has been suspended. Please contact support." 
+                    : "Please verify your email before logging in. Check your inbox for the verification link.";
+                AuthResponse response = new AuthResponse(false, message);
                 return ResponseEntity.status(403).body(response);
             }
 
