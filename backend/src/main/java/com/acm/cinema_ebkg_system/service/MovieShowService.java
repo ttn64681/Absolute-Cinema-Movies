@@ -1,10 +1,12 @@
 package com.acm.cinema_ebkg_system.service;
 
 import com.acm.cinema_ebkg_system.model.MovieShow;
+import com.acm.cinema_ebkg_system.model.ShowRoom;
 import com.acm.cinema_ebkg_system.repository.MovieShowRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.util.List;
+import java.time.LocalDateTime;
 
 /**
  * Movie Show Service
@@ -74,6 +76,10 @@ public class MovieShowService {
      */
     public void deleteMovieShow(Long movieShowId) {
         movieShowRepository.deleteById(movieShowId);
+    }
+
+    public List<MovieShow> checkMovieShowTimeConflicts(Long showRoomId, LocalDateTime startTime, LocalDateTime endTime) {
+        return movieShowRepository.findOverlappingMovieShows(showRoomId, startTime, endTime);
     }
 }
 

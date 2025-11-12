@@ -60,36 +60,52 @@ public class MovieShowController {
     
     /**
      * POST /api/movie-shows (admin only)
-     * Input: MovieShow JSON body with {movie_id, show_room_id, status, available_seats}
+     * Input: MovieShow JSON body with {movie_id, show_room_id, and showtime}
      * Returns: MovieShow - Created show with ID and timestamps
      */
     @PostMapping
     public ResponseEntity<?> createMovieShow(@RequestBody MovieShowDTO dto) {
         try {
-            
+            // Retrieve the movie and show room associated with the IDs in the input
             Movie movie = movieService.getMovieById(dto.getMovieId());
             ShowRoom room = showRoomService.getShowRoomById(dto.getShowRoomId());
 
-            // New MovieShow
-            MovieShow newShow = new MovieShow();
-            newShow.setMovie(movie);
-            newShow.setShowRoom(room);
-            newShow.setAvailableSeats(150); // placeholder
+            // Get end time using the provided start time and the duration of the movie
+            int durationMinutes = movie.getDuration();
+            LocalDateTime startTime = LocalDateTime.parse(dto.getStartTime());
+            System.out.println(startTime);
+            LocalDateTime endTime = startTime.plusMinutes(durationMinutes);
 
-            // Create new MovieShow in the database
-            MovieShow createdShow = movieShowService.createMovieShow(newShow);
+            // Check for time conflicts before attempting to schedule
+            List<MovieShow> conflictingShows = movieShowService.checkMovieShowTimeConflicts(room.getId(), startTime, endTime);
+            System.out.println("Hello!");
 
-           // Create the ShowTime and link it to the MovieShow
-            ShowTime newTime = new ShowTime();
-            newTime.setShowTime(LocalDateTime.parse(dto.getShowTime())); 
-            newTime.setMovieShow(createdShow);
-            ShowTime createdTime = showTimeService.createShowTime(newTime);
+            if (!conflictingShows.isEmpty()) {
+                return ResponseEntity.badRequest().body("There is already a movie show scheduled at this time and location. Please choose a different start time or showroom.");
+            } else {
+                // Create new MovieShow object
+                MovieShow newShow = new MovieShow();
+                newShow.setMovie(movie);
+                newShow.setShowRoom(room);
+                newShow.setAvailableSeats(room.getCapacity()); // starting available seats depends on showroom capacity
 
-            // Link the ShowTime to the MovieShow
-            createdShow.setShowTime(createdTime);
-            movieShowService.updateMovieShow(createdShow);
-            
-            return ResponseEntity.ok(createdShow);
+                // Save new MovieShow in the database
+                MovieShow createdShow = movieShowService.createMovieShow(newShow);
+
+                // Create the ShowTime and link it to the MovieShow
+                ShowTime newTime = new ShowTime();
+                newTime.setShowTime(LocalDateTime.parse(dto.getStartTime())); 
+                newTime.setMovieShow(createdShow);
+
+                // Save ShowTime in the database
+                ShowTime createdTime = showTimeService.createShowTime(newTime);
+
+                // Link the MovieShow to the ShowTime
+                createdShow.setShowTime(createdTime);
+                movieShowService.updateMovieShow(createdShow);
+                
+                return ResponseEntity.ok(createdShow);
+            }
 
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Error creating movie show: " + e.getMessage());

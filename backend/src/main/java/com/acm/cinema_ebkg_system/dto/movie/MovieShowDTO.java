@@ -12,5 +12,5 @@ import com.acm.cinema_ebkg_system.model.ShowRoom;
 public class MovieShowDTO {
     private Long movieId;
     private Long showRoomId;
-    private String showTime;
+    private String startTime;
 }
