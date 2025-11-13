@@ -73,13 +73,12 @@ public class MovieShowController {
             // Get end time using the provided start time and the duration of the movie
             int durationMinutes = movie.getDuration();
             LocalDateTime startTime = LocalDateTime.parse(dto.getStartTime());
-            System.out.println(startTime);
             LocalDateTime endTime = startTime.plusMinutes(durationMinutes);
 
             // Check for time conflicts before attempting to schedule
             List<MovieShow> conflictingShows = movieShowService.checkMovieShowTimeConflicts(room.getId(), startTime, endTime);
-            System.out.println("Hello!");
 
+            // If there is even a single conflicting show in the list, deny creation of the movie show.
             if (!conflictingShows.isEmpty()) {
                 return ResponseEntity.badRequest().body("There is already a movie show scheduled at this time and location. Please choose a different start time or showroom.");
             } else {

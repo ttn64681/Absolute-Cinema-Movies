@@ -24,6 +24,17 @@ public interface MovieShowRepository extends JpaRepository<MovieShow, Long> {
     // Find movie shows by show room
     List<MovieShow> findByShowRoomId(Long showRoomId);
     
+    /**FINDING SCHEDULING CONFLICTS: 
+     * @params roomId, startTime, and endTime of a MovieShow the admin wishes to schedule.
+     * 
+     * For each existing show in the same room, the ShowTimes are compared to see if they overlap.
+     * This occurs when the start time of the existing show is less than or equal to the end time of the new show
+     * and the end time of the existing show is greater than or equal to the start time of the new show.
+     * 
+     * Note: ShowTime table only contains the start time. End time is the start time + the movie duration.
+     * 
+     * @return A list of existing MovieShows that cause conflicts.
+     */
     @Query(value =
      "SELECT ms.* " +
      "FROM movie_show ms " +
