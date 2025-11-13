@@ -13,13 +13,19 @@ function SeatingPageContent() {
   const router = useRouter(); 
   const searchParams = useSearchParams(); 
   
-  // Custom hook for seat management
-  const { selectedSeats:selectedSeats, rows, toggleSeat, resetSeats } = useSeats();
-  
   // Movie details from URL params
   const [movieTitle, setMovieTitle] = useState(searchParams.get('title') || 'Oldboy');
   const [date, setDate] = useState(searchParams.get('date') || '10/29/2025');
   const [time, setTime] = useState(searchParams.get('time') || '2:30-4:00PM');
+  
+  // Get capacity from URL params or default to 70
+  // Supported capacities: 60, 70, 80, 90
+  const capacityParam = searchParams.get('capacity');
+  const capacity = capacityParam ? parseInt(capacityParam, 10) : 70;
+  const validCapacity = [60, 70, 80, 90].includes(capacity) ? capacity : 70;
+  
+  // Custom hook for seat management with dynamic capacity
+  const { selectedSeats:selectedSeats, rows, toggleSeat, resetSeats } = useSeats(validCapacity);
 
   const goBack = () => {
     router.back();
