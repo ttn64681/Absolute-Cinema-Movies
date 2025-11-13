@@ -5,8 +5,7 @@ import java.time.LocalDateTime;
 import com.acm.cinema_ebkg_system.enums.DiscountType;
 import com.acm.cinema_ebkg_system.enums.PromotionStatus;
 
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
+
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
@@ -20,7 +19,7 @@ public class PromotionDTO {
     private String promoCode;
     private String title;
     private String description;
-    private String image_link;
+    private String imageLink;
     private java.math.BigDecimal discountValue;
     private DiscountType discountType;
     private PromotionStatus status;

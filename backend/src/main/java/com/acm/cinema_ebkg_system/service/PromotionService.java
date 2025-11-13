@@ -43,7 +43,7 @@ public class PromotionService {
         promotion.setPromoCode(promotionDTO.getPromoCode());
         promotion.setTitle(promotionDTO.getTitle());
         promotion.setDescription(promotionDTO.getDescription());
-        promotion.setImageLink(promotionDTO.getImage_link());
+        promotion.setImageLink(promotionDTO.getImageLink());
         promotion.setDiscountValue(promotionDTO.getDiscountValue());
         promotion.setDiscountType(promotionDTO.getDiscountType());
         promotion.setCreatedAt(LocalDateTime.now());
@@ -68,7 +68,7 @@ public class PromotionService {
             String promoCode = updatedPromotionDTO.getPromoCode();
             String title = updatedPromotionDTO.getTitle();
             String description = updatedPromotionDTO.getDescription();
-            String imageLink = updatedPromotionDTO.getImage_link();
+            String imageLink = updatedPromotionDTO.getImageLink();
             java.math.BigDecimal discountValue = updatedPromotionDTO.getDiscountValue();
             DiscountType discountType = updatedPromotionDTO.getDiscountType();
             LocalDateTime expirationDate = updatedPromotionDTO.getExpirationDate();

@@ -3,16 +3,10 @@ package com.acm.cinema_ebkg_system.model;
 
 import jakarta.persistence.*;
 import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
 
 import com.acm.cinema_ebkg_system.enums.DiscountType;
 import com.acm.cinema_ebkg_system.enums.PromotionStatus;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-
-import org.hibernate.annotations.JdbcType;
-//import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
-import org.hibernate.annotations.Type;
 
 
 import jakarta.validation.constraints.NotBlank;
