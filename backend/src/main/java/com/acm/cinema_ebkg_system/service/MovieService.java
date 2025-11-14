@@ -1,11 +1,15 @@
 package com.acm.cinema_ebkg_system.service;
 
 import com.acm.cinema_ebkg_system.dto.movie.MovieSummary;
+import com.acm.cinema_ebkg_system.dto.movie.PaginatedMovieResponse;
 import com.acm.cinema_ebkg_system.model.Movie;
-import com.acm.cinema_ebkg_system.model.PaymentCard;
 import com.acm.cinema_ebkg_system.repository.MovieRepository;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors; // For converting List<Movie> to List<MovieSummary>
@@ -13,10 +17,12 @@ import java.util.stream.Collectors; // For converting List<Movie> to List<MovieS
 @Service // Spring service bean for business logic layer
 public class MovieService {
 
-    // Dependency injection of MovieRepository for database operations
+    // Constants
+    private static final int MOVIES_PER_PAGE = 10; // 10 movies/page (5 max per row, wraps responsively)
+
+    // Pattern: Dependency Injection (DI) - constructor injection
     private final MovieRepository movieRepository;
 
-    // Constructor injection - Spring automatically provides MovieRepository instance
     public MovieService(MovieRepository movieRepository) {
         this.movieRepository = movieRepository;
     }
@@ -90,6 +96,60 @@ public class MovieService {
     }
 
     /**
+     * Paginated search NOW_PLAYING (10/page).
+     * Cached by search params + page. Eviction: 10min TTL, 100 entries max, or @CacheEvict on create/delete
+     */
+    @Cacheable(value = "searchNowPlayingMovies", key = "#title + '_' + (#genres != null ? #genres : 'null') + '_' + (#month != null ? #month : 'null') + '_' + (#day != null ? #day : 'null') + '_' + (#year != null ? #year : 'null') + '_' + #page")
+    public PaginatedMovieResponse searchNowPlayingPaginated(String title, String genres, Integer month, Integer day, Integer year, int page) {
+        String t = (title != null && !title.isBlank()) ? title : null;
+        String g = (genres != null && !genres.isBlank()) ? genres : null;
+        
+        Pageable pageable = PageRequest.of(page, MOVIES_PER_PAGE);
+        Page<Movie> moviePage = movieRepository.searchNowPlayingOrdered(t, g, month, day, year, pageable);
+        
+        List<MovieSummary> summaries = moviePage.getContent().stream()
+                .map(MovieSummary::fromMovie)
+                .collect(Collectors.toList());
+        
+        return new PaginatedMovieResponse(
+            summaries,
+            moviePage.getNumber(),
+            moviePage.getTotalPages(),
+            moviePage.getTotalElements(),
+            moviePage.hasNext(),
+            moviePage.hasPrevious(),
+            MOVIES_PER_PAGE
+        );
+    }
+
+    /**
+     * Paginated search UPCOMING (10/page).
+     * Cached by search params + page. Eviction: 10min TTL, 100 entries max, or @CacheEvict on create/delete
+     */
+    @Cacheable(value = "searchUpcomingMovies", key = "#title + '_' + (#genres != null ? #genres : 'null') + '_' + (#month != null ? #month : 'null') + '_' + (#day != null ? #day : 'null') + '_' + (#year != null ? #year : 'null') + '_' + #page")
+    public PaginatedMovieResponse searchUpcomingPaginated(String title, String genres, Integer month, Integer day, Integer year, int page) {
+        String t = (title != null && !title.isBlank()) ? title : null;
+        String g = (genres != null && !genres.isBlank()) ? genres : null;
+        
+        Pageable pageable = PageRequest.of(page, MOVIES_PER_PAGE);
+        Page<Movie> moviePage = movieRepository.searchUpcomingOrdered(t, g, month, day, year, pageable);
+        
+        List<MovieSummary> summaries = moviePage.getContent().stream()
+                .map(MovieSummary::fromMovie)
+                .collect(Collectors.toList());
+        
+        return new PaginatedMovieResponse(
+            summaries,
+            moviePage.getNumber(),
+            moviePage.getTotalPages(),
+            moviePage.getTotalElements(),
+            moviePage.hasNext(),
+            moviePage.hasPrevious(),
+            MOVIES_PER_PAGE
+        );
+    }
+
+    /**
      * Get all unique genres available in the system, ordered alphabetically.
      * Return: List<String>
      * Example JSON: ["Action", "Comedy", "Drama", "Horror", "Sci-Fi"]
@@ -120,13 +180,21 @@ public class MovieService {
         }
     }
 
-    // Creates a new movie.
+    /**
+     * Creates a new movie.
+     * Evicts all pagination caches (pagination changes when movie count changes)
+     */
+    @CacheEvict(value = {"nowPlayingMovies", "upcomingMovies", "searchNowPlayingMovies", "searchUpcomingMovies"}, allEntries = true)
     public Movie createMovie(Movie movie) {
         // Save movie to database
         return movieRepository.save(movie);
     }
 
-    // Deletes a movie.
+    /**
+     * Deletes a movie.
+     * Evicts all pagination caches (pagination changes when movie count changes)
+     */
+    @CacheEvict(value = {"nowPlayingMovies", "upcomingMovies", "searchNowPlayingMovies", "searchUpcomingMovies"}, allEntries = true)
     public void deleteMovie(Long movieId) {
         // Get the movie by id
         Movie movie = movieRepository.findById(movieId)
@@ -163,6 +231,7 @@ public class MovieService {
     /**
      * Get NOW_PLAYING movies for browsing (lightweight summaries only).
      * Return: List<MovieSummary>
+     * @deprecated Use getNowPlayingForBrowsingPaginated instead
      */
     public List<MovieSummary> getNowPlayingForBrowsing() {
         List<Movie> movies = getNowPlayingOrdered();
@@ -174,12 +243,61 @@ public class MovieService {
     /**
      * Get UPCOMING movies for browsing (lightweight summaries only).
      * Return: List<MovieSummary>
+     * @deprecated Use getUpcomingForBrowsingPaginated instead
      */
     public List<MovieSummary> getUpcomingForBrowsing() {
         List<Movie> movies = getUpcomingOrdered();
         return movies.stream()
                 .map(MovieSummary::fromMovie)
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * Get paginated NOW_PLAYING movies (10/page).
+     * Cached by page number. Eviction: 10min TTL, 100 entries max, or @CacheEvict on create/delete
+     */
+    @Cacheable(value = "nowPlayingMovies", key = "#page")
+    public PaginatedMovieResponse getNowPlayingForBrowsingPaginated(int page) {
+        Pageable pageable = PageRequest.of(page, MOVIES_PER_PAGE);
+        Page<Movie> moviePage = movieRepository.findNowPlayingOrderedByNextShowDate(pageable);
+        
+        List<MovieSummary> summaries = moviePage.getContent().stream()
+                .map(MovieSummary::fromMovie)
+                .collect(Collectors.toList());
+        
+        return new PaginatedMovieResponse(
+            summaries,
+            moviePage.getNumber(),
+            moviePage.getTotalPages(),
+            moviePage.getTotalElements(),
+            moviePage.hasNext(),
+            moviePage.hasPrevious(),
+            MOVIES_PER_PAGE
+        );
+    }
+
+    /**
+     * Get paginated UPCOMING movies (10/page).
+     * Cached by page number. Eviction: 10min TTL, 100 entries max, or @CacheEvict on create/delete
+     */
+    @Cacheable(value = "upcomingMovies", key = "#page")
+    public PaginatedMovieResponse getUpcomingForBrowsingPaginated(int page) {
+        Pageable pageable = PageRequest.of(page, MOVIES_PER_PAGE);
+        Page<Movie> moviePage = movieRepository.findUpcoming(pageable);
+        
+        List<MovieSummary> summaries = moviePage.getContent().stream()
+                .map(MovieSummary::fromMovie)
+                .collect(Collectors.toList());
+        
+        return new PaginatedMovieResponse(
+            summaries,
+            moviePage.getNumber(),
+            moviePage.getTotalPages(),
+            moviePage.getTotalElements(),
+            moviePage.hasNext(),
+            moviePage.hasPrevious(),
+            MOVIES_PER_PAGE
+        );
     }
 
     /**

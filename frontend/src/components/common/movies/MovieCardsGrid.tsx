@@ -5,12 +5,13 @@ interface MovieCardsGridProps {
   movies: BackendMovie[];
 }
 
+// 5 movies per row 
 export default function MovieCardsGrid({ movies }: MovieCardsGridProps) {
   return (
     <section className="py-12">
       <div className="w-full">
-        {/* Movies Grid - Clean responsive grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
+        {/* Movies Grid - 5 max per row (10 movies = 2 rows) */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
           {movies.map((movie) => (
             <MovieCard key={movie.movie_id} movie={movie} />
           ))}

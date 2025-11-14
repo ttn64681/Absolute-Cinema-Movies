@@ -1,9 +1,10 @@
 package com.acm.cinema_ebkg_system.controller;
 
-import com.acm.cinema_ebkg_system.dto.movie.MovieSummary;
 import com.acm.cinema_ebkg_system.dto.movie.MovieDTO;
+import com.acm.cinema_ebkg_system.dto.movie.PaginatedMovieResponse;
+import jakarta.validation.constraints.Min;
+import org.springframework.validation.annotation.Validated;
 import com.acm.cinema_ebkg_system.model.Movie;
-import com.acm.cinema_ebkg_system.model.PaymentCard;
 import com.acm.cinema_ebkg_system.service.MovieService;
 import com.acm.cinema_ebkg_system.service.ShowTimeService;
 import com.acm.cinema_ebkg_system.enums.MovieStatus;
@@ -25,6 +26,7 @@ import java.util.List;
 
 @RestController // Bean that creates a RESTful controller class that handles HTTP requests
 @RequestMapping("/api/movies")
+@Validated // Enables method-level validation for @RequestParam/@PathVariable
 public class MovieController {
 
     // Dependency injection of services for business logic
@@ -70,36 +72,64 @@ public class MovieController {
         return movieService.getAvailableGenres();
     }
 
+    // /**
+    //  * Search for movies based on AND filters title, genres (internal OR), 
+    //  * and date (month, day, year) (internal OR).
+    //  * Use when searching for movies via search bar.
+    //  */
+    // @GetMapping("/search-now-playing")
+    // public List<Movie> searchNowPlaying(
+    //         @RequestParam(required = false) String title,
+    //         @RequestParam(required = false) String genres,
+    //         @RequestParam(required = false) Integer month,
+    //         @RequestParam(required = false) Integer day,
+    //         @RequestParam(required = false) Integer year) {
+    //     // Return JSON: [ { "movie_id": 5, "status": "NOW_PLAYING", ... }, ... ] (ordered by earliest show_date)
+    //     return movieService.searchNowPlayingOrdered(title, genres, month, day, year);
+    // }
+
+    // /**
+    //  * Search for upcoming movies based on AND filters title, genres (internal OR), 
+    //  * and date (month, day, year) (internal OR).
+    //  * Use when searching for movies via search bar.
+    //  */
+    // @GetMapping("/search-upcoming")
+    // public List<Movie> searchUpcoming(
+    //         @RequestParam(required = false) String title,
+    //         @RequestParam(required = false) String genres,
+    //         @RequestParam(required = false) Integer month,
+    //         @RequestParam(required = false) Integer day,
+    //         @RequestParam(required = false) Integer year) {
+    //     // Return JSON: [ { "movie_id": 9, "status": "UPCOMING", ... }, ... ] (ordered by earliest show_date)
+    //     return movieService.searchUpcomingOrdered(title, genres, month, day, year);
+    // }
+
     /**
-     * Search for movies based on AND filters title, genres (internal OR), 
-     * and date (month, day, year) (internal OR).
-     * Use when searching for movies via search bar.
+     * Paginated search NOW_PLAYING (10/page). Validates page >= 0
      */
     @GetMapping("/search-now-playing")
-    public List<Movie> searchNowPlaying(
+    public PaginatedMovieResponse searchNowPlayingPaginated(
             @RequestParam(required = false) String title,
             @RequestParam(required = false) String genres,
             @RequestParam(required = false) Integer month,
             @RequestParam(required = false) Integer day,
-            @RequestParam(required = false) Integer year) {
-        // Return JSON: [ { "movie_id": 5, "status": "NOW_PLAYING", ... }, ... ] (ordered by earliest show_date)
-        return movieService.searchNowPlayingOrdered(title, genres, month, day, year);
+            @RequestParam(required = false) Integer year,
+            @RequestParam(defaultValue = "0") @Min(value = 0, message = "Page number must be >= 0") int page) {
+        return movieService.searchNowPlayingPaginated(title, genres, month, day, year, page);
     }
 
     /**
-     * Search for upcoming movies based on AND filters title, genres (internal OR), 
-     * and date (month, day, year) (internal OR).
-     * Use when searching for movies via search bar.
+     * Paginated search UPCOMING (10/page). Validates page >= 0
      */
     @GetMapping("/search-upcoming")
-    public List<Movie> searchUpcoming(
+    public PaginatedMovieResponse searchUpcomingPaginated(
             @RequestParam(required = false) String title,
             @RequestParam(required = false) String genres,
             @RequestParam(required = false) Integer month,
             @RequestParam(required = false) Integer day,
-            @RequestParam(required = false) Integer year) {
-        // Return JSON: [ { "movie_id": 9, "status": "UPCOMING", ... }, ... ] (ordered by earliest show_date)
-        return movieService.searchUpcomingOrdered(title, genres, month, day, year);
+            @RequestParam(required = false) Integer year,
+            @RequestParam(defaultValue = "0") @Min(value = 0, message = "Page number must be >= 0") int page) {
+        return movieService.searchUpcomingPaginated(title, genres, month, day, year, page);
     }
 
     /**
@@ -186,18 +216,40 @@ public class MovieController {
 
     /**
      * Lightweight version of getNowPlaying() for browsing.
+     * @deprecated Use paginated endpoint with page parameter
      */
-    @GetMapping("/browse/now-playing")
-    public List<MovieSummary> getNowPlayingForBrowsing() {
-        return movieService.getNowPlayingForBrowsing();
-    }
+    // @GetMapping("/browse/now-playing")
+    // public List<MovieSummary> getNowPlayingForBrowsing() {
+    //     return movieService.getNowPlayingForBrowsing();
+    // }
 
     /**
      * Lightweight version of getUpcoming() for browsing.
+     * @deprecated Use paginated endpoint with page parameter
+     */
+    // @GetMapping("/browse/upcoming")
+    // public List<MovieSummary> getUpcomingForBrowsing() {
+    //     return movieService.getUpcomingForBrowsing();
+    // }
+
+    /**
+     * Paginated NOW_PLAYING movies (10/page).
+     * Validates page >= 0
+     */
+    @GetMapping("/browse/now-playing")
+    public PaginatedMovieResponse getNowPlayingForBrowsingPaginated(
+            @RequestParam(defaultValue = "0") @Min(value = 0, message = "Page number must be >= 0") int page) {
+        return movieService.getNowPlayingForBrowsingPaginated(page);
+    }
+
+    /**
+     * Paginated UPCOMING movies (10/page).
+     * Validates page >= 0
      */
     @GetMapping("/browse/upcoming")
-    public List<MovieSummary> getUpcomingForBrowsing() {
-        return movieService.getUpcomingForBrowsing();
+    public PaginatedMovieResponse getUpcomingForBrowsingPaginated(
+            @RequestParam(defaultValue = "0") @Min(value = 0, message = "Page number must be >= 0") int page) {
+        return movieService.getUpcomingForBrowsingPaginated(page);
     }
 
     /**

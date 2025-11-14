@@ -52,6 +52,22 @@ This document provides high-level guidelines for AI agents working on this codeb
 - Never return entities directly - always wrap in DTOs
 - Remove deprecated fields instead of keeping them
 
+### Pagination Patterns
+
+- **Use Spring Data's Pageable**: Always use `Pageable` and `Page<T>` for paginated queries in repositories
+- **Pagination DTOs**: Create dedicated pagination response DTOs (e.g., `PaginatedMovieResponse`) that include:
+  - List of items for current page
+  - Current page number
+  - Total pages
+  - Total elements
+  - Has next/previous flags
+  - Page size
+- **Repository Pattern**: Use `PageRequest.of(page, size)` in services to create `Pageable` instances
+- **Default Page Size**: Use consistent page sizes (e.g., 8 items per page for movie listings)
+- **Controller Parameters**: Accept `page` parameter with `@RequestParam(defaultValue = "0")` for 0-based pagination
+- **Frontend Caching**: Cache paginated responses per page to avoid redundant API calls
+- **Navigation**: Provide next/previous navigation and pagination dots for direct page access
+
 ### User DTOs Reference
 
 **All User DTOs are necessary and serve different purposes:**
