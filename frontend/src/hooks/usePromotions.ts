@@ -46,12 +46,13 @@ export function usePromotions() {
           },
           body: JSON.stringify(newPromotion),
         });
-        await getPromotions(); // refresh list
+        
 
         if (response.ok) {
-          const data = (await response.json()) as BackendPromotion;
-          console.log('Added promotion: ', data);
-          setPromotions(prev => [...prev, data]);
+          // const data = (await response.json()) as BackendPromotion;
+          // console.log('Added promotion: ', data);
+          // setPromotions(prev => [...prev, data]);
+          await getPromotions(); // refresh list
         }
       } catch (error) {
         console.error('Error adding promotion:', error);
@@ -61,22 +62,25 @@ export function usePromotions() {
     }
 
     async function updatePromotion(promotionId: number, updatedPromotion: Partial<BackendPromotion>) {
+      console.log(updatedPromotion);
       try {
         setLoading(true);
         const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-        const response = await fetch(buildUrl(endpoints.paymentCards.updatePaymentCard(promotionId)), {
+        const response = await fetch(buildUrl(endpoints.promotions.updatePromotion(promotionId)), {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
             Authorization: token ? `Bearer ${token}` : '',
           },
-            body: JSON.stringify(updatedPromotion),
+          body: JSON.stringify(updatedPromotion),
         });
-        await getPromotions(); // refresh list
+        console.log("Response: " + response.ok);
+        
         if (response.ok) {
-          const data = (await response.json()) as BackendPromotion;
-          console.log('Updated promotion: ', data);
-          setPromotions(prev => prev.map(promo => promo.id === promotionId ? data : promo));
+          await getPromotions(); // refresh list
+          // const data = (await response.json()) as BackendPromotion;
+          // console.log('Updated promotion: ', data);
+          // setPromotions(prev => prev.map(promo => promo.id === promotionId ? data : promo));
         }
       } catch (error) {
         console.error('Update payment error ', error);      
@@ -87,16 +91,17 @@ export function usePromotions() {
 
     async function deletePromotion(promotionId: number) {
       try {
+        console.log("Attempting to delete...");
         setLoading(true);
         const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-        const response = await fetch(buildUrl(endpoints.paymentCards.deletePaymentCard(promotionId)), {
+        const response = await fetch(buildUrl(endpoints.promotions.deletePromotion(promotionId)), {
           method: 'DELETE',
           headers: {
             'Content-Type': 'application/json',
             Authorization: token ? `Bearer ${token}` : '',
           },
         });
-        await getPromotions(); // refresh list
+        if (response.ok) await getPromotions(); // refresh list
         return response.ok;
       } catch (error) {
         console.error('Delete payment error ', error);        
@@ -104,5 +109,15 @@ export function usePromotions() {
         setLoading(false);
       }
     }
+
+    return {
+        promotions,
+        setPromotions,
+        loading,
+        getPromotions,
+        addPromotion,
+        updatePromotion,
+        deletePromotion
+    };
 
 }

@@ -15,8 +15,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.acm.cinema_ebkg_system.dto.promotion.PromotionDTO;
-import com.acm.cinema_ebkg_system.model.Address;
-import com.acm.cinema_ebkg_system.model.PaymentCard;
 import com.acm.cinema_ebkg_system.model.Promotion;
 import com.acm.cinema_ebkg_system.service.PromotionService;
 
