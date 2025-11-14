@@ -144,7 +144,7 @@ export default function SelectedMovieShowtimes({
 
         {/* Showtimes */}
         <div className="mb-4">
-          <label className="block text-white/80 text-sm font-medium mb-3">Available Times</label>
+          <label className="block text-white/80 text-sm font-medium mb-2 mt-2">Available Times</label>
           <div className="flex gap-3 flex-wrap">
             {timesLoading && <Spinner size="sm" color="pink" text="Loading times..." />}
             {timesError && (

@@ -4,6 +4,6 @@ import { buildUrl } from '../config/api';
 import { AdminMovie } from '@/types/admin';
 
 
-export function useAdminMovies() {
+export function useMovieShows() {
 
 }
