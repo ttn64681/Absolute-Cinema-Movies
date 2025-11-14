@@ -7,6 +7,7 @@ import com.acm.cinema_ebkg_system.repository.ShowTimeRepository;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -46,17 +47,20 @@ public class ShowTimeService {
      * Returns all times associated with a movie ID and a LocalDate.
      * Converts java.sql.Timestamp java.sql.Time, then to java.time.LocalTime for API compatibility.
      */
-    public List<LocalTime> getAvailableTimesForMovieAndDate(Long movieId, LocalDate showDate) {
+    public List<String> getAvailableTimesForMovieAndDate(Long movieId, LocalDate showDate) {
         List<Time> sqlTimes = new ArrayList<>();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("h:mm a");
         try {
             System.out.println("Showdate received: " + showDate);
             sqlTimes = showTimeRepository.findTimesByMovieIdAndDate(movieId, showDate);
         } catch (Exception e) {
             System.out.println("Could not retrieve showtimes: " + e.getMessage());
         }
-            return sqlTimes.stream()
-                .map(Time::toLocalTime)
-                .collect(Collectors.toList());
+        
+        return sqlTimes.stream()
+            .map(Time::toLocalTime)
+            .map(time -> time.format(formatter))
+            .collect(Collectors.toList());
     }
 
     /**
@@ -69,6 +73,18 @@ public class ShowTimeService {
         return sqlTimes.stream()
             .map(Timestamp::toLocalDateTime)
             .collect(Collectors.toList());
+    }
+
+    public List<String> convertToAMPM(List<LocalTime> timeList) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("hh:mm a");
+        List<String> formattedTimes = new ArrayList<>();
+
+        for (LocalTime time : timeList) {
+            String formattedTime = time.format(formatter);
+            System.out.println("Showtime in AM/PM" + time);
+            formattedTimes.add(formattedTime);
+        }
+        return formattedTimes;
     }
 
 

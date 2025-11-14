@@ -143,7 +143,7 @@ public class MovieController {
      * Use when displaying the times for a movie.
      */
     @GetMapping("/{movieId}/times")
-    public List<LocalTime> getAvailableTimesForDate(@PathVariable Long movieId, @RequestParam String date) {
+    public List<String> getAvailableTimesForDate(@PathVariable Long movieId, @RequestParam String date) {
         // Frontend: when user picks a date from the dropdown, call this with that date.
         // Return format (JSON): array of ShowTime objects, e.g.
         // [{"show_time_id": 123, "show_date_id": 45, "start_time": "10:00:00", "end_time": "12:30:00", "created_at": "2025-09-26T12:00:00"}, ...]

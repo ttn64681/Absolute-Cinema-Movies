@@ -38,6 +38,7 @@ interface MovieFormModalProps {
   initialMovie?: AdminMovie | null;
 }
 
+// Add/edit movie form
 export default function MovieFormModal({ isOpen, onClose, onSaved, initialMovie }: MovieFormModalProps) {
   const [title, setTitle] = useState("");
   const [movieType, setMovieType] = useState("New Movie");
