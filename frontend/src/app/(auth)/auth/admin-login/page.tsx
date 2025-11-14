@@ -24,8 +24,8 @@ export default function AdminLoginPage() {
       const response = await adminLogin(email, password, false);
 
       if (response.success) {
-        // Redirect to admin users page (default admin page)
-        router.push('/admin/users');
+        // Redirect to admin home page
+        router.push('/admin/');
       } else {
         setError(response.message);
       }
