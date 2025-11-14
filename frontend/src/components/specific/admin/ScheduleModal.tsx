@@ -18,11 +18,12 @@ interface ScheduleModalProps {
   existingShowtimes?: Showtime[];
 }
 
-// Hardcoded show rooms: A, B, C
+// Hardcoded show rooms with capacities: 60, 70, 80, 90
 const SHOW_ROOMS = [
-  { id: 1, name: "A" },
-  { id: 2, name: "B" },
-  { id: 3, name: "C" },
+  { id: 1, name: "A", capacity: 60 },
+  { id: 2, name: "B", capacity: 70 },
+  { id: 3, name: "C", capacity: 80 },
+  { id: 4, name: "D", capacity: 90 },
 ];
 
 export default function ScheduleModal({
