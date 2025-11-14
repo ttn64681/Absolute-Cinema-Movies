@@ -8,6 +8,7 @@ import { Movie } from '@/types/admin';
 import MovieFormModal, { AdminMovie } from '@/components/specific/admin/MovieFormModal';
 import ScheduleModal from '@/components/specific/admin/ScheduleModal';
 
+
 // hardcoded movies for now
 const moviesList: Movie[] = [
   {
@@ -151,6 +152,10 @@ const moviesList: Movie[] = [
   },
 ];
 
+
+// Note: Will need to make a backend endpoint to return a movieshow with 
+
+// Function to convert a time into minutes
 function parseTime(time: string, ampm: string) {
   const [hours, minutes] = time.split(':').map(Number);
   let totalMinutes = hours * 60 + minutes;
@@ -159,6 +164,7 @@ function parseTime(time: string, ampm: string) {
   return totalMinutes;
 }
 
+// Function to check if a time string is in AM or PM
 function getAmpmFromTime(time: string): 'AM' | 'PM' {
   if (time.toUpperCase().includes('AM')) {
     return 'AM';
@@ -167,15 +173,16 @@ function getAmpmFromTime(time: string): 'AM' | 'PM' {
 }
 
 export default function AdminMoviesPage() {
-  const [movies, setMovies] = useState(moviesList);
-  const [showModal, setShowModal] = useState(false);
-  const [editingMovie, setEditingMovie] = useState<AdminMovie | null>(null);
-  const [showScheduleModal, setShowScheduleModal] = useState(false);
-  const [schedulingMovie, setSchedulingMovie] = useState<Movie | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
-  const moviesPerPage = 10;
+  const [movies, setMovies] = useState(moviesList); // movies list
+  const [showModal, setShowModal] = useState(false); // add/edit movie popup visibility
+  const [editingMovie, setEditingMovie] = useState<AdminMovie | null>(null); // movie currently being edited, if any
+  const [showScheduleModal, setShowScheduleModal] = useState(false); // schedule movie show popup visibility
+  const [schedulingMovie, setSchedulingMovie] = useState<Movie | null>(null); // movie currently being scheduled
+  const [searchQuery, setSearchQuery] = useState(''); // user input for searching movies
+  const [currentPage, setCurrentPage] = useState(1); // current page of movies to show
+  const moviesPerPage = 10; // # of movies to display on one page
 
+  // Retrieve in session storage?
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
@@ -197,7 +204,7 @@ export default function AdminMoviesPage() {
     }
   }, []);
 
-  // delete a movie
+  // Delete movie function
   const remove = (movieId: number) => {
     const movieToDelete = movies.find((movie) => movie.id === movieId);
     const hasShowtimes = movieToDelete?._meta?.showtimes && movieToDelete._meta.showtimes.length > 0;
@@ -216,11 +223,13 @@ export default function AdminMoviesPage() {
     }
   };
 
+  // Function to open add movie menu
   const openAddModal = () => {
     setEditingMovie(null);
     setShowModal(true);
   };
 
+  // Function to open edit movie menu
   const openEditModal = (movie: Movie) => {
     const existingShowtimes = movie._meta?.showtimes;
     const defaultShowtime = {
@@ -242,6 +251,7 @@ export default function AdminMoviesPage() {
     setShowModal(true);
   };
 
+  // Function to update movies list with a new or edited movie
   const onMovieSaved = (savedMovie: AdminMovie) => {
     setMovies((prevMovies) => {
       const existingIndex = prevMovies.findIndex((m) => m.id === savedMovie.id);
@@ -265,11 +275,13 @@ export default function AdminMoviesPage() {
     });
   };
 
+  // Function to open menu for scheduling movie shows
   const openScheduleModal = (movie: Movie) => {
     setSchedulingMovie(movie);
     setShowScheduleModal(true);
   };
 
+  // Add and save a new movie show
   const handleSchedule = (date: string, time: string, showRoomId: number) => {
     if (!schedulingMovie) return;
 

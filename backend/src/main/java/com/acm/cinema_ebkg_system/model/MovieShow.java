@@ -5,6 +5,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -18,6 +20,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
+@JsonIgnoreProperties
 @Table(name = "movie_show")
 public class MovieShow {
     
@@ -35,10 +38,6 @@ public class MovieShow {
     @JoinColumn(name = "show_room_id", nullable = false)
     private ShowRoom showRoom;
     
-    // Status: 'now_playing' or 'upcoming'
-    @Column(name = "status", nullable = false)
-    private String status;
-    
     // Available seats count
     @Column(name = "available_seats", nullable = false)
     private Integer availableSeats = 0;
@@ -48,6 +47,12 @@ public class MovieShow {
     @OneToMany(mappedBy = "movieShow", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonIgnoreProperties({"movieShow"})
     private List<ShowSeat> seats;
+
+    // Each MovieShow is associated with one ShowTime
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "show_time_id", nullable = false)
+    @JsonManagedReference
+    private ShowTime showTime;
     
     @Column(name = "created_at")
     private LocalDateTime createdAt;

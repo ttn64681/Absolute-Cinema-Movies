@@ -60,7 +60,7 @@ public class MovieService {
      */
     public List<Movie> getUpcomingOrdered() {
         // Use repository custom query to get UPCOMING movies ordered by show date
-        return movieRepository.findUpcomingOrderedByFirstShowDate();
+        return movieRepository.findUpcoming();
     }
 
     /**
@@ -189,6 +189,15 @@ public class MovieService {
     public Movie getMovieById(Long movieId) {
         return movieRepository.findById(movieId)
                 .orElseThrow(() -> new RuntimeException("Movie not found with id: " + movieId));
+    }
+
+    /**
+     * Get full movie details by title (including cast, directors, producers).
+     * Return: Movie (full entity)
+     */
+    public Movie getMovieByTitle(String title) {
+        return movieRepository.findByTitle(title)
+                .orElseThrow(() -> new RuntimeException("Movie not found with title: " + title));
     }
 
 }

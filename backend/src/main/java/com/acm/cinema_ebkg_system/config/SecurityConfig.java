@@ -95,7 +95,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/booking/**").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")
                 
                 // All other API endpoints require authentication
-                .requestMatchers("/api/**").authenticated()
+                //.requestMatchers("/api/**").authenticated()
                 
                 .anyRequest().permitAll()
             )

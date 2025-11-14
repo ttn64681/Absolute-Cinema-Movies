@@ -1,11 +1,12 @@
 package com.acm.cinema_ebkg_system.controller;
 
 import com.acm.cinema_ebkg_system.dto.movie.MovieSummary;
-import com.acm.cinema_ebkg_system.dto.movie.MovieInfo;
+import com.acm.cinema_ebkg_system.dto.movie.MovieDTO;
 import com.acm.cinema_ebkg_system.model.Movie;
-import com.acm.cinema_ebkg_system.model.ShowTime;
+import com.acm.cinema_ebkg_system.model.PaymentCard;
 import com.acm.cinema_ebkg_system.service.MovieService;
 import com.acm.cinema_ebkg_system.service.ShowTimeService;
+import com.acm.cinema_ebkg_system.enums.MovieStatus;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -18,6 +19,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController // Bean that creates a RESTful controller class that handles HTTP requests
@@ -136,16 +139,26 @@ public class MovieController {
     }
 
     /**
-     * Get all available times for a movie on a given date ordered by start_time.
+     * Get all available times for a movie on a certain date.
      * Use when displaying the times for a movie.
      */
     @GetMapping("/{movieId}/times")
-    public List<ShowTime> getAvailableTimes(@PathVariable Long movieId, @RequestParam String date) {
+    public List<LocalTime> getAvailableTimesForDate(@PathVariable Long movieId, @RequestParam String date) {
         // Frontend: when user picks a date from the dropdown, call this with that date.
         // Return format (JSON): array of ShowTime objects, e.g.
         // [{"show_time_id": 123, "show_date_id": 45, "start_time": "10:00:00", "end_time": "12:30:00", "created_at": "2025-09-26T12:00:00"}, ...]
         LocalDate showDate = LocalDate.parse(date);
+        System.out.println(showDate);
         return showTimeService.getAvailableTimesForMovieAndDate(movieId, showDate);
+    }
+
+     /**
+     * Get all available showings of a movie (date and time combined).
+     */
+    @GetMapping("/{movieId}/times/combined")
+    public List<LocalDateTime> getAvailableTimes(@PathVariable Long movieId) {
+        // Included for testing. Frontend does not need this endpoint.
+        return showTimeService.getAvailableTimesForMovie(movieId);
     }
 
     // @GetMapping("/{movieId}/schedule")
@@ -154,11 +167,6 @@ public class MovieController {
     //     // Return format (JSON): {"2025-10-01": [ShowTime, ...], "2025-10-02": [ShowTime, ...], ...}
     //     return showTimeService.getMovieShowSchedule(movieId);
     // }
-
-
-
-
-
 
     // ===== OPTIMIZED BROWSING ENDPOINTS =====
 
@@ -192,7 +200,6 @@ public class MovieController {
         return movieService.getUpcomingForBrowsing();
     }
 
-
     /**
      * Get full movie details by ID (including cast, directors, producers).
      * Use this only when user clicks on a movie for detailed view.
@@ -203,16 +210,25 @@ public class MovieController {
     }
 
     /**
+     * Get full movie details by ID (including cast, directors, producers).
+     * Use this only when user clicks on a movie for detailed view.
+     */
+    @GetMapping("/title/{title}")
+    public Movie getMovieDetailsByTitle(@PathVariable String title) {
+        return movieService.getMovieByTitle(title);
+    }
+
+    /**
      * POST api/movies/create
      * Use when adding a new movie (when logged in as Admin).
      */
     @PostMapping("/create")
-    public ResponseEntity<?> createMovie(@RequestBody MovieInfo dto) {
+    public ResponseEntity<?> createMovie(@RequestBody MovieDTO dto) {
         try {
             // Create a new Movie object
             Movie newMovie = new Movie();
             newMovie.setTitle(dto.getTitle());
-            newMovie.setStatus("UPCOMING"); // default status (no movie shows scheduled)
+            newMovie.setStatus(MovieStatus.upcoming); // default status (no movie shows scheduled)
             newMovie.setGenres(dto.getGenres());
             newMovie.setRating(dto.getRating());
             newMovie.setRelease_date(dto.getRelease_date());
