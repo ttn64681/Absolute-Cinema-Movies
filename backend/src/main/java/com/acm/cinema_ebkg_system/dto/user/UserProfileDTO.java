@@ -12,6 +12,7 @@ import lombok.AllArgsConstructor;
  * - Returns DTOs instead of entities (prevents exposing sensitive data)
  * - Uses AuthResponse.UserDto for consistency
  * - Includes address information as separate DTO
+ * - Includes profile-specific fields (profileImageLink, enrolledForPromotions)
  * 
  * Note: Payment cards are fetched separately on the payments page
  */
@@ -21,6 +22,8 @@ import lombok.AllArgsConstructor;
 public class UserProfileDTO {
     private UserDto user;  // User info DTO (excludes password)
     private AddressDTO homeAddress;  // Address DTO (null if no home address)
+    private String profileImageLink;  // Profile image URL (optional)
+    private Boolean enrolledForPromotions;  // Promotions enrollment status
     
     /**
      * Address DTO - Represents address information

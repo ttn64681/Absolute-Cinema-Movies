@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -36,13 +37,13 @@ public class UserController {
     
     // GET /api/user/info - Get current user's information (userId from JWT in frontend)
     @GetMapping("/user/info")
-    public User getCurrentUserInfo(@org.springframework.web.bind.annotation.RequestParam Long userId) {
+    public User getCurrentUserInfo(@RequestParam Long userId) {
         return userService.getUserById(userId);
     }
     
-    // GET /api/user/profile - Get user profile (user info + home address)
+    // GET /api/user/profile - Get user profile (user info + home address + profile image)
     @GetMapping("/user/profile")
-    public UserProfileDTO getUserProfile(@org.springframework.web.bind.annotation.RequestParam Long userId) {
+    public UserProfileDTO getUserProfile(@RequestParam Long userId) {
         User user = userService.getUserById(userId);
         Optional<Address> homeAddressOpt = addressService.getUserHomeAddress(userId);
         
@@ -63,18 +64,24 @@ public class UserController {
             );
         }
         
-        return new UserProfileDTO(userDto, addressDto);
+        // Include profile-specific fields (profileImageLink, enrolledForPromotions)
+        return new UserProfileDTO(
+            userDto, 
+            addressDto, 
+            user.getProfileImageLink(), 
+            user.isEnrolledForPromotions()
+        );
     }
     
     // PUT /api/user/info - Update current user's personal information
     @PutMapping("/user/info")
-    public User updateCurrentUserInfo(@org.springframework.web.bind.annotation.RequestParam Long userId, @RequestBody UserUpdateRequest userUpdateRequest) {
+    public User updateCurrentUserInfo(@RequestParam Long userId, @RequestBody UserUpdateRequest userUpdateRequest) {
         return userService.updatePersonalInfo(userId, userUpdateRequest);
     }
     
     // PUT /api/user/change-password - Change current user's password
     @PutMapping("/user/change-password")
-    public User changeCurrentUserPassword(@org.springframework.web.bind.annotation.RequestParam Long userId, @RequestBody PasswordChangeRequest passwordChangeRequest) {
+    public User changeCurrentUserPassword(@RequestParam Long userId, @RequestBody PasswordChangeRequest passwordChangeRequest) {
         return userService.changePassword(userId, passwordChangeRequest);
     }
 

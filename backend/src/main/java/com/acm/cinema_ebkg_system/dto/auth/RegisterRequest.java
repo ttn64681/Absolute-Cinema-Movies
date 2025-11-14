@@ -5,13 +5,12 @@ import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import java.util.List;
 
-import com.acm.cinema_ebkg_system.dto.payment.PaymentCardDTO;
-import com.acm.cinema_ebkg_system.enums.*;
+import com.acm.cinema_ebkg_system.dto.payment.PaymentCardRequestDTO;
 
 /**
  * Registration Request DTO
  * 
- * Design Decision: Uses PaymentCardDTO instead of nested class
+ * Design Decision: Uses PaymentCardRequestDTO instead of nested class
  * to follow DRY principle and maintain single source of truth
  * for payment card structure.
  */
@@ -33,7 +32,7 @@ public class RegisterRequest {
     private String homeZip;
     private String homeCountry;
     
-    // Use PaymentCardDTO instead of nested class (DRY principle)
+    // Use PaymentCardRequestDTO instead of nested class (DRY principle)
     // Note: userId will be set by backend after user creation
-    private List<PaymentCardDTO> paymentCards; // Up to 3 payment cards
+    private List<PaymentCardRequestDTO> paymentCards; // Up to 3 payment cards
 }

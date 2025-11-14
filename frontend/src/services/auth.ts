@@ -38,9 +38,7 @@ export interface AuthResponse {
     firstName: string;
     lastName: string;
     phoneNumber?: string;
-    address?: string;
-    state?: string;
-    country?: string;
+    // Note: Address information is provided separately via UserProfileDTO when needed
   };
 }
 
@@ -188,8 +186,8 @@ export const authAPI = {
 
   async adminLogin(credentials: LoginRequest): Promise<AuthResponse> {
     try {
-      console.log('🔐 authAPI.adminLogin - Making request to:', `${API_BASE_URL}/admin/login`);
-      console.log('🔐 authAPI.adminLogin - Credentials:', { ...credentials, password: '[HIDDEN]' });
+      console.log('authAPI.adminLogin - Making request to:', `${API_BASE_URL}/admin/login`);
+      console.log('authAPI.adminLogin - Credentials:', { ...credentials, password: '[HIDDEN]' });
 
       const response = await fetch(`${API_BASE_URL}/admin/login`, {
         method: 'POST',
@@ -199,12 +197,12 @@ export const authAPI = {
         body: JSON.stringify(credentials),
       });
 
-      console.log('🔐 authAPI.adminLogin - Response status:', response.status);
+      console.log('authAPI.adminLogin - Response status:', response.status);
       const data = await response.json();
-      console.log('🔐 authAPI.adminLogin - Response data:', data);
+      console.log('authAPI.adminLogin - Response data:', data);
       return data;
     } catch (error) {
-      console.error('❌ authAPI.adminLogin - Admin login API error:', error);
+      console.error('authAPI.adminLogin - Admin login API error:', error);
       return {
         success: false,
         message: 'Network error. Please try again.',

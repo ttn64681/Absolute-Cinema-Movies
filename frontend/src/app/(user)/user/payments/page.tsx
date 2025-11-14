@@ -3,210 +3,41 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { MdDelete, MdEdit, MdCreditCard } from 'react-icons/md';
-import { useState, useEffect } from 'react';
 import NavBar from '@/components/common/navBar/NavBar';
 import { useProfile } from '@/contexts/ProfileContext';
 import PaymentCardModal from '@/components/specific/user/PaymentCardModal';
-import { PaymentCardFormData, PaymentCard } from '@/types/payment';
-import { buildUrl, endpoints } from '@/config/api';
+import { PaymentCardFormData } from '@/types/payment';
+import { useUserId } from '@/hooks/useUserId';
+import { usePaymentCardModal } from '@/hooks/usePaymentCardModal';
+import { usePaymentCards } from '@/hooks/usePaymentCards';
+import { displayCardNumber, formatExpirationDate } from '@/utils/payment';
 
 export default function PaymentsPage() {
-  const [paymentCards, setPaymentCards] = useState<PaymentCard[]>([]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalMode, setModalMode] = useState<'Add' | 'Edit'>('Add');
-  const [editingCardId, setEditingCardId] = useState<number | null>(null);
-  const [editingCard, setEditingCard] = useState<PaymentCard | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [userId, setUserId] = useState<number>(0);
+  const { userId } = useUserId();
   const { profilePicUrl } = useProfile();
+  const { isOpen, mode, editingCard, openAdd, openEdit, close } = usePaymentCardModal();
+  const { paymentCards, isLoading, error, isSubmitting, createCard, updateCard, deleteCard } = usePaymentCards(userId);
 
-  // Get user ID from token
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-      if (token) {
-        try {
-          const [, payloadBase64] = token.split('.');
-          const decodedPayload = Buffer.from(payloadBase64, 'base64').toString('utf-8');
-          const userData = JSON.parse(decodedPayload);
-          setUserId(userData.userId);
-        } catch (error) {
-          console.error('Error decoding token:', error);
-        }
-      }
-    }
-  }, []);
-
-  // Fetch payment cards
-  const fetchPaymentCards = async () => {
-    if (!userId) return;
-
-    try {
-      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-      const response = await fetch(buildUrl(endpoints.paymentCards.getUserPaymentCards(userId)), {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: token ? `Bearer ${token}` : '',
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch payment cards');
-      }
-
-      const cards = (await response.json()) as PaymentCard[];
-
-      // Ensure cards is an array
-      if (Array.isArray(cards)) {
-        setPaymentCards(cards);
-      } else {
-        console.error('Expected array but got:', cards);
-        setPaymentCards([]);
-      }
-    } catch (error) {
-      console.error('Error fetching payment cards:', error);
-      setPaymentCards([]);
-    }
-  };
-
-  useEffect(() => {
-    if (userId) {
-      fetchPaymentCards();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userId]);
-
-  // Format card number for display
-  const formatCardNumber = (cardNumber: string | undefined): string => {
-    if (!cardNumber) return '**** **** **** ****';
-    const cleaned = cardNumber.replace(/\s+/g, '');
-    if (cleaned.length >= 4) {
-      return `**** **** **** ${cleaned.slice(-4)}`;
-    }
-    return cardNumber;
-  };
-
-  // Format expiration date
-  const formatExpirationDate = (dateString: string | undefined): string => {
-    if (!dateString) return '--/--';
-    if (dateString.includes('/')) return dateString;
-    const date = new Date(dateString);
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const year = String(date.getFullYear()).slice(-2);
-    return `${month}/${year}`;
-  };
-
-  // Handle add card
-  const handleAddCard = () => {
-    setEditingCardId(null);
-    setEditingCard(null);
-    setModalMode('Add');
-    setIsModalOpen(true);
-  };
-
-  // Handle edit card
-  const handleEditCard = (card: PaymentCard) => {
-    setEditingCardId(card.id);
-    setEditingCard(card);
-    setModalMode('Edit');
-    setIsModalOpen(true);
-  };
-
-  // Handle delete card
+  // Handle delete w/ confirmation
   const handleDeleteCard = async (cardId: number) => {
     if (!confirm('Are you sure you want to delete this payment method?')) {
       return;
     }
-
-    try {
-      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-      const response = await fetch(buildUrl(endpoints.paymentCards.deletePaymentCard(cardId)), {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: token ? `Bearer ${token}` : '',
-        },
-      });
-
-      if (response.ok) {
-        await fetchPaymentCards();
-      } else {
-        alert('Failed to delete payment card');
-      }
-    } catch (error) {
-      console.error('Error deleting card:', error);
-      alert('Error deleting payment card');
-    }
+    await deleteCard(cardId);
   };
 
   // Handle form submission
   const handleSubmit = async (formData: PaymentCardFormData) => {
-    setIsSubmitting(true);
-    try {
-      if (modalMode === 'Add' && paymentCards.length >= 3) {
-        alert('Maximum of 3 payment methods reached.');
-        setIsSubmitting(false);
-        return;
-      }
+    let success = false;
 
-      const payload = {
-        userId: userId, // Add user ID
-        cardType: formData.cardType,
-        cardNumber: formData.cardNumber.replace(/\s+/g, ''),
-        expirationDate: formData.expirationDate,
-        cardholderName: formData.cardholderName,
-        billingStreet: formData.billingStreet,
-        billingCity: formData.billingCity,
-        billingState: formData.billingState,
-        billingZip: formData.billingZip,
-        billingCountry: formData.billingCountry,
-        isDefault: formData.isDefault,
-      };
+    if (mode === 'Add') {
+      success = await createCard(formData);
+    } else if (editingCard) {
+      success = await updateCard(editingCard.id, formData);
+    }
 
-      if (modalMode === 'Add') {
-        // Create payment card with billing address
-        const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-        const response = await fetch(buildUrl(endpoints.paymentCards.createPaymentCard()), {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: token ? `Bearer ${token}` : '',
-          },
-          body: JSON.stringify(payload),
-        });
-
-        if (!response.ok) {
-          alert('Failed to add payment card');
-        } else {
-          await fetchPaymentCards();
-          setIsModalOpen(false);
-        }
-      } else {
-        // Update payment card
-        if (!editingCardId) return; // Prevent null access
-        const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-        const response = await fetch(buildUrl(endpoints.paymentCards.updatePaymentCard(editingCardId)), {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: token ? `Bearer ${token}` : '',
-          },
-          body: JSON.stringify(payload),
-        });
-
-        if (!response.ok) {
-          alert('Failed to update payment card');
-        } else {
-          await fetchPaymentCards();
-          setIsModalOpen(false);
-        }
-      }
-    } catch (error) {
-      console.error('Error submitting card:', error);
-      alert('An error occurred');
-    } finally {
-      setIsSubmitting(false);
+    if (success) {
+      close();
     }
   };
 
@@ -263,70 +94,84 @@ export default function PaymentsPage() {
               <p className="text-white/60 text-sm">Manage your payment information</p>
             </div>
 
-            <div className="space-y-4">
-              {paymentCards.map((card) => (
-                <div key={card.id} className="bg-white/5 border border-white/20 rounded-lg p-6">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <MdCreditCard className="text-3xl text-acm-pink" />
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-white font-afacad text-lg">{card.cardholderName}</span>
-                          {card.isDefault && (
-                            <span className="text-acm-pink text-xs font-bold bg-acm-pink/20 px-2 py-1 rounded">
-                              DEFAULT
-                            </span>
-                          )}
-                        </div>
-                        <span className="text-white/70 font-afacad text-sm">{formatCardNumber(card.cardNumber)}</span>
-                        <div className="text-white/60 font-afacad text-xs">
-                          {formatExpirationDate(card.expirationDate)} • {card.paymentCardType.toUpperCase()}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex gap-2">
-                      <button
-                        type="button"
-                        onClick={() => handleEditCard(card)}
-                        className="p-2 text-white hover:text-acm-pink transition-colors cursor-pointer"
-                        title="Edit"
-                      >
-                        <MdEdit className="text-2xl" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteCard(card.id)}
-                        className="p-2 text-white hover:text-red-500 transition-colors cursor-pointer"
-                        title="Delete"
-                      >
-                        <MdDelete className="text-2xl" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-
-              {paymentCards.length === 0 && (
-                <div className="text-center py-12 text-white/60 font-afacad">No payment methods yet.</div>
-              )}
-            </div>
-
-            {/* Add button */}
-            {paymentCards.length < 3 && (
-              <div className="mt-6">
-                <button
-                  onClick={handleAddCard}
-                  className="px-6 py-3 rounded-full font-afacad font-bold text-white border-2 border-acm-pink hover:bg-acm-pink transition-colors cursor-pointer"
-                >
-                  Add Payment Method +
-                </button>
+            {error && (
+              <div className="mb-4 p-4 bg-red-900/50 border border-red-500 rounded-md">
+                <p className="text-red-200 text-sm">{error}</p>
               </div>
             )}
 
-            {paymentCards.length >= 3 && (
-              <div className="mt-4 text-center text-white/60 text-sm font-afacad">
-                Maximum of 3 payment methods reached.
-              </div>
+            {isLoading ? (
+              <div className="text-center py-12 text-white/60 font-afacad">Loading payment methods...</div>
+            ) : (
+              <>
+                <div className="space-y-4">
+                  {paymentCards.map((card) => (
+                    <div key={card.id} className="bg-white/5 border border-white/20 rounded-lg p-6">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                          <MdCreditCard className="text-3xl text-acm-pink" />
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-white font-afacad text-lg">{card.cardholderName}</span>
+                              {card.isDefault && (
+                                <span className="text-acm-pink text-xs font-bold bg-acm-pink/20 px-2 py-1 rounded">
+                                  DEFAULT
+                                </span>
+                              )}
+                            </div>
+                            <span className="text-white/70 font-afacad text-sm">
+                              {displayCardNumber(card.cardNumber)}
+                            </span>
+                            <div className="text-white/60 font-afacad text-xs">
+                              {formatExpirationDate(card.expirationDate)} • {card.paymentCardType.toUpperCase()}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            onClick={() => openEdit(card)}
+                            className="p-2 text-white hover:text-acm-pink transition-colors cursor-pointer"
+                            title="Edit"
+                          >
+                            <MdEdit className="text-2xl" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteCard(card.id)}
+                            className="p-2 text-white hover:text-red-500 transition-colors cursor-pointer"
+                            title="Delete"
+                          >
+                            <MdDelete className="text-2xl" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+
+                  {paymentCards.length === 0 && (
+                    <div className="text-center py-12 text-white/60 font-afacad">No payment methods yet.</div>
+                  )}
+                </div>
+
+                {/* Add button */}
+                {paymentCards.length < 3 && (
+                  <div className="mt-6">
+                    <button
+                      onClick={openAdd}
+                      className="px-6 py-3 rounded-full font-afacad font-bold text-white border-2 border-acm-pink hover:bg-acm-pink transition-colors cursor-pointer"
+                    >
+                      Add Payment Method +
+                    </button>
+                  </div>
+                )}
+
+                {paymentCards.length >= 3 && (
+                  <div className="mt-4 text-center text-white/60 text-sm font-afacad">
+                    Maximum of 3 payment methods reached.
+                  </div>
+                )}
+              </>
             )}
           </section>
         </div>
@@ -334,12 +179,9 @@ export default function PaymentsPage() {
 
       {/* Payment Card Modal */}
       <PaymentCardModal
-        isOpen={isModalOpen}
-        mode={modalMode}
-        onClose={() => {
-          setIsModalOpen(false);
-          setEditingCard(null);
-        }}
+        isOpen={isOpen}
+        mode={mode}
+        onClose={close}
         onSubmit={handleSubmit}
         isSubmitting={isSubmitting}
         initialData={

@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useMemo, useCallback, useRef, ReactNode } from 'react';
 import { authAPI, AuthResponse } from '@/services/auth';
+import { getAuthToken } from '@/utils/auth';
 
 interface User {
   id: number;
@@ -36,9 +37,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsLoading(true);
 
     // Check localStorage first, then sessionStorage
-    const localToken = localStorage.getItem('token');
-    const sessionToken = sessionStorage.getItem('token');
-    const token = localToken || sessionToken;
+    const token = getAuthToken();
+    const localToken = localStorage.getItem('token'); // For logging only
+    const sessionToken = sessionStorage.getItem('token'); // For logging only
     const rememberMe = localStorage.getItem('rememberMe') === 'true';
 
     // Check for refresh token

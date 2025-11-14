@@ -78,6 +78,8 @@ public class SecurityConfig {
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/api/admin/create").permitAll() // this is for testing...
                 .requestMatchers("/api/admin/login").permitAll()
+                .requestMatchers("/api/hello").permitAll() // Public health check endpoint
+                .requestMatchers("/api/env").permitAll() // Public environment variables endpoint (for debugging)
                 .requestMatchers("/h2-console/**").permitAll()
                 
                 // Movie browsing endpoints - PUBLIC (anyone can browse movies)

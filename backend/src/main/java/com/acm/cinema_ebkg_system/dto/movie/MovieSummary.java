@@ -10,6 +10,10 @@ import lombok.Setter;
  * Lightweight movie summary for browsing -
  * excludes "heavy" fields like cast, directors, producers
  * Used for homepage, search results, and movie grids
+ * 
+ * Note: Use fromMovie() factory method to create instances.
+ * Parameterized constructor is private to enforce use of factory method.
+ * No-args constructor (from @NoArgsConstructor) is public for Jackson deserialization.
  */
 @Getter
 @Setter
@@ -25,7 +29,8 @@ public class MovieSummary {
     private String trailer_link;
     private String poster_link;
     
-    public MovieSummary(Long movie_id, String title, String status, String genres, 
+    // Private constructor - use fromMovie() factory method instead
+    private MovieSummary(Long movie_id, String title, String status, String genres, 
                        String rating, LocalDate release_date, String synopsis, 
                        String trailer_link, String poster_link) {
         this.movie_id = movie_id;
@@ -40,8 +45,11 @@ public class MovieSummary {
     }
     
     /**
-     * Create MovieSummary from Movie entity. 
-     * Movie entity will map to this DTO (Data Transfer Object).
+     * Factory method: Creates MovieSummary from Movie entity.
+     * Handles synopsis truncation logic (max 150 chars).
+     * 
+     * @param movie Movie entity to convert
+     * @return MovieSummary DTO with truncated synopsis
      */
     public static MovieSummary fromMovie(Movie movie) {
         String truncatedSynopsis = movie.getSynopsis();

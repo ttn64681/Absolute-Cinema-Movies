@@ -77,13 +77,26 @@ export default function RegisterPage() {
     }
   };
 
+  const hasErrors = Object.keys(errors).length > 0;
+
   return (
     <AuthFormContainer
       stepNumber={1}
       stepTitle="Create an Account"
       stepDescription="Step 1 of 3 - Get started with your account"
     >
-      <form onSubmit={handleSubmit} className="space-y-6">
+      {hasErrors && (
+        <div className="mb-6 p-4 bg-red-900/50 border border-red-500 rounded-md">
+          <p className="text-red-200 text-sm font-semibold mb-2">Please fix the following errors:</p>
+          <ul className="list-disc list-inside text-red-200 text-sm space-y-1">
+            {errors.email && <li>{errors.email}</li>}
+            {errors.password && <li>{errors.password}</li>}
+            {errors.confirmPassword && <li>{errors.confirmPassword}</li>}
+          </ul>
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit} className="space-y-6" noValidate>
         <AuthInput
           id="email"
           label="Email Address"

@@ -2,6 +2,8 @@ package com.acm.cinema_ebkg_system.repository;
 
 import com.acm.cinema_ebkg_system.model.Movie;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -81,6 +83,27 @@ public interface MovieRepository extends JpaRepository<Movie, Long> {
       ORDER BY MIN(sd.show_date) ASC
     """, nativeQuery = true)
     List<Movie> findNowPlayingOrderedByNextShowDate();
+    
+    /**
+     * Paginated NOW_PLAYING ordered by earliest upcoming show_date (>= today).
+     * Return: Page<Movie>
+     */
+    @Query(value = """
+      SELECT m.* FROM movie m
+      INNER JOIN movie_show ms ON ms.movie_id = m.movie_id
+      INNER JOIN show_date sd ON sd.movie_show_id = ms.id
+      WHERE ms.status = 'now_playing' AND sd.show_date >= CURRENT_DATE
+      GROUP BY m.movie_id
+      ORDER BY MIN(sd.show_date) ASC
+    """, 
+    countQuery = """
+      SELECT COUNT(DISTINCT m.movie_id) FROM movie m
+      INNER JOIN movie_show ms ON ms.movie_id = m.movie_id
+      INNER JOIN show_date sd ON sd.movie_show_id = ms.id
+      WHERE ms.status = 'now_playing' AND sd.show_date >= CURRENT_DATE
+    """,
+    nativeQuery = true)
+    Page<Movie> findNowPlayingOrderedByNextShowDate(Pageable pageable);
 
     /**
      * UPCOMING ordered by first show_date (> today).
