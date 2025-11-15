@@ -17,14 +17,41 @@ import java.util.stream.Collectors; // For converting List<Movie> to List<MovieS
 @Service // Spring service bean for business logic layer
 public class MovieService {
 
-    // Constants
-    private static final int MOVIES_PER_PAGE = 10; // 10 movies/page (5 max per row, wraps responsively)
+    // ===== CONSTANTS ===== //
+    private static final int MOVIES_PER_PAGE = 10; // 10 movies/page
 
-    // Pattern: Dependency Injection (DI) - constructor injection
     private final MovieRepository movieRepository;
 
     public MovieService(MovieRepository movieRepository) {
         this.movieRepository = movieRepository;
+    }
+
+    // ===== PAGINATION HELPER METHODS ===== //
+    /**
+     * Converts Page<Movie> to PaginatedMovieResponse DTO.
+     * Pattern: Helper method for code reuse
+     */
+    private PaginatedMovieResponse toPaginatedResponse(Page<Movie> moviePage) {
+        List<MovieSummary> summaries = moviePage.getContent().stream()
+                .map(MovieSummary::fromMovie)
+                .collect(Collectors.toList());
+        
+        return new PaginatedMovieResponse(
+            summaries,
+            moviePage.getNumber(),
+            moviePage.getTotalPages(),
+            moviePage.getTotalElements(),
+            moviePage.hasNext(),
+            moviePage.hasPrevious(),
+            MOVIES_PER_PAGE
+        );
+    }
+
+    /**
+     * Normalizes search parameters (converts blank strings to null).
+     */
+    private String normalizeStringParam(String param) {
+        return (param != null && !param.isBlank()) ? param : null;
     }
 
     // // AND-based combined filters; blanks treated as nulls; genresCsv = OR across tokens; month/day/year each optional
@@ -69,16 +96,15 @@ public class MovieService {
         return movieRepository.findUpcoming();
     }
 
+    // ===== NON-PAGINATED SEARCH METHODS ===== //
     /**
      * Search NOW_PLAYING only, ordered by earliest show_date.
      * Return: List<Movie>
      * Example JSON: [ { "movie_id": 5, "status": "NOW_PLAYING", ... }, ... ]
      */
     public List<Movie> searchNowPlayingOrdered(String title, String genres, Integer month, Integer day, Integer year) {
-        // Convert blank strings to null for proper SQL handling
-        String t = (title != null && !title.isBlank()) ? title : null;
-        String g = (genres != null && !genres.isBlank()) ? genres : null;
-        // Use repository custom query with filters
+        String t = normalizeStringParam(title);
+        String g = normalizeStringParam(genres);
         return movieRepository.searchNowPlayingOrdered(t, g, month, day, year);
     }
 
@@ -88,67 +114,76 @@ public class MovieService {
      * Example JSON: [ { "movie_id": 9, "status": "UPCOMING", ... }, ... ]
      */
     public List<Movie> searchUpcomingOrdered(String title, String genres, Integer month, Integer day, Integer year) {
-        // Convert blank strings to null for proper SQL handling
-        String t = (title != null && !title.isBlank()) ? title : null; // title -> null if null/blank
-        String g = (genres != null && !genres.isBlank()) ? genres : null; // genres -> null if null/blank
-        // Use repository custom query with filters
+        String t = normalizeStringParam(title);
+        String g = normalizeStringParam(genres);
         return movieRepository.searchUpcomingOrdered(t, g, month, day, year); 
     }
 
+    // ===== PAGINATED BROWSING METHODS ===== //
+    /**
+     * Get paginated NOW_PLAYING movies (10/page).
+     * Cached by page number. Eviction: 10min TTL, 100 entries max, or @CacheEvict on create/delete
+     */
+    @Cacheable(value = "nowPlayingMovies", key = "#page")
+    public PaginatedMovieResponse getNowPlayingForBrowsingPaginated(int page) {
+        Pageable pageable = PageRequest.of(page, MOVIES_PER_PAGE);
+        Page<Movie> moviePage = movieRepository.findNowPlayingOrderedByNextShowDate(pageable);
+        return toPaginatedResponse(moviePage);
+    }
+
+    /**
+     * Get paginated UPCOMING movies (10/page).
+     * Cached by page number. Eviction: 10min TTL, 100 entries max, or @CacheEvict on create/delete
+     */
+    @Cacheable(value = "upcomingMovies", key = "#page")
+    public PaginatedMovieResponse getUpcomingForBrowsingPaginated(int page) {
+        Pageable pageable = PageRequest.of(page, MOVIES_PER_PAGE);
+        Page<Movie> moviePage = movieRepository.findUpcoming(pageable);
+        return toPaginatedResponse(moviePage);
+    }
+
+    // ===== PAGINATED SEARCH METHODS ===== //
     /**
      * Paginated search NOW_PLAYING (10/page).
      * Cached by search params + page. Eviction: 10min TTL, 100 entries max, or @CacheEvict on create/delete
      */
-    @Cacheable(value = "searchNowPlayingMovies", key = "#title + '_' + (#genres != null ? #genres : 'null') + '_' + (#month != null ? #month : 'null') + '_' + (#day != null ? #day : 'null') + '_' + (#year != null ? #year : 'null') + '_' + #page")
+    @Cacheable(
+        value = "searchNowPlayingMovies",
+        key = "#title + '_' + (#genres != null ? #genres : 'null') + '_' + " +
+            "(#month != null ? #month : 'null') + '_' + (#day != null ? #day : 'null') + '_' + " +
+            "(#year != null ? #year : 'null') + '_' + #page"
+    )
     public PaginatedMovieResponse searchNowPlayingPaginated(String title, String genres, Integer month, Integer day, Integer year, int page) {
-        String t = (title != null && !title.isBlank()) ? title : null;
-        String g = (genres != null && !genres.isBlank()) ? genres : null;
+        String t = normalizeStringParam(title);
+        String g = normalizeStringParam(genres);
         
         Pageable pageable = PageRequest.of(page, MOVIES_PER_PAGE);
         Page<Movie> moviePage = movieRepository.searchNowPlayingOrdered(t, g, month, day, year, pageable);
-        
-        List<MovieSummary> summaries = moviePage.getContent().stream()
-                .map(MovieSummary::fromMovie)
-                .collect(Collectors.toList());
-        
-        return new PaginatedMovieResponse(
-            summaries,
-            moviePage.getNumber(),
-            moviePage.getTotalPages(),
-            moviePage.getTotalElements(),
-            moviePage.hasNext(),
-            moviePage.hasPrevious(),
-            MOVIES_PER_PAGE
-        );
+        return toPaginatedResponse(moviePage);
     }
 
     /**
      * Paginated search UPCOMING (10/page).
      * Cached by search params + page. Eviction: 10min TTL, 100 entries max, or @CacheEvict on create/delete
      */
-    @Cacheable(value = "searchUpcomingMovies", key = "#title + '_' + (#genres != null ? #genres : 'null') + '_' + (#month != null ? #month : 'null') + '_' + (#day != null ? #day : 'null') + '_' + (#year != null ? #year : 'null') + '_' + #page")
+    @Cacheable(
+        value = "searchUpcomingMovies",
+        key = "#title + '_' + (#genres != null ? #genres : 'null') + '_' + " +
+            "(#month != null ? #month : 'null') + '_' + (#day != null ? #day : 'null') + '_' + " +
+            "(#year != null ? #year : 'null') + '_' + #page"
+    )
     public PaginatedMovieResponse searchUpcomingPaginated(String title, String genres, Integer month, Integer day, Integer year, int page) {
-        String t = (title != null && !title.isBlank()) ? title : null;
-        String g = (genres != null && !genres.isBlank()) ? genres : null;
+        String t = normalizeStringParam(title);
+        String g = normalizeStringParam(genres);
         
         Pageable pageable = PageRequest.of(page, MOVIES_PER_PAGE);
         Page<Movie> moviePage = movieRepository.searchUpcomingOrdered(t, g, month, day, year, pageable);
-        
-        List<MovieSummary> summaries = moviePage.getContent().stream()
-                .map(MovieSummary::fromMovie)
-                .collect(Collectors.toList());
-        
-        return new PaginatedMovieResponse(
-            summaries,
-            moviePage.getNumber(),
-            moviePage.getTotalPages(),
-            moviePage.getTotalElements(),
-            moviePage.hasNext(),
-            moviePage.hasPrevious(),
-            MOVIES_PER_PAGE
-        );
+        return toPaginatedResponse(moviePage);
     }
 
+
+
+    
     /**
      * Get all unique genres available in the system, ordered alphabetically.
      * Return: List<String>
@@ -180,13 +215,13 @@ public class MovieService {
         }
     }
 
+    // ===== MOVIE CRUD OPERATIONS ===== //
     /**
      * Creates a new movie.
      * Evicts all pagination caches (pagination changes when movie count changes)
      */
     @CacheEvict(value = {"nowPlayingMovies", "upcomingMovies", "searchNowPlayingMovies", "searchUpcomingMovies"}, allEntries = true)
     public Movie createMovie(Movie movie) {
-        // Save movie to database
         return movieRepository.save(movie);
     }
 
@@ -252,53 +287,6 @@ public class MovieService {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Get paginated NOW_PLAYING movies (10/page).
-     * Cached by page number. Eviction: 10min TTL, 100 entries max, or @CacheEvict on create/delete
-     */
-    @Cacheable(value = "nowPlayingMovies", key = "#page")
-    public PaginatedMovieResponse getNowPlayingForBrowsingPaginated(int page) {
-        Pageable pageable = PageRequest.of(page, MOVIES_PER_PAGE);
-        Page<Movie> moviePage = movieRepository.findNowPlayingOrderedByNextShowDate(pageable);
-        
-        List<MovieSummary> summaries = moviePage.getContent().stream()
-                .map(MovieSummary::fromMovie)
-                .collect(Collectors.toList());
-        
-        return new PaginatedMovieResponse(
-            summaries,
-            moviePage.getNumber(),
-            moviePage.getTotalPages(),
-            moviePage.getTotalElements(),
-            moviePage.hasNext(),
-            moviePage.hasPrevious(),
-            MOVIES_PER_PAGE
-        );
-    }
-
-    /**
-     * Get paginated UPCOMING movies (10/page).
-     * Cached by page number. Eviction: 10min TTL, 100 entries max, or @CacheEvict on create/delete
-     */
-    @Cacheable(value = "upcomingMovies", key = "#page")
-    public PaginatedMovieResponse getUpcomingForBrowsingPaginated(int page) {
-        Pageable pageable = PageRequest.of(page, MOVIES_PER_PAGE);
-        Page<Movie> moviePage = movieRepository.findUpcoming(pageable);
-        
-        List<MovieSummary> summaries = moviePage.getContent().stream()
-                .map(MovieSummary::fromMovie)
-                .collect(Collectors.toList());
-        
-        return new PaginatedMovieResponse(
-            summaries,
-            moviePage.getNumber(),
-            moviePage.getTotalPages(),
-            moviePage.getTotalElements(),
-            moviePage.hasNext(),
-            moviePage.hasPrevious(),
-            MOVIES_PER_PAGE
-        );
-    }
 
     /**
      * Get full movie details by ID (including cast, directors, producers).
