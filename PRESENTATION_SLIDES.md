@@ -106,16 +106,16 @@ HTTP Client (Axios)
 Provides unified interface to complex subsystem
 
 **Problem:**
-- ❌ Code duplication across components
-- ❌ Tight coupling to API endpoints
-- ❌ Mixed concerns in hooks (API + state)
-- ❌ No reusability (can't use in server-side)
+- - Code duplication across components
+- - Tight coupling to API endpoints
+- - Mixed concerns in hooks (API + state)
+- - No reusability (can't use in server-side)
 
 **Solution:**
-- ✅ `movieClient.ts` facade: Single interface for all movie operations
-- ✅ Separates API logic from React state
-- ✅ Reusable across components, hooks, server-side
-- ✅ Centralized error handling & transformation
+- + `movieClient.ts` facade: Single interface for all movie operations
+- + Separates API logic from React state
+- + Reusable across components, hooks, server-side
+- + Centralized error handling & transformation
 
 **Benefits:**
 - Single source of truth
@@ -137,9 +137,9 @@ Components → MovieClient (Facade) → API Config/HTTP/Utils → Backend API
 3. **OCP**: Can extend facade with new methods without modifying existing code
 
 **Design Goals:**
-- ✅ Maintainability: Centralized logic
-- ✅ Reusability: Single source of truth
-- ✅ Testability: Easy to mock
+- + Maintainability: Centralized logic
+- + Reusability: Single source of truth
+- + Testability: Easy to mock
 
 ---
 
@@ -149,16 +149,16 @@ Components → MovieClient (Facade) → API Config/HTTP/Utils → Backend API
 Attaches responsibilities dynamically without modifying base object
 
 **Problem:**
-- ❌ Conditional rendering complexity (showBooking, showAdmin props)
-- ❌ Tight coupling: Component knows all use cases
-- ❌ Hard to extend: Adding variant requires modifying base
-- ❌ Violates Open/Closed Principle
+- - Conditional rendering complexity (showBooking, showAdmin props)
+- - Tight coupling: Component knows all use cases
+- - Hard to extend: Adding variant requires modifying base
+- - Violates Open/Closed Principle
 
 **Solution:**
-- ✅ Base `MovieCard`: Core rendering only
-- ✅ Decorators: `withBookingActions`, `withComingSoonBanner`, `withAdminControls`
-- ✅ Composable: Can combine decorators
-- ✅ Base unchanged when adding new behaviors
+- + Base `MovieCard`: Core rendering only
+- + Decorators: `withBookingActions`, `withComingSoonBanner`, `withAdminControls`
+- + Composable: Can combine decorators
+- + Base unchanged when adding new behaviors
 
 **Benefits:**
 - No modification to base component
@@ -182,9 +182,9 @@ Decorators: withBookingActions | withComingSoonBanner | withAdminControls
 3. **ISP**: Clients use base for simple cases | Specific decorators for specific needs
 
 **Design Goals:**
-- ✅ Maintainability: Base unchanged
-- ✅ Reusability: Composable decorators
-- ✅ Extensibility: Easy to add new decorators
+- + Maintainability: Base unchanged
+- + Reusability: Composable decorators
+- + Extensibility: Easy to add new decorators
 
 ---
 
@@ -194,16 +194,16 @@ Decorators: withBookingActions | withComingSoonBanner | withAdminControls
 Controls access to object based on permissions/authorization
 
 **Problem:**
-- ❌ Backend protected ✅ | Frontend routes not fully protected ❌
-- ❌ Admin can navigate to public pages
-- ❌ Protection happens after render (poor UX)
-- ❌ Security gap: Backend protects APIs, frontend doesn't protect routes
+- - Backend protected + | Frontend routes not fully protected -
+- - Admin can navigate to public pages
+- - Protection happens after render (poor UX)
+- - Security gap: Backend protects APIs, frontend doesn't protect routes
 
 **Solution:**
-- ✅ Backend: `JwtAuthenticationFilter` + `SecurityFilterChain` (already implemented)
-- ✅ Frontend: Next.js Middleware (server-side proxy) + RouteProtection HOC (client-side proxy)
-- ✅ Defense in depth: Multiple layers of protection
-- ✅ Redirects before render (better UX)
+- + Backend: `JwtAuthenticationFilter` + `SecurityFilterChain` (already implemented)
+- + Frontend: Next.js Middleware (server-side proxy) + RouteProtection HOC (client-side proxy)
+- + Defense in depth: Multiple layers of protection
+- + Redirects before render (better UX)
 
 **Benefits:**
 - Prevents unauthorized access
@@ -226,9 +226,9 @@ Backend: Client → JwtFilter/SecurityChain (Proxy) → Controller Endpoints
 3. **DIP**: Client depends on abstraction, not proxy vs real subject
 
 **Design Goals:**
-- ✅ Security: Defense in depth
-- ✅ Usability: Redirects before render
-- ✅ Maintainability: Centralized access control
+- + Security: Defense in depth
+- + Usability: Redirects before render
+- + Maintainability: Centralized access control
 
 ---
 
@@ -272,7 +272,7 @@ Backend: Client → JwtFilter/SecurityChain (Proxy) → Controller Endpoints
 - SRP, OCP, ISP, DIP achieved across patterns
 
 **Design Goals:**
-- ✅ Maintainability | ✅ Usability | ✅ Security | ✅ Reusability
+- + Maintainability | + Usability | + Security | + Reusability
 
 ---
 
