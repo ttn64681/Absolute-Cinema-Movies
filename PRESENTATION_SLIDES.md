@@ -131,6 +131,12 @@ Provides a **unified interface** to a **complex subsystem** with many classes/in
 - + Reusable across components, hooks, server-side
 - + Centralized error handling & transformation
 
+**Implementation:**
+- Create MovieClient class with methods: getMovies, searchMovies, getMovieDetails, getShowtimes
+- Each method handles URL building, HTTP requests, error handling, and response transformation internally
+- Hooks use MovieClient instead of direct API calls
+- All API complexity hidden from components
+
 **Class Diagram:**
 ```
 Components → MovieClient (Facade) → API Config/HTTP/Utils → Backend API
@@ -184,6 +190,13 @@ Attaches **additional responsibilities** to an object **dynamically** by **wrapp
 - + Decorators: `withBookingActions`, `withComingSoonBanner`, `withAdminControls`
 - + Composable: Can combine decorators
 - + Base unchanged when adding new behaviors
+
+**Implementation:**
+- Base MovieCard renders only poster, title, genres (no conditional logic)
+- Each decorator is a function that takes MovieCard component and returns wrapped version
+- Decorator renders base component plus additional UI elements (buttons, banners, controls)
+- Usage: const NowPlayingCard = withBookingActions(MovieCard)
+- Can compose: withAdminControls(withBookingActions(MovieCard))
 
 **Class Diagram:**
 ```
@@ -241,6 +254,13 @@ Provides a **surrogate/placeholder** that **controls access** to another object 
 - + Frontend: Next.js Middleware (server-side proxy) + RouteProtection HOC (client-side proxy)
 - + Defense in depth: Multiple layers of protection
 - + Redirects before render (better UX)
+
+**Implementation:**
+- Backend: JwtAuthenticationFilter intercepts all HTTP requests, validates JWT token, sets SecurityContext
+- Backend: SecurityFilterChain checks user role, enforces endpoint permissions, returns 403 if unauthorized
+- Frontend: Next.js middleware.ts intercepts route requests, checks JWT from cookies, validates role, redirects if unauthorized
+- Frontend: RouteProtection HOC wraps protected components, checks auth state, blocks render if unauthorized
+- Both proxies forward to real subject only if authorized
 
 **Class Diagram:**
 ```
