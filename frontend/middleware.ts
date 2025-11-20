@@ -3,11 +3,17 @@ import type { NextRequest } from 'next/server';
 
 /**
  * Next.js Middleware - Protected Proxy Pattern
+ *
  * Intercepts route requests BEFORE page render
  * - Checks JWT token from cookies
  * - Validates user role
  * - Redirects unauthorized users
+ *
+ * Benefits over RouteProtection:
+ * - Runs server-side (no race conditions)
+ * - Blocks before render (better UX)
  * - Can access cookies (no localStorage issues)
+ * - No hydration problems
  */
 
 export function middleware(request: NextRequest) {
