@@ -83,6 +83,38 @@ public class ShowTimeService {
         return showTimeRepository
             .findByShowDateIdAndTimeRange(sd.get().getShow_date_id(), startTime, endTime);
     }
+    
+    /**
+     * Get movie_show.id from movie_id, date, and start_time
+     * 
+     * Database flow:
+     * 1. Find show_date where movie_show.movie_id = movieId AND show_date = date
+     * 2. Find show_time where show_date_id = show_date.show_date_id AND start_time = time
+     * 3. Return show_date.movie_show_id (which is movie_show.id)
+     * 
+     * @param movieId The movie.movie_id
+     * @param date The show date
+     * @param startTime The show start_time
+     * @return movie_show.id or null if not found
+     */
+    public Long getMovieShowIdByMovieDateAndTime(Long movieId, LocalDate date, LocalTime startTime) {
+        // Find the show_date for this movie and date
+        Optional<ShowDate> showDate = showDateRepository.findByMovieIdAndDate(movieId, date);
+        if (showDate.isEmpty()) {
+            return null;
+        }
+        
+        // Find the show_time for this show_date and start_time
+        List<ShowTime> showTimes = showTimeRepository.findByShowDateIdOrderByStartTime(showDate.get().getShow_date_id());
+        for (ShowTime st : showTimes) {
+            if (st.getStart_time().equals(startTime)) {
+                // Found matching show_time, return the movie_show_id from show_date
+                return showDate.get().getMovie_show_id();
+            }
+        }
+        
+        return null; // No matching show_time found
+    }
 }
 
 

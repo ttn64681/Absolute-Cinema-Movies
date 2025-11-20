@@ -181,6 +181,46 @@ public class UserService {
         return userRepository.findAll();
     }
 
+    /**
+     * Suspend a user account
+     * 
+     * This method sets a user's account_status to suspended.
+     * Suspended users cannot log in to the system.
+     * 
+     * @param userId User ID to suspend
+     * @return User Updated user object with suspended status
+     * @throws RuntimeException if user not found
+     */
+    @Transactional
+    public User suspendUser(Long userId) {
+        User user = getUserById(userId);
+        System.out.println("Suspending user - User: " + user.getEmail() + ", current account_status: " + user.getAccountStatus());
+        user.setAccountStatus(UserStatus.suspended);
+        User suspendedUser = userRepository.save(user);
+        System.out.println("User suspended - User: " + suspendedUser.getEmail() + ", new account_status: " + suspendedUser.getAccountStatus());
+        return suspendedUser;
+    }
+
+    /**
+     * Unsuspend a user account (reactivate)
+     * 
+     * This method sets a user's account_status back to active.
+     * The user can log in again after being unsuspended.
+     * 
+     * @param userId User ID to unsuspend
+     * @return User Updated user object with active status
+     * @throws RuntimeException if user not found
+     */
+    @Transactional
+    public User unsuspendUser(Long userId) {
+        User user = getUserById(userId);
+        System.out.println("Unsuspending user - User: " + user.getEmail() + ", current account_status: " + user.getAccountStatus());
+        user.setAccountStatus(UserStatus.active);
+        User unsuspendedUser = userRepository.save(user);
+        System.out.println("User unsuspended - User: " + unsuspendedUser.getEmail() + ", new account_status: " + unsuspendedUser.getAccountStatus());
+        return unsuspendedUser;
+    }
+
     // ========== USER DATA UPDATE ==========
 
     /**

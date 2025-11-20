@@ -4,7 +4,9 @@ import com.acm.cinema_ebkg_system.dto.auth.AuthResponse;
 import com.acm.cinema_ebkg_system.dto.auth.LoginRequest;
 import com.acm.cinema_ebkg_system.mapper.UserDtoFactory;
 import com.acm.cinema_ebkg_system.model.Admin;
+import com.acm.cinema_ebkg_system.model.User;
 import com.acm.cinema_ebkg_system.service.AdminService;
+import com.acm.cinema_ebkg_system.service.UserService;
 import com.acm.cinema_ebkg_system.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -45,6 +47,9 @@ public class AdminController {
     
     @Autowired
     private AdminService adminService;
+
+    @Autowired
+    private UserService userService;
 
     @Autowired
     private JwtUtil jwtUtil;
@@ -195,6 +200,54 @@ public class AdminController {
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             AuthResponse response = new AuthResponse(false, "Failed to delete admin: " + e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
+    // ========== USER MANAGEMENT ENDPOINTS ==========
+
+    /**
+     * Suspend a user account
+     * 
+     * Suspended users cannot log in to the system.
+     * 
+     * @param userId User ID to suspend
+     * @return ResponseEntity<User> with updated user data
+     */
+    @PutMapping("/users/{userId}/suspend")
+    public ResponseEntity<?> suspendUser(@PathVariable Long userId) {
+        try {
+            System.out.println("AdminController.suspendUser - userId: " + userId);
+            User user = userService.suspendUser(userId);
+            System.out.println("AdminController.suspendUser - Success: " + user.getEmail() + ", status: " + user.getAccountStatus());
+            return ResponseEntity.ok(user);
+        } catch (Exception e) {
+            System.err.println("AdminController.suspendUser - Error: " + e.getMessage());
+            e.printStackTrace();
+            AuthResponse response = new AuthResponse(false, "Failed to suspend user: " + e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
+    /**
+     * Unsuspend a user account (reactivate)
+     * 
+     * Unsuspended users can log in again.
+     * 
+     * @param userId User ID to unsuspend
+     * @return ResponseEntity<User> with updated user data
+     */
+    @PutMapping("/users/{userId}/unsuspend")
+    public ResponseEntity<?> unsuspendUser(@PathVariable Long userId) {
+        try {
+            System.out.println("AdminController.unsuspendUser - userId: " + userId);
+            User user = userService.unsuspendUser(userId);
+            System.out.println("AdminController.unsuspendUser - Success: " + user.getEmail() + ", status: " + user.getAccountStatus());
+            return ResponseEntity.ok(user);
+        } catch (Exception e) {
+            System.err.println("AdminController.unsuspendUser - Error: " + e.getMessage());
+            e.printStackTrace();
+            AuthResponse response = new AuthResponse(false, "Failed to unsuspend user: " + e.getMessage());
             return ResponseEntity.badRequest().body(response);
         }
     }

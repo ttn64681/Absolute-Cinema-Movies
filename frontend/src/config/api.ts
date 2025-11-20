@@ -36,6 +36,7 @@ export const apiConfig = {
       // SHOW SCHEDULE ENDPOINTS BY MOVIE ID
       dates: (movieId: number) => `/api/movies/${movieId}/dates`, // function taking in movieId
       times: (movieId: number) => `/api/movies/${movieId}/times`, // function taking in movieId
+      showId: (movieId: number) => `/api/movies/${movieId}/show-id`, // Get movie_show.id from movie_id, date, and time
 
       // OPTIMIZED BROWSING ENDPOINTS (Lightweight)
       browseNowPlaying: '/api/movies/browse/now-playing',
@@ -53,6 +54,15 @@ export const apiConfig = {
       getUserInfo: (userId: number) => `/api/user/info?userId=${userId}`,
       updateUser: (userId: number) => `/api/users/${userId}/info`,
       changePassword: (userId: number) => `/api/users/${userId}/change-password`,
+      getAllUsers: '/api/users', // Get all users (admin only)
+      resetPassword: (userId: number) => `/api/users/${userId}/forgot-password`, // Admin can reset user password
+    },
+
+    // ADMIN ENDPOINTS
+    admin: {
+      getAllAdmins: '/api/admin/all',
+      suspendUser: (userId: number) => `/api/admin/users/${userId}/suspend`,
+      unsuspendUser: (userId: number) => `/api/admin/users/${userId}/unsuspend`,
     },
 
     // ADDRESS ENDPOINTS
@@ -84,6 +94,20 @@ export const apiConfig = {
       resetPassword: '/api/auth/reset-password',
       checkEmail: '/api/auth/check-email',
     },
+
+    // SEAT ENDPOINTS
+    seats: {
+      getSeatsForShow: (showId: number) => `/api/seats/show/${showId}`,
+      reserve: '/api/seats/reserve',
+      release: '/api/seats/release',
+      releaseBySelection: '/api/seats/release-by-selection', // Release by showId + seat row/number
+      checkAvailability: '/api/seats/check-availability',
+    },
+
+    // BOOKING ENDPOINTS
+    bookings: {
+      create: '/api/bookings/create',
+    },
   },
 
   // Helper function to build full URLs
@@ -100,12 +124,35 @@ const api = axios.create({
   },
 });
 
+// Helper function to validate JWT token format
+function isValidJWT(token: string | null): boolean {
+  if (!token || typeof token !== 'string') {
+    return false;
+  }
+  // JWT should have 3 parts separated by periods: header.payload.signature
+  const parts = token.split('.');
+  return parts.length === 3 && parts.every(part => part.length > 0);
+}
+
 // Add request interceptor for JWT tokens
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token');
+    // Check both localStorage and sessionStorage for token
+    const localToken = localStorage.getItem('token');
+    const sessionToken = sessionStorage.getItem('token');
+    const token = localToken || sessionToken;
+    
     if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+      // Validate token format before sending
+      if (isValidJWT(token)) {
+        config.headers.Authorization = `Bearer ${token}`;
+      } else {
+        console.warn('Invalid JWT token format detected. Token will not be sent.');
+        console.warn('Token value:', token.substring(0, 20) + '...');
+        // Clear invalid token
+        if (localToken) localStorage.removeItem('token');
+        if (sessionToken) sessionStorage.removeItem('token');
+      }
     }
     return config;
   },

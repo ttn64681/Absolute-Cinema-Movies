@@ -1,9 +1,5 @@
 package com.acm.cinema_ebkg_system.dto.auth;
 
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
-
 /**
  * Reset Password Request DTO
  * 
@@ -12,11 +8,35 @@ import lombok.AllArgsConstructor;
  * @author ACM Cinema Team
  * @version 1.0
  */
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class ResetPasswordRequest {
     private String token;
     private String newPassword;
+
+    // Default constructor
+    public ResetPasswordRequest() {}
+
+    // Constructor
+    public ResetPasswordRequest(String token, String newPassword) {
+        this.token = token;
+        this.newPassword = newPassword;
+    }
+
+    // Getters
+    public String getToken() {
+        return token;
+    }
+
+    public String getNewPassword() {
+        return newPassword;
+    }
+
+    // Setters
+    public void setToken(String token) {
+        this.token = token;
+    }
+
+    public void setNewPassword(String newPassword) {
+        this.newPassword = newPassword;
+    }
 }
 

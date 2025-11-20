@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import NavBar from "@/components/common/navBar/NavBar";
 import TicketTable from "@/components/specific/booking/ticketAge/TicketTable";
 import PromoBanner from "@/components/common/promos/PromoBanner";
+import { useReservation } from "@/contexts/ReservationContext";
 
 function TicketAgePageContent() {
     const router = useRouter(); 
@@ -13,17 +14,32 @@ function TicketAgePageContent() {
     // Get the # of seats from the booking page
     const [reservedSeats, setReservedSeats] = useState(Number(searchParams.get('seats')) || 0);
     const [selectedSeatIds, setSelectedSeatIds] = useState<string[]>([]);
+    const [showId, setShowId] = useState<number | null>(null);
     const title = searchParams.get('title') || '';
     const date = searchParams.get('date') || '';
     const time = searchParams.get('time') || '';
+    
+    // Reservation context
+    const { isExpired: timerExpired, showId: reservationShowId, startReservation } = useReservation();
 
     useEffect(() => {
         const reservedSeats = searchParams.get('seats');
         const seatIds = searchParams.get('seatIds');
+        const showIdParam = searchParams.get('showId');
 
         if (reservedSeats) setReservedSeats(Number(reservedSeats));
         if (seatIds) setSelectedSeatIds(seatIds.split(','));
-    }, [searchParams]);
+        if (showIdParam) {
+            const parsedShowId = parseInt(showIdParam);
+            setShowId(parsedShowId);
+            // If we have seats and showId but no active reservation, start one
+            // BUT: Don't start if reservation was cancelled (check sessionStorage)
+            const isCancelled = sessionStorage.getItem('reservationCancelled') === 'true';
+            if (seatIds && parsedShowId && !reservationShowId && !isCancelled) {
+                startReservation(parsedShowId, seatIds.split(','));
+            }
+        }
+    }, [searchParams, reservationShowId, startReservation]);
 
     const goBack = () => {
         router.back();
@@ -57,9 +73,24 @@ function TicketAgePageContent() {
                         )}
                     </div>
 
-                    <div className="mt-6">
-                        <TicketTable reservedSeats={reservedSeats} />
-                    </div>
+                    {timerExpired && (
+                        <div className="mt-4 bg-red-500/20 border border-red-500 rounded-lg p-4 text-center">
+                            <p className="text-red-400 font-semibold">Your reservation has expired</p>
+                            <p className="text-red-300 text-sm mt-1">Please select your seats again.</p>
+                            <button
+                                onClick={() => router.back()}
+                                className="mt-4 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors"
+                            >
+                                Go Back to Seats
+                            </button>
+                        </div>
+                    )}
+
+                    {!timerExpired && (
+                        <div className="mt-6">
+                            <TicketTable reservedSeats={reservedSeats} />
+                        </div>
+                    )}
                 </div>
             </div>
 

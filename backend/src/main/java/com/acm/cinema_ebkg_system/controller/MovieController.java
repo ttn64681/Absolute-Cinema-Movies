@@ -8,6 +8,7 @@ import com.acm.cinema_ebkg_system.model.ShowTime;
 import com.acm.cinema_ebkg_system.service.MovieService;
 import com.acm.cinema_ebkg_system.service.ShowTimeService;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,8 +18,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
+import java.util.HashMap;
+import java.util.Map;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 
 @RestController // Bean that creates a RESTful controller class that handles HTTP requests
@@ -147,6 +150,46 @@ public class MovieController {
         // [{"show_time_id": 123, "show_date_id": 45, "start_time": "10:00:00", "end_time": "12:30:00", "created_at": "2025-09-26T12:00:00"}, ...]
         LocalDate showDate = LocalDate.parse(date);
         return showTimeService.getAvailableTimesForMovieAndDate(movieId, showDate);
+    }
+    
+    /**
+     * Get movie_show.id from movie_id, date, and time
+     * This is needed to identify which specific movie_show instance to book seats for
+     * 
+     * Endpoint: GET /api/movies/{movieId}/show-id?date=YYYY-MM-DD&time=HH:MM:SS
+     * 
+     * @param movieId The movie.movie_id
+     * @param date The show date (YYYY-MM-DD format)
+     * @param time The show start_time (HH:MM:SS format)
+     * @return movie_show.id (Long) or null if not found
+     */
+    @GetMapping("/{movieId}/show-id")
+    public ResponseEntity<Map<String, Object>> getMovieShowId(
+            @PathVariable Long movieId,
+            @RequestParam String date,
+            @RequestParam String time) {
+        try {
+            LocalDate showDate = LocalDate.parse(date);
+            LocalTime startTime = LocalTime.parse(time);
+            
+            Long showId = showTimeService.getMovieShowIdByMovieDateAndTime(movieId, showDate, startTime);
+            
+            Map<String, Object> response = new HashMap<>();
+            if (showId != null) {
+                response.put("showId", showId);
+                response.put("success", true);
+                return ResponseEntity.ok(response);
+            } else {
+                response.put("success", false);
+                response.put("error", "No movie show found for the given movie, date, and time");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+            }
+        } catch (Exception e) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("error", "Failed to find movie show: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
     }
 
     // @GetMapping("/{movieId}/schedule")

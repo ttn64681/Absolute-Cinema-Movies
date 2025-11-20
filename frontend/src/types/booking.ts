@@ -5,8 +5,13 @@
 
 // Seat interface for cinema seating
 export interface Seat {
-  id: string;
+  id: string; // Display ID (e.g., "A1", "B5")
+  seatId?: number; // Database ID (for API calls)
+  seatRow?: string;
+  seatNumber?: string;
   occupied: boolean;
+  isAvailable?: boolean;
+  isReserved?: boolean;
 }
 
 // Seat row configuration

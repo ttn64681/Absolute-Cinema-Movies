@@ -19,7 +19,7 @@ export default function SelectedMovieBookButton({
       <div className="mt-auto pt-6 border-t border-white/10">
         {selectedShowtime ? (
           <Link
-            href={`/booking?title=${encodeURIComponent(movie.title ?? '')}&time=${encodeURIComponent(selectedShowtime ?? '')}&date=${encodeURIComponent(currentDate ?? '')}`}
+            href={`/booking?movieId=${encodeURIComponent(movie.movie_id ?? '')}&title=${encodeURIComponent(movie.title ?? '')}&time=${encodeURIComponent(selectedShowtime ?? '')}&date=${encodeURIComponent(currentDate ?? '')}`}
           >
             <button
               title="Book Tickets"
