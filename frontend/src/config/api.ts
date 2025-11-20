@@ -5,7 +5,6 @@
 
 import axios from 'axios';
 import { BackendUser } from '@/types/user';
-import { getAuthToken } from '@/utils/auth';
 
 // Get the base URL from environment variables
 const getApiUrl = (): string => {
@@ -73,7 +72,15 @@ export const apiConfig = {
       setDefaultCard: (userId: number, cardId: number) => `/api/payment-card/user/${userId}/set-default/${cardId}`,
     },
 
-    // AUTH ENDPOINTS
+    // PROMOTION ENDPOINTS
+    promotions: {
+      getPromotions: () => '/api/promotion/' ,
+      addPromotion: () => '/api/promotion/',
+      updatePromotion: (promotionId: number) => `/api/promotion/${promotionId}`,
+      deletePromotion: (promotionId: number) => `/api/promotion/${promotionId}`,
+    },
+
+    // 🔐 AUTH ENDPOINTS
     auth: {
       login: '/api/auth/login',
       register: '/api/auth/register',
@@ -104,7 +111,7 @@ const api = axios.create({
 // Add request interceptor for JWT tokens
 api.interceptors.request.use(
   (config) => {
-    const token = getAuthToken();
+    const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
