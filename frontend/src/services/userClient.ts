@@ -47,8 +47,58 @@ async function getUserInfo(userId: number) {
             console.error('Failed to fetch user profile:', response.status, response.statusText);
             return null;
         }
+
+        // Process the JSON data
+        const profileData = (await response.json()) as {
+          user: {
+            id: number;
+            email: string;
+            firstName: string;
+            lastName: string;
+            phoneNumber: string;
+            enrolledForPromotions: boolean;
+            profileImageLink?: string;
+          };
+          homeAddress: {
+            street: string;
+            city: string;
+            state: string;
+            zip: string;
+            country: string;
+          } | null;
+        };
+
+        // Combine user data with home address
+
+        // User
+        const userData: Partial<BackendUser> & {
+          id: number;
+          email: string;
+          firstName: string;
+          lastName: string;
+          phoneNumber: string;
+          enrolledForPromotions: boolean;
+          homeStreet?: string;
+          homeCity?: string;
+          homeState?: string;
+          homeZip?: string;
+          homeCountry?: string;
+          profileImageLink?: string;
+        } = { ...profileData.user };
         
-        return await response.json();
+        // Address
+        if (profileData.homeAddress) {
+          userData.homeStreet = profileData.homeAddress.street;
+          userData.homeCity = profileData.homeAddress.city;
+          userData.homeState = profileData.homeAddress.state;
+          userData.homeZip = profileData.homeAddress.zip;
+          userData.homeCountry = profileData.homeAddress.country || 'US';
+        }
+
+        // Return the combined user and address data
+        console.log('Successfully retrieved user profile from backend');
+        return userData;
+
     } catch (error) {
         console.error('Fetch error:', error);
         return null;
