@@ -12,12 +12,6 @@ import styles from './profile.module.css';
 import { useUser } from '@/hooks/useUser';
 import { getUserIdFromToken } from '@/utils/auth';
 
-// Get the ID of the logged in user using the token
-function getUserID(): number | null {
-  // getUserIdFromToken() already handles SSR (returns null)
-  return getUserIdFromToken();
-}
-
 function validatePhoneNumber(phoneNumber: string) {
   const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
   return phoneRegex.test(phoneNumber);
@@ -45,7 +39,8 @@ function checkPasswordSecurity(currentPwd: string, newPwd: string) {
 export default function ProfilePage() {
   // Initialize user profile data
   // Get the user profile data from the backend
-  const { user, isLoading, error, updateUser, updatePassword } = useUser(getUserID());
+  // useUser expects number, use nullish coalescing w/ 0 fallback for now
+  const { user, isLoading, error, updateUser, updatePassword } = useUser(getUserIdFromToken() ?? 0);
 
   // Promotions subscription state
   const [subscribeToPromotions, setSubscribeToPromotions] = useState(false);

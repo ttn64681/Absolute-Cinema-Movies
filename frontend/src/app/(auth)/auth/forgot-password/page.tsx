@@ -5,7 +5,11 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import NavBar from '@/components/common/navBar/NavBar';
 import { useToast } from '@/contexts/ToastContext';
+<<<<<<< HEAD
 import { validateEmail } from '@/clients/auth';
+=======
+import { validateEmail } from '@/clients/authClient';
+>>>>>>> thai_d7_troubleshoot
 import { buildUrl, endpoints } from '@/config/api';
 
 export default function ForgotPasswordPage() {

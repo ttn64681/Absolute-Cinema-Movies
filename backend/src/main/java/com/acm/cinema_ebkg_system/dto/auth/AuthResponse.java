@@ -37,7 +37,7 @@ public class AuthResponse {
      * User DTO - Represents user data safe for frontend consumption
      * 
      * Security: Excludes password hash and sensitive data.
-     * Design: Simple data container. Factory methods are in UserDtoFactory class.
+     * Design: Simple data container. Static factory methods are in UserDtoFactory class.
      * Note: Address information is provided separately via UserProfileDTO when needed.
      */
     @Data

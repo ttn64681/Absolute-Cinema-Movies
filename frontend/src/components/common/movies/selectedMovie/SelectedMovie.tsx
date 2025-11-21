@@ -10,35 +10,48 @@ import SelectedMovieCredits from './SelectedMovieCredits';
 import SelectedMovieTrailer from './SelectedMovieTrailer';
 
 import { BackendMovie } from '@/types/movie';
-import { buildUrl, endpoints } from '@/config/api';
+import { movieClient } from '@/clients/movieClient';
 
 interface MovieDetailProps {
   movie: BackendMovie;
   onClose: () => void;
 }
 
-// MOVIE DETAILS POP-UP
+/**
+ * Selected Movie Modal - Displays full movie details
+ *
+ * Implements Virtual Proxy pattern:
+ * - Receives MovieSummary (lightweight) from parent
+ * - Fetches full Movie entity (with cast/directors/producers) on mount
+ * - Falls back to MovieSummary if fetch fails
+ *
+ * This ensures fast browsing (MovieSummary) while providing complete
+ * details (Movie) when user shows interest by clicking.
+ */
 export default function SelectedMovie({ movie, onClose }: MovieDetailProps) {
-  // Dummy data for show dates and times
-  // const availableDates = ["10/10/25", "10/11/25", "10/12/25"];
-  // const availableTimes = ["8:00 PM", "9:15 PM", "10:00 PM"];
-
   // State for showtime selection
   const [currentDate, setCurrentDate] = useState<string>('');
   const [selectedShowtime, setSelectedShowtime] = useState<string | null>(null);
 
-  // Fetch dates with useQuery
+  // Virtual Proxy: Fetch full movie details (cast, directors, producers)
+  const { data: fullMovie } = useQuery({
+    queryKey: ['movie-details', movie.movie_id],
+    queryFn: async () => {
+      return await movieClient.getMovieById(movie.movie_id);
+    },
+    staleTime: 10 * 60 * 1000, // Cache for 10 minutes
+    placeholderData: movie, // Use MovieSummary as placeholder while loading
+  });
+
+  // Fetch available showtime dates
   const {
     data: availableDates = [],
     isLoading: datesLoading,
     error: datesError,
   } = useQuery({
-    queryKey: ['movie-dates', movie.movie_id], // uniqueKey for system to invalidate query if movie ID changes
+    queryKey: ['movie-dates', movie.movie_id],
     queryFn: async () => {
-      const url = buildUrl(endpoints.movies.dates(movie.movie_id));
-      const resp = await fetch(url);
-      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-      return resp.json();
+      return await movieClient.getDates(movie.movie_id);
     },
     staleTime: 5 * 60 * 1000, // Cache for 5 minutes
   });
@@ -68,16 +81,16 @@ export default function SelectedMovie({ movie, onClose }: MovieDetailProps) {
         </button>
 
         {/* Left Side - Movie Poster + Details */}
-        <SelectedMovieInfo movie={movie} />
+        <SelectedMovieInfo movie={fullMovie || movie} />
 
         {/* Right Side - trailer, showtimes, cast */}
         <div className="w-1/2 h-full p-6 flex flex-col overflow-y-auto bg-gradient-to-br from-black/90 to-gray-900/90 backdrop-blur-sm">
           {/* Trailer Section */}
-          <SelectedMovieTrailer movie={movie} />
+          <SelectedMovieTrailer movie={fullMovie || movie} />
 
           {/* Showtimes Section */}
           <SelectedMovieShowtimes
-            movie={movie}
+            movie={fullMovie || movie}
             availableDates={availableDates}
             datesLoading={datesLoading}
             datesError={datesError}
@@ -87,10 +100,14 @@ export default function SelectedMovie({ movie, onClose }: MovieDetailProps) {
             selectedShowtime={selectedShowtime}
           />
 
-          {/* Movie Credits Section */}
-          <SelectedMovieCredits movie={movie} />
+          {/* Movie Credits Section - Now has real cast/directors/producers! */}
+          <SelectedMovieCredits movie={fullMovie || movie} />
 
-          <SelectedMovieBookButton selectedShowtime={selectedShowtime ?? ''} movie={movie} currentDate={currentDate} />
+          <SelectedMovieBookButton
+            selectedShowtime={selectedShowtime ?? ''}
+            movie={fullMovie || movie}
+            currentDate={currentDate}
+          />
         </div>
       </div>
     </div>

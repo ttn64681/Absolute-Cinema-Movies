@@ -1,0 +1,1378 @@
+# ACM Cinema E-Booking System - Cursor Rules
+
+## Core Principles
+
+### 1. NO BREAKING CHANGES
+- NEVER modify existing functionality without explicit approval
+- Test after EVERY change
+- If unsure, ask before implementing
+- Preserve existing behavior when refactoring
+- Before modifying any code, trace all usages and analyze dependencies (see Dependency Analysis section)
+
+### 2. SOLID Principles
+- **Single Responsibility**: Each class/component/function does ONE thing
+- **Open/Closed**: Open for extension, closed for modification
+- **Liskov Substitution**: Subtypes must be substitutable for base types
+- **Interface Segregation**: Many specific interfaces > one general interface
+- **Dependency Inversion**: Depend on abstractions, not concretions
+
+### 3. Design Patterns (Active in Codebase)
+- **Facade/API Client**: Single interface for API calls (movieClient, paymentClient, authClient)
+- **Decorator**: Dynamic responsibility addition (HOCs for cross-cutting concerns)
+- **Protected Proxy**: Access control (middleware, JWT filters)
+- **Static Factory Method**: Named constructors for object creation (MovieSummary.fromMovie())
+- **Virtual Proxy**: Lazy-load heavy data (SelectedMovie fetches full entity on demand)
+
+### 4. DRY (Don't Repeat Yourself)
+- Eliminate code duplication
+- Create utilities for shared logic
+- Use Single Source of Truth (SSoT)
+- Refactor duplicated patterns into reusable abstractions
+
+### 5. Design Goals
+- **Maintainability**: Changes in one place, minimal ripple effects
+- **Reusability**: Components/functions usable in multiple contexts
+- **Security**: Auth checks at appropriate layers
+- **Usability**: Clear error messages, loading states, consistent UX
+- **Testability**: Pure functions, dependency injection
+
+---
+
+## Frontend Architecture
+
+### Layer Structure
+```
+┌─────────────────────────────────┐
+│  Pages/Routes (View Layer)      │  ← Display only, minimal logic
+├─────────────────────────────────┤
+│  Components (Presentation)      │  ← Reusable UI, props-based
+├─────────────────────────────────┤
+│  Hooks (State Management)       │  ← React state, caching, lifecycle
+├─────────────────────────────────┤
+│  Clients (Facade Layer)         │  ← API calls, error handling
+├─────────────────────────────────┤
+│  Utils (Pure Helpers)           │  ← Pure functions, no state/side effects
+├─────────────────────────────────┤
+│  Services                       │  ← Complex business logic (if needed)
+└─────────────────────────────────┘
+```
+
+### Naming Conventions
+
+#### Components
+- **PascalCase** for component files: `MovieCard.tsx`, `NavBar.tsx`
+- **Specific > Generic**: `SelectedMovieCredits` not `Credits`
+- **Location-based organization**:
+  - `/components/common/` - Reusable across app (NavBar, Footer, Spinner)
+  - `/components/specific/` - Feature-specific (home/, movies/, booking/)
+
+#### Hooks
+- **Prefix with `use`**: `useMovies`, `useAuth`, `usePaymentCards`
+- **Named after domain**: `useMovies` (not `useMovieData`)
+- **ONE hook per feature**: Combines state, business logic, and client calls
+- **Return object with clear properties**:
+  ```typescript
+  return {
+    data: movies,
+    isLoading,
+    error,
+    refetch,
+    // ... operations
+  };
+  ```
+
+#### Clients (API Facades)
+- **Named with `Client` suffix**: `movieClient`, `paymentClient`, `authClient`
+- **Export const object** with methods: `export const movieClient = { getNowPlaying, ... }`
+- **Shared request helper**: Use a common `request()` function for auth headers, error handling
+- **One client per domain**: Movies, payments, auth, user, etc.
+
+#### Utils
+- **Descriptive function names**: `getAuthToken`, `formatExpirationDate`
+- **Pure functions only** (no state, no side effects)
+- **Grouped by domain**: `auth.ts`, `payment.ts`, `pagination.ts`
+
+#### Types/Interfaces
+- **PascalCase**: `BackendMovie`, `PaymentCard`, `PaginatedMovieResponse`
+- **Prefix with `Backend` for API types**: `BackendUser`, `BackendMovie`
+- **Backend DTOs**: Always include "DTO" suffix for clarity (e.g., `MovieDTO`, `UserProfileDTO`, `PaymentCardRequestDTO`)
+  - Exception: Request/Response classes may use suffix instead (e.g., `LoginRequest`, `AuthResponse`)
+  - Current inconsistency exists but will be standardized to always use DTO suffix in future
+- **Frontend types**: Suffix with purpose if needed (e.g., `MovieFormData`, `PaymentCardData`)
+
+### File Organization
+```
+src/
+├── app/                    # Next.js pages/routes
+│   ├── (public)/          # Public routes (no auth required)
+│   ├── (auth)/            # Auth routes (login, register)
+│   ├── (user)/            # User routes (protected)
+│   └── (admin)/           # Admin routes (admin only)
+├── components/
+│   ├── common/            # Reusable across app
+│   │   ├── auth/          # Auth-related components
+│   │   ├── movies/        # Movie display components
+│   │   ├── navBar/        # Navigation components
+│   │   └── promos/        # Promotion components
+│   └── specific/          # Feature-specific
+│       ├── home/          # Homepage components
+│       ├── movies/        # Movies page components
+│       ├── booking/       # Booking flow components
+│       ├── auth/          # Auth flow components
+│       ├── user/          # User profile components
+│       └── admin/         # Admin panel components
+├── hooks/                 # Custom React hooks
+├── clients/               # API facades (standardized API calls)
+├── contexts/              # React contexts (global state)
+├── services/              # Complex business logic
+├── utils/                 # Pure utility functions
+├── types/                 # TypeScript types/interfaces
+└── config/                # Configuration (api.ts)
+```
+
+---
+
+## Backend Architecture
+
+### Layer Structure
+```
+┌─────────────────────────────────┐
+│  Controller Layer              │  ← HTTP endpoints, request/response
+├─────────────────────────────────┤
+│  Service Layer                 │  ← Business logic, validation
+├─────────────────────────────────┤
+│  Repository Layer              │  ← Database queries (Spring Data JPA)
+├─────────────────────────────────┤
+│  Model/Entity Layer            │  ← Database entities
+├─────────────────────────────────┤
+│  DTO Layer                     │  ← Data transfer objects
+└─────────────────────────────────┘
+```
+
+### Naming Conventions
+
+#### DTOs
+- **Always include "DTO" suffix** for clarity (preferred standard)
+  - Example: `MovieDTO`, `PromotionDTO`, `UserProfileDTO`
+- **RequestDTO**: Incoming data (POST/PUT body)
+  - Example: `PaymentCardRequestDTO`, `RegisterRequestDTO`
+  - Note: Some legacy files use just `Request` (e.g., `LoginRequest`) - will be standardized to `LoginRequestDTO` in future
+- **ResponseDTO**: Outgoing data (API response)
+  - Example: `PaymentCardResponseDTO`, `UserProfileResponseDTO`
+  - Note: Some legacy files use just `Response` (e.g., `AuthResponse`) - will be standardized to `AuthResponseDTO` in future
+- **DTO**: Used for both request and response (bidirectional)
+  - Example: `MovieDTO`, `PromotionDTO`
+
+#### Controllers
+- **Suffix with `Controller`**: `MovieController`, `UserController`
+- **RESTful naming**: Use standard HTTP methods
+  ```java
+  @GetMapping("/movies")           // Get all
+  @GetMapping("/movies/{id}")      // Get one
+  @PostMapping("/movies")          // Create
+  @PutMapping("/movies/{id}")      // Update
+  @DeleteMapping("/movies/{id}")   // Delete
+  ```
+
+#### Services
+- **Suffix with `Service`**: `MovieService`, `PaymentCardService`
+- **Business logic methods**: `createMovie`, `validateCard`, `processBooking`
+- **DTO to Entity conversion**: Handle in service, NOT controller
+- **Naming convention**: `createMovie(MovieDTO)` NOT `createMovieFromDTO(MovieDTO)`
+  - Method name matches entity, parameter type shows it takes DTO
+  - Consistent with other services (e.g., PromotionService.createPromotion(PromotionDTO))
+
+#### Repositories
+- **Suffix with `Repository`**: `MovieRepository`, `UserRepository`
+- **Extend JPA interfaces**: `JpaRepository<Movie, Long>`
+
+### Environment Variables
+
+**Backend requires environment variables:**
+- **Required**: `DATABASE_URL`, `DATABASE_USERNAME`, `DATABASE_PASSWORD`
+- **Setup**: Source `set_env.sh` before running backend
+  - Mac/Linux: `source set_env.sh && mvn spring-boot:run`
+  - Windows: `set_env.ps1`
+- **Error Handling**: Application fails with clear error if env vars not set
+- **Configuration**: Database config in `application.properties` uses env vars for security
+
+### Backend Layer Separation
+
+**Controller Layer (THIN - Target: < 5 lines per method)**
+```java
+@PostMapping("/create")
+public ResponseEntity<?> createMovie(@RequestBody MovieDTO dto) {
+    try {
+        Movie created = movieService.createMovie(dto);  // Delegate to service
+        return ResponseEntity.ok(created);
+    } catch (Exception e) {
+        return ResponseEntity.badRequest().body("Error: " + e.getMessage());
+    }
+}
+```
+
+**Service Layer (THICK - Contains all business logic)**
+```java
+@CacheEvict(value = {"nowPlayingMovies", "upcomingMovies"}, allEntries = true)
+public Movie createMovie(MovieDTO movieDTO) {
+    // DTO to Entity conversion in service
+    Movie newMovie = new Movie();
+    newMovie.setTitle(movieDTO.getTitle());
+    newMovie.setStatus(MovieStatus.upcoming);
+    // ... all conversion logic here
+    
+    return movieRepository.save(newMovie);
+}
+```
+
+**What Belongs Where**:
+- **Controller**: HTTP concerns (request/response, status codes, headers)
+- **Service**: Business logic (validation, transformation, DTO conversion, transactions)
+- **Repository**: Data access (queries, persistence)
+
+### Code Organization
+```
+src/main/java/com/acm/cinema_ebkg_system/
+├── config/                # Configuration classes
+│   ├── CacheConfig.java
+│   ├── SecurityConfig.java
+│   └── WebConfig.java
+├── controller/            # REST controllers
+├── service/               # Business logic
+├── repository/            # Data access
+├── model/                 # JPA entities
+├── dto/                   # Data transfer objects
+│   ├── auth/
+│   ├── movie/
+│   ├── payment/
+│   └── user/
+├── filter/                # Request filters (JWT)
+├── util/                  # Utility classes
+└── enums/                 # Enumerations
+```
+
+---
+
+## Code Style Rules
+
+### General Rules
+1. **NO EMOJIS** in code or comments
+2. **NO AUTHOR TAGS** in comments
+3. **NO ARROW SYMBOLS (→)** in comments - use plain text instead
+4. **Use imports** - no fully qualified names in method signatures
+5. **Add JavaDoc/JSDoc** for public APIs
+6. **Meaningful variable names** - `userData` not `data`, `movieId` not `id`
+
+### Comments (CRITICAL)
+**Brief, non-verbose, explain WHY not WHAT:**
+- Explain design decisions, not obvious code
+- Mention SOLID principles or patterns when relevant
+- Use abbreviations: "w/" instead of "with", "&" instead of "and"
+- Inline format: `code  // Brief explanation` (1 space after code)
+
+```java
+// GOOD: Brief, explains WHY
+// Use HashMap for O(1) lookups w/ 10k+ entries
+
+// BAD: Verbose, explains WHAT (obvious)
+// Loop through movies and process them
+
+// GOOD: Complex logic w/ design pattern
+/**
+ * Validates payment card using Luhn algorithm
+ * @param cardNumber 13-19 digit card number
+ * @return true if valid, false otherwise
+ */
+
+// BAD: Over-documenting simple getter
+/**
+ * Gets the user ID
+ * @return the ID
+ */
+public Long getId() { return id; }
+
+// GOOD: Concise abbreviations
+// Fetch cards w/ error handling & caching
+
+// BAD: Too verbose
+// Fetch payment cards with error handling and caching
+```
+
+### TypeScript/JavaScript
+```typescript
+// Use explicit types
+function getMovie(id: number): Promise<BackendMovie> { }
+
+// NOT implicit any
+function getMovie(id) { }
+
+// Use interfaces for objects
+interface MovieProps {
+  movie: BackendMovie;
+  onClose: () => void;
+}
+
+// Use const for immutable, let for mutable
+const API_URL = 'http://localhost:8080';
+let count = 0;
+
+// Destructure props
+function MovieCard({ movie, onClick }: MovieCardProps) { }
+
+// NOT: function MovieCard(props) { }
+```
+
+### Java
+```java
+// Use dependency injection (constructor injection preferred)
+@Service
+public class MovieService {
+    private final MovieRepository movieRepository;
+    
+    public MovieService(MovieRepository movieRepository) {
+        this.movieRepository = movieRepository;
+    }
+}
+
+// Use Optional for potentially null values
+public Optional<Movie> findMovieById(Long id) { }
+
+// Use streams for collections
+return movies.stream()
+    .filter(m -> m.getStatus() == MovieStatus.NOW_PLAYING)
+    .map(MovieSummary::fromMovie)
+    .collect(Collectors.toList());
+```
+
+---
+
+## Authentication Rules
+
+### Frontend Auth Flow
+1. **AuthContext** manages global auth state (user, isAuthenticated, login, logout)
+2. **`/utils/auth.ts`** provides pure utility functions (getAuthToken, getUserIdFromToken, getRefreshToken)
+3. **`/clients/authClient.ts`** handles API calls (authClient.login, authClient.register)
+4. **Middleware** protects routes at Next.js level (edge runtime)
+5. **Token storage**: localStorage (remember me) or sessionStorage (session only)
+
+### Backend Auth Flow
+1. **JwtAuthenticationFilter** validates tokens on every request
+2. **SecurityConfig** defines authorization rules (who can access what)
+3. **JwtUtil** handles token creation/validation
+4. **Controllers** assume authenticated user if reached (SecurityConfig ensures this)
+
+### Token Handling Rules
+- **ALWAYS use `getAuthToken()`** from utils (don't access localStorage directly)
+- **ALWAYS send token** in Authorization header: `Bearer ${token}`
+- **Token format**: JWT with payload `{ userId, email, role, exp }`
+- **Refresh tokens**: Stored separately, used for token refresh endpoint
+
+---
+
+## API Client Rules
+
+### When to Create a Client
+Create a client file for each major domain:
+1. One client per API domain (movies, users, payments, auth)
+2. Centralizes API calls with shared logic (headers, error handling, parsing)
+3. Used by hooks, never called directly from pages/components
+
+### Existing Clients
+- `movieClient.ts` - Movie browsing, search, details
+- `paymentClient.ts` - Payment card CRUD operations
+- `authClient.ts` - Login, register, password reset, token refresh
+
+### Client Structure
+```typescript
+// clients/movieClient.ts
+import { buildUrl, endpoints } from '@/config/api';
+import { getAuthToken } from '@/utils/auth';
+
+// Shared request helper
+async function request(path: string, options: RequestInit = {}) {
+  const token = getAuthToken();
+  const response = await fetch(buildUrl(path), {
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: token ? `Bearer ${token}` : '',
+      ...options.headers,
+    },
+    ...options,
+  });
+  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  return response.json();
+}
+
+// Domain-specific methods
+export const movieClient = {
+  async getNowPlaying(page: number) {
+    return request(`${endpoints.movies.browseNowPlaying}?page=${page}`);
+  },
+  
+  async getMovieById(id: number) {
+    return request(endpoints.movies.byId(id));
+  },
+  
+  // ... more methods
+};
+```
+
+### Hook Pattern - ONE Hook Per Feature
+```typescript
+// hooks/usePaymentCards.ts
+import { paymentClient } from '@/clients/paymentClient';
+
+export function usePaymentCards(userId: number | null) {
+  // State management
+  const [paymentCards, setPaymentCards] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+  
+  // Modal state (if needed for this feature)
+  const [isOpen, setIsOpen] = useState(false);
+  const [mode, setMode] = useState('Add');
+  const [editingCard, setEditingCard] = useState(null);
+  
+  // Data operations (calls client)
+  const fetchCards = async () => {
+    const data = await paymentClient.getCards(userId);
+    setPaymentCards(data);
+  };
+  
+  // Business logic
+  const handleSubmit = async (formData) => {
+    const success = mode === 'Add'
+      ? await paymentClient.createCard(userId, formData)
+      : await paymentClient.updateCard(userId, editingCard.id, formData);
+    if (success) setIsOpen(false);
+  };
+  
+  const handleDelete = async (cardId) => {
+    if (!confirm('Delete?')) return;
+    await paymentClient.deleteCard(cardId);
+    await fetchCards();
+  };
+  
+  // Return everything needed by the page
+  return { 
+    paymentCards, isLoading, error, 
+    isOpen, mode, editingCard,
+    handleSubmit, handleDelete, openAdd, openEdit, close 
+  };
+}
+```
+
+**Key points**:
+- ONE hook per feature (not multiple hooks for same feature)
+- Hook contains state + business logic + client calls
+- Hook returns unified interface
+- Pages just call the hook and render
+
+---
+
+## Utility File Rules
+
+### When to Create a Util
+Create a util file when:
+1. Function is **pure** (no side effects, no state)
+2. Function is **reusable** across multiple files
+3. Function performs **simple transformation** (format, parse, validate)
+
+### Examples of Good Utils
+- `getAuthToken()` - Extract token from storage
+- `formatExpirationDate()` - Format date string
+- `displayCardNumber()` - Mask card number
+- `createPaginationState()` - Transform API response to pagination object
+
+### What NOT to Put in Utils
+- React hooks (use `/hooks/`)
+- API calls (use `/clients/`)
+- Complex business logic (use `/hooks/` for frontend, `/services/` for backend)
+- Stateful operations (use `/hooks/` or context)
+
+### Null Handling (CRITICAL)
+- **Always use `null` for missing values**, never `0` or `-1` as sentinels
+- **Use nullish coalescing (`??`)** not logical OR (`||`) when falling back
+  - BAD: `userId || getUserIdFromToken()` (breaks if userId is 0)
+  - GOOD: `userId ?? getUserIdFromToken()`
+- **TypeScript**: Use `number | null`, not `number | undefined`
+- **API responses**: Backend should return `null` for missing values
+- **SSR**: Functions accessing `localStorage`/`sessionStorage` must return `null` during SSR
+
+### Centralized Auth Utilities (NO DUPLICATION)
+
+**ALWAYS use `utils/auth.ts` functions:**
+- **Token Retrieval**: Use `getAuthToken()` instead of `localStorage.getItem('token') || sessionStorage.getItem('token')`
+- **User ID Decoding**: Use `getUserIdFromToken()` - handles SSR automatically, returns `number | null`
+- **Refresh Token**: Use `getRefreshToken()` instead of direct storage access
+
+**Before Adding Auth Logic:**
+1. Check if `utils/auth.ts` already has the function
+2. Search codebase for duplicate token retrieval patterns: `grep -r "localStorage.getItem('token')"`
+3. Refactor existing code to use centralized utilities
+4. Never duplicate JWT decoding logic
+
+**Common Patterns to Avoid:**
+- BAD: `const token = localStorage.getItem('token') || sessionStorage.getItem('token');` 
+- GOOD: `const token = getAuthToken();`
+- BAD: Manual JWT decoding in components/hooks 
+- GOOD: `getUserIdFromToken()` or `useUserId()` hook
+- BAD: Duplicate `getUserIdFromToken()` functions 
+- GOOD: Import from `utils/auth.ts`
+
+### When to Use Hooks vs Utils (SSR-Safe Patterns)
+
+**Problem**: Direct util calls in component body can cause SSR hydration errors
+
+```typescript
+// BAD: Hydration mismatch
+function PaymentsPage() {
+  const userId = getUserIdFromToken(); // Server: null, Client: actual ID
+  // Result: Hydration error!
+}
+
+// GOOD: Hook with useEffect
+function PaymentsPage() {
+  const { userId } = useUserId(); // Safe: starts null on both sides
+}
+```
+
+**When to use `useUserId()` hook**:
+- In component body (for rendering)
+- Need SSR-safe access to userId
+- Need loading state
+- Prevents hydration mismatches
+
+**When to use `getUserIdFromToken()` util**:
+- Inside event handlers (onClick, onSubmit)
+- Inside another hook's `useEffect`
+- In API calls (already client-side)
+- In callbacks
+
+**Other examples that follow this pattern**:
+- `displayCardNumber()` util → **should always be used** for masking cards
+- `formatExpirationDate()` util → **should always be used** for formatting dates
+- `validatePhoneNumber()` util → **should always be used** for phone validation
+- These utils are pure functions and safe to call anywhere!
+
+---
+
+## Component Reusability Rules
+
+### Component Size & Complexity Limits
+
+**Hard Limits:**
+- **Component size**: Max 200-300 lines, split if larger
+- **State management**: Max 5-7 `useState` hooks per component
+- **If exceeded**: Extract logic to custom hooks or split into smaller components
+
+**When to Extract:**
+- Component >300 lines → Split into smaller components
+- Component has >7 `useState` hooks → Create custom hook
+- API calls in component → Move to custom hook
+- Business logic in component → Extract to hook or utility
+- Formatting functions in component → Move to `utils/`
+
+### Pages Should Be Lightweight (Target: < 100 lines)
+```tsx
+// GOOD: Page just calls hook and renders
+export default function PaymentsPage() {
+  const { userId } = useUserId();
+  const payment = usePaymentCards(userId);  // ONE hook call
+  
+  return (
+    <div>
+      <NavBar />
+      <UserNavTabs activeTab="payments" />
+      <PaymentCardsList 
+        cards={payment.paymentCards}
+        onEdit={payment.openEdit}
+        onDelete={payment.handleDelete}
+      />
+      <PaymentCardModal
+        isOpen={payment.isOpen}
+        onSubmit={payment.handleSubmit}
+      />
+    </div>
+  );
+}
+
+// BAD: Page contains business logic
+export default function PaymentsPage() {
+  const [cards, setCards] = useState([]);
+  const [mode, setMode] = useState('Add');
+  
+  const handleSubmit = async (formData) => {
+    if (mode === 'Add') { /* logic */ }
+    else { /* logic */ }
+  };
+  
+  // ... 200 lines of logic
+}
+```
+
+### Component Composition Over Monoliths
+```tsx
+// GOOD: Composed components
+<SelectedMovie>
+  <SelectedMovieInfo />
+  <SelectedMovieCredits />
+  <SelectedMovieShowtimes />
+</SelectedMovie>
+
+// BAD: Monolithic component
+<SelectedMovie />  // 500 lines of JSX inside
+```
+
+### Props > Context (for most cases)
+- Use props for component-to-child communication
+- Use context only for truly global state (auth, theme)
+- Don't overuse context (causes unnecessary re-renders)
+
+---
+
+## Error Handling Rules
+
+### Frontend Error Handling
+```typescript
+// ALWAYS provide user-friendly messages
+try {
+  await movieClient.getMovieById(id);
+} catch (error) {
+  setError('Failed to load movie details. Please try again.');
+  // NOT: setError(error.message) - too technical
+}
+
+// ALWAYS have loading states
+const [isLoading, setIsLoading] = useState(false);
+
+// ALWAYS reset error state before retrying
+const retry = () => {
+  setError(null);
+  fetchData();
+};
+```
+
+### Backend Error Handling
+```java
+// ALWAYS return appropriate HTTP status codes
+@ExceptionHandler(ResourceNotFoundException.class)
+public ResponseEntity<ErrorResponse> handleNotFound(ResourceNotFoundException ex) {
+    return ResponseEntity.status(HttpStatus.NOT_FOUND)
+        .body(new ErrorResponse(ex.getMessage()));
+}
+
+// ALWAYS log errors (but don't expose internals to client)
+catch (Exception e) {
+    log.error("Database error processing payment", e);
+    throw new ServiceException("Payment processing failed"); // Generic message to client
+}
+```
+
+---
+
+## Testing Rules
+
+### What to Test
+1. **Business logic** (service layer methods)
+2. **API endpoints** (controller integration tests)
+3. **Utility functions** (pure function unit tests)
+4. **Complex components** (React component tests)
+
+### What NOT to Test
+1. **Simple getters/setters**
+2. **Framework code** (Spring Security, Next.js routing)
+3. **Third-party libraries**
+4. **Generated code** (Lombok, DTO builders)
+
+---
+
+## Performance Rules
+
+### Caching Strategy
+1. **Use Spring Cache** for expensive queries (movie lists, genres)
+2. **Set appropriate TTL** (5-10 min for volatile data, 1 hour for static)
+3. **Evict on mutations** (@CacheEvict on create/update/delete)
+4. **Consider cache size** (limit to 100-1000 entries)
+
+### React Performance
+1. **Use useMemo** for expensive calculations
+2. **Use useCallback** for functions passed as props
+3. **Use React.memo** for pure components
+4. **Lazy load** heavy components (React.lazy, Next.js dynamic)
+
+### Database Performance
+1. **Use pagination** for large result sets
+2. **Use indexes** on frequently queried columns
+3. **Avoid N+1 queries** (use JPA fetch joins)
+4. **Use DTOs** to limit data transfer (MovieSummary vs Movie)
+
+---
+
+## Security Rules
+
+### Frontend Security
+1. **NEVER store sensitive data** in localStorage/cookies without encryption
+2. **ALWAYS validate user input** before sending to backend
+3. **Use HTTPS** in production
+4. **Sanitize user-generated content** (XSS prevention)
+
+### Backend Security
+1. **ALWAYS validate input** (@Valid, @NotNull, @Size)
+2. **Use parameterized queries** (prevents SQL injection)
+3. **Hash passwords** (BCrypt, never plain text)
+4. **Rate limit** sensitive endpoints (login, register)
+5. **Use ROLE-based access** (ROLE_USER, ROLE_ADMIN)
+
+---
+
+## File Management & Legacy Code
+
+### Documentation Files
+- **No MD File Explosion**: Do not create multiple markdown files unnecessarily
+- **Update Existing Docs**: Modify existing documentation instead of creating new files
+- **Temporary Files**: Clean up analysis/temporary files after use
+- **Consolidate**: Keep related information in single files
+
+### Legacy Code & File Deletion
+
+**Check Usage Before Deletion:**
+1. Search codebase for imports/references using `grep` or codebase search
+2. Check if used in frontend (API calls, imports)
+3. Check if used in backend (controllers, services, repositories)
+4. Document if legacy/unused before removal
+
+**Legacy Code Identification:**
+- Unused controllers/services (no frontend calls)
+- Deprecated DTOs (replaced by newer versions)
+- Duplicate functionality (old vs new implementation)
+- Dead code paths (commented out, TODO markers)
+
+**Refactoring Safety:**
+- Ensure replacement exists and works
+- Update all references before deletion
+- Consider deprecation warnings before removal
+- Test after removing legacy code
+
+---
+
+## Git Commit Rules
+
+### Commit Message Format
+```
+<type>: <short description>
+
+<optional longer description>
+
+<optional footer>
+```
+
+### Types
+- `feat`: New feature
+- `fix`: Bug fix
+- `refactor`: Code refactoring (no behavior change)
+- `docs`: Documentation changes
+- `style`: Formatting changes (no code change)
+- `test`: Adding/updating tests
+- `chore`: Maintenance tasks
+
+### Examples
+```
+feat: implement virtual proxy for movie details
+
+- Created movieClient.ts facade
+- Added getMovieById to fetch full movie entity
+- Updated SelectedMovie to fetch cast/directors on click
+
+Closes #42
+```
+
+---
+
+## Dependency & Breakage Analysis (CRITICAL)
+
+**Before modifying any code, you MUST:**
+
+### 1. Trace All Usages
+- Use `grep` to find all imports/usages of the function/component/hook
+- Use codebase search to find indirect dependencies
+- Check both frontend and backend if applicable
+- Verify no other files import or depend on what you're changing
+
+### 2. Analyze Type Signature Changes
+- **Breaking changes**: Changing `function(x: number)` → `function(x: number | null)`
+  - GOOD: Backward compatible - `number` can be passed to `number | null`
+  - WARNING: Check all call sites handle `null` properly
+- **Removing functions**: If removing function, verify no imports exist
+- **Changing return types**: `number` → `number | null` requires all callers to handle `null`
+
+### 3. Consider Edge Cases
+- **SSR (Server-Side Rendering)**: 
+  - `localStorage`/`sessionStorage` unavailable → functions return `null`
+  - Client-side hydration may have different values → potential hydration mismatch
+  - Verify components handle `null` gracefully during SSR
+- **Null/undefined handling**:
+  - API calls with `null` userId → URL becomes `/api/user/profile?userId=null` (verify backend handles this)
+  - `useEffect` dependencies with `null` → may cause unnecessary re-renders
+  - Conditional rendering with `null` → ensure UI doesn't break
+- **Error states**:
+  - Failed API calls → verify error handling doesn't crash
+  - Missing tokens → verify graceful degradation
+  - Network failures → verify user feedback
+
+### 4. Verify Hook Dependencies
+- **useEffect dependencies**: Changing type may affect dependency arrays
+- **Hook return values**: Changing hook return types affects all consumers
+- **Context providers**: Changing context values affects all consumers
+
+### 5. Test Scenarios (Mental Checklist)
+- [ ] **Happy path**: Normal usage works
+- [ ] **Null/undefined**: Functions handle missing values
+- [ ] **SSR**: Server-side rendering doesn't crash
+- [ ] **Hydration**: Client-side hydration matches server
+- [ ] **Error states**: Failures are handled gracefully
+- [ ] **Type safety**: TypeScript catches type mismatches
+
+### 6. Document Edge Cases
+- Add brief comments for non-obvious edge cases
+- Document SSR considerations
+- Note any breaking changes in function signatures
+
+---
+
+## Refactoring Checklist
+
+Before refactoring:
+- [ ] Read existing code thoroughly
+- [ ] Identify all usages (search codebase)
+- [ ] Document current behavior
+- [ ] Write tests (if not already covered)
+
+During refactoring:
+- [ ] Make small, incremental changes
+- [ ] Test after each change
+- [ ] Keep existing tests passing
+- [ ] Don't change behavior (unless that's the goal)
+
+After refactoring:
+- [ ] Run full test suite
+- [ ] Check for linter errors
+- [ ] Update documentation
+- [ ] Review git diff
+
+---
+
+## Questions to Ask Before Coding
+
+1. **Does this follow SOLID principles?**
+2. **Is this DRY (not duplicating existing code)?**
+3. **Does this fit our architecture?**
+4. **Will this break existing functionality?** (Trace dependencies first!)
+5. **Is this the Single Source of Truth?**
+6. **Can this be reused elsewhere?**
+7. **Is error handling consistent?**
+8. **Are naming conventions followed?**
+9. **Is this testable?**
+10. **Would I understand this code in 6 months?**
+11. **Does this duplicate existing utilities?** (Check `utils/`, especially `auth.ts`)
+12. **Are comments brief and explain WHY not WHAT?**
+13. **Is component size <300 lines and state management <7 hooks?**
+14. **Have I considered SSR/hydration edge cases?**
+15. **Am I using `null` correctly (not `0` as sentinel)?**
+
+---
+
+## Red Flags (Don't Do This)
+
+- Creating duplicate code when SSoT exists
+- Putting business logic in controllers
+- Putting API calls in components (use hooks/clients)
+- Using `any` without type annotations
+- Ignoring TypeScript errors
+- Copying code without understanding it
+- Creating files with vague names (`util.ts`, `helper.tsx`)
+- Hard-coding values that should be configurable
+- Skipping error handling
+- Writing 500-line functions
+- Using magic numbers without constants
+- Mixing concerns (display + logic in one component)
+- **Using emojis in code or comments**
+- **Using arrow symbols (→) in comments**
+- **Verbose comments explaining obvious code**
+- Duplicating auth/token logic instead of using `utils/auth.ts`
+- Manual JWT decoding instead of using `getUserIdFromToken()`
+- Using `0` or `-1` as sentinel values instead of `null`
+- Using `||` for fallbacks when `??` is correct (breaks with falsy values like `0`)
+- Components >300 lines without splitting
+- Components >7 `useState` hooks without extracting to custom hook
+- Creating new markdown files instead of updating existing docs
+
+---
+
+## Decision Making Process
+
+1. **Analyze**: Review existing code patterns and structures
+2. **Trace Dependencies**: Find all usages and potential breakage points (see Dependency & Breakage Analysis)
+3. **Argue**: Consider multiple approaches and their trade-offs
+4. **Decide**: Choose solution that best fits SOLID principles and existing architecture
+5. **Verify**: Check edge cases, SSR, null handling, error states
+6. **Document**: Add brief comments explaining design decisions and edge cases
+
+---
+
+## UI/UX Design Conventions
+
+### Color System (TailwindCSS)
+
+**Primary Brand Colors:**
+- `acm-pink`: Primary CTA color (`#FF478B`, `#FF3290` on hover)
+- `acm-orange`: Secondary CTA color, used in gradients
+- Gradients: `bg-gradient-to-r from-acm-pink to-acm-orange`
+
+**Backgrounds:**
+- Main background: `bg-black` or `bg-[#1C1C1C]`
+- Cards/Panels: `bg-white/10` or `bg-black/50` with `backdrop-blur-md`
+- Overlays: `bg-black/50` or `bg-black/70` with `backdrop-blur-sm`
+- Hover states: `hover:bg-black/70`, `hover:bg-white/20`
+
+**Text Colors:**
+- Primary text: `text-white`
+- Secondary text: `text-white/80`, `text-white/60`
+- Tertiary text: `text-white/40`, `text-gray-400`, `text-gray-500`
+- Error text: `text-red-400`, `text-red-200`
+- Success text: `text-green-400`
+
+**Borders:**
+- Subtle borders: `border border-white/10`, `border-white/20`
+- Hover borders: `hover:border-acm-pink/50`, `hover:border-white/40`
+- Active/Selected: `border-acm-pink`, `border-2 border-acm-pink`
+
+### Interactive Elements
+
+**CRITICAL: ALL interactive elements MUST have `cursor-pointer`**
+
+**Button Standards:**
+
+1. **Primary CTA Buttons:**
+```tsx
+className="px-6 py-3 rounded-md font-afacad font-bold text-white bg-gradient-to-r from-acm-pink to-acm-orange hover:brightness-110 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+```
+
+2. **Secondary Buttons:**
+```tsx
+className="px-4 py-2 rounded-md font-afacad font-bold text-white border-2 border-white/20 hover:border-white/40 transition-colors cursor-pointer"
+```
+
+3. **Icon Buttons:**
+```tsx
+className="bg-black/50 hover:bg-black/70 backdrop-blur-sm rounded-full p-2 text-white hover:text-acm-pink transition-all duration-200 cursor-pointer border border-white/20 hover:border-acm-pink/50"
+```
+
+4. **Destructive Actions:**
+```tsx
+className="text-red-400 hover:text-red-300 transition-colors cursor-pointer"
+```
+
+**Link Standards:**
+```tsx
+// Navigation links
+className="text-white hover:text-acm-pink transition-colors cursor-pointer"
+
+// Active navigation (with underline indicator)
+className="relative font-bold text-acm-pink cursor-pointer"
+// Add: <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-acm-pink rounded-full" />
+```
+
+**Input Standards:**
+```tsx
+className="w-full px-4 py-3 rounded-md bg-white/10 border border-white/20 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-acm-pink focus:border-transparent"
+```
+
+**Select Dropdowns:**
+```tsx
+className="w-full px-4 py-3 rounded-md bg-white/10 border border-white/20 text-white focus:outline-none focus:ring-2 focus:ring-acm-pink focus:border-transparent cursor-pointer"
+```
+
+**Checkbox:**
+```tsx
+className="w-4 h-4 rounded border-white/20 bg-white/10 text-acm-pink focus:ring-2 focus:ring-acm-pink cursor-pointer"
+```
+
+**Card Hover Effects:**
+```tsx
+// Movie cards, payment cards, etc.
+className="group cursor-pointer transition-all duration-300 hover:shadow-xl hover:scale-105"
+```
+
+**Disabled States:**
+- Always include: `disabled:opacity-50 disabled:cursor-not-allowed`
+- For buttons with gradient: `disabled:opacity-50 disabled:cursor-not-allowed`
+
+### Modal/Popup Standards
+
+**Overlay:**
+```tsx
+<div className="fixed inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
+```
+
+**Modal Container:**
+```tsx
+<div className="fixed inset-0 flex items-center justify-center z-50">
+  <div className="relative w-[90vw] max-w-6xl backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 bg-gradient-to-br from-black/90 to-gray-900/90 p-6">
+    {/* Content */}
+  </div>
+</div>
+```
+
+**Close Button (Top Right):**
+```tsx
+<button
+  type="button"
+  onClick={onClose}
+  className="absolute top-5 right-6 z-[60] bg-black/50 hover:bg-black/70 backdrop-blur-sm rounded-full p-2 text-white hover:text-acm-pink duration-200 text-2xl cursor-pointer border border-white/20 hover:border-acm-pink/50"
+  title="Close"
+>
+  <IoClose />
+</button>
+```
+
+### Error Handling & User Feedback
+
+**CRITICAL: Use Toast notifications for success/error, NOT `alert()`**
+
+**Toast Usage (REQUIRED):**
+```tsx
+import { useToast } from '@/contexts/ToastContext';
+
+const { showToast } = useToast();
+
+// Success
+showToast('Profile updated successfully', 'success');
+
+// Error
+showToast('Failed to update profile. Please try again.', 'error');
+
+// Info
+showToast('Changes will take effect immediately', 'info');
+```
+
+**Inline Error Display (Forms):**
+```tsx
+{error && (
+  <div className="mb-4 p-3 bg-red-900/40 border border-red-500/60 rounded-md">
+    <p className="text-red-200 text-sm">{error}</p>
+  </div>
+)}
+```
+
+**Loading States:**
+```tsx
+// Spinner component
+<Spinner size="sm" color="pink" text="Loading..." />
+
+// Button loading state
+<button disabled={isLoading}>
+  {isLoading ? 'Saving...' : 'Save Changes'}
+</button>
+
+// Full page loading
+<div className="min-h-screen bg-black flex items-center justify-center">
+  <div className="text-white text-xl">Loading...</div>
+</div>
+```
+
+**Error States:**
+```tsx
+// With retry option
+{error && (
+  <div className="text-center py-8">
+    <p className="text-red-400 mb-4">{error}</p>
+    <button onClick={retry} className="text-acm-pink hover:text-acm-pink/80 cursor-pointer">
+      Try Again
+    </button>
+  </div>
+)}
+```
+
+**Empty States:**
+```tsx
+<div className="text-center py-8">
+  <p className="text-white/60 mb-4">No items found</p>
+  <button onClick={onAdd} className="text-acm-pink hover:text-acm-pink/80 cursor-pointer">
+    Add Your First Item
+  </button>
+</div>
+```
+
+### Animation & Transitions
+
+**Standard Transition:**
+```tsx
+className="transition-all duration-200"
+```
+
+**Hover Scale:**
+```tsx
+className="transition-all duration-300 hover:scale-105"
+```
+
+**Color Transitions:**
+```tsx
+className="transition-colors duration-200"
+```
+
+**Smooth Slide-in (Toast, Dropdowns):**
+```tsx
+className="transform transition-all duration-300 translate-x-0 opacity-100"
+// Hidden: "translate-x-full opacity-0"
+```
+
+### Typography
+
+**Fonts:**
+- Primary: `font-afacad` (most UI text)
+- Headers: `font-red-rose` (page titles, major sections)
+
+**Text Sizes:**
+- Page titles: `text-3xl` or `text-2xl`
+- Section headers: `text-xl` or `text-lg`
+- Body text: `text-base` or `text-sm`
+- Labels: `text-sm`
+- Helper text: `text-xs`
+
+**Font Weights:**
+- Titles: `font-bold`
+- Buttons: `font-semibold` or `font-bold`
+- Body: `font-normal` (default)
+
+### Layout Patterns
+
+**Page Structure:**
+```tsx
+<div className="min-h-screen bg-[#1C1C1C]">
+  <NavBar />
+  <div className="h-30" /> {/* Spacer for fixed navbar */}
+  
+  <UserNavTabs activeTab="current" />
+  
+  <div className="max-w-7xl mx-auto px-8 pb-16 mt-8">
+    {/* Page content */}
+  </div>
+</div>
+```
+
+**Grid Layouts:**
+```tsx
+// Sidebar + Main content
+<div className="grid grid-cols-1 md:grid-cols-[280px_1fr] gap-12 items-start">
+  <aside>{/* Sidebar */}</aside>
+  <section>{/* Main content */}</section>
+</div>
+
+// Card grid
+<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+  {items.map(item => <Card key={item.id} {...item} />)}
+</div>
+```
+
+**Spacing:**
+- Page padding: `px-8 pb-16` or `px-6`
+- Section margins: `mt-8`, `mb-8`
+- Element gaps: `gap-4`, `gap-6`, `gap-12`
+- Internal padding: `p-4`, `p-6`, `p-8`
+
+### Accessibility
+
+**Required Attributes:**
+1. **All buttons MUST have `type` attribute:**
+   ```tsx
+   <button type="button" onClick={...}>...</button>
+   <button type="submit">...</button>
+   ```
+
+2. **All interactive elements MUST have `title` attribute:**
+   ```tsx
+   <button type="button" title="Close modal">...</button>
+   <input type="text" title="Enter email address" />
+   ```
+
+3. **All form inputs MUST have labels:**
+   ```tsx
+   <label htmlFor="email">Email</label>
+   <input id="email" type="email" />
+   ```
+
+4. **Images MUST have alt text:**
+   ```tsx
+   <Image src={...} alt="Movie poster" />
+   ```
+
+### Consistency Checklist
+
+Before committing any UI component, verify:
+- [ ] All interactive elements have `cursor-pointer`
+- [ ] All buttons have `type` attribute
+- [ ] All interactive elements have `title` attribute
+- [ ] Uses `showToast()` instead of `alert()` for notifications
+- [ ] Follows brand color system (acm-pink, acm-orange)
+- [ ] Has proper hover states with transitions
+- [ ] Has disabled states where applicable
+- [ ] Has loading states for async operations
+- [ ] Has error states with user-friendly messages
+- [ ] Uses consistent spacing (px-4, py-3, gap-4, etc.)
+- [ ] Uses backdrop-blur for glassmorphism effect
+- [ ] Border opacity follows standards (white/10, white/20)
+- [ ] Text colors follow hierarchy (white, white/80, white/60)
+
+### Common Mistakes to Avoid
+
+1. **Using `alert()` instead of Toast notifications**
+   - BAD: `alert('Profile updated')`
+   - GOOD: `showToast('Profile updated successfully', 'success')`
+
+2. **Missing cursor pointer on interactive elements**
+   - BAD: `<button onClick={...}>Click</button>`
+   - GOOD: `<button onClick={...} className="cursor-pointer">Click</button>`
+
+3. **Inconsistent button styling**
+   - BAD: Custom inline styles on each button
+   - GOOD: Use standard button classes from this guide
+
+4. **Missing disabled states**
+   - BAD: `<button onClick={submit}>Submit</button>`
+   - GOOD: `<button onClick={submit} disabled={isLoading} className="disabled:opacity-50 disabled:cursor-not-allowed">Submit</button>`
+
+5. **No loading feedback**
+   - BAD: Button does nothing when clicked
+   - GOOD: Show loading state: `{isLoading ? 'Saving...' : 'Save'}`
+
+6. **Generic error messages**
+   - BAD: `Error occurred`
+   - GOOD: `Failed to update profile. Please check your connection and try again.`
+
+---
+
+## Resources
+
+- **Spring Boot Docs**: https://docs.spring.io/spring-boot/docs/current/reference/html/
+- **Next.js Docs**: https://nextjs.org/docs
+- **React Docs**: https://react.dev/
+- **TypeScript Handbook**: https://www.typescriptlang.org/docs/
+- **SOLID Principles**: https://en.wikipedia.org/wiki/SOLID
+- **TailwindCSS Docs**: https://tailwindcss.com/docs
+
+---
+
+## Current Implementation Status
+
+### Frontend
+**Clients (API Facades)**:
+- movieClient.ts - Movies browsing, search, details, showtimes
+- paymentClient.ts - Payment card CRUD
+- authClient.ts - Authentication operations
+
+**Hooks (ONE per feature)**:
+- useMovies - Movie browsing with pagination
+- useMovieSearch - Movie search with filters
+- usePaymentCards - Payment cards with modal state and CRUD
+- useUser - User profile (NOTE: Still uses direct fetch, needs refactoring to use userClient)
+- useUserId - SSR-safe userId extraction (KEEP - prevents hydration errors)
+
+**Utils**:
+- auth.ts - getAuthToken(), getUserIdFromToken(), getRefreshToken()
+- payment.ts - displayCardNumber(), formatExpirationDate()
+- profile.ts - validatePhoneNumber(), checkPasswordSecurity()
+- pagination.ts - Pagination helpers
+
+**Reusable Components**:
+- UserProfileSidebar - Profile picture + logout (used across user pages)
+- UserNavTabs - Navigation tabs (profile/payments/orders)
+- HomeAddressFields - Address input fields
+- PaymentCardsList, PaymentCardItem - Payment UI components
+
+### Backend
+**Controllers**: Thin, delegate to services
+**Services**: Thick, contain all business logic + DTO conversion
+**Repositories**: Data access only
+
+### Known Technical Debt
+- useUser.ts - Should use userClient (currently direct fetch calls)
+- Profile page - Could benefit from further recomponentization 
+
+---
+
+**Last Updated**: November 21, 2024
+**Version**: 2.2 (Consolidated & Comprehensive - Primary Reference)
+
+---
+
+## Complete Code Review Checklist
+
+Use this checklist for every code change:
+
+### Architecture & Design
+- [ ] Follows SOLID principles
+- [ ] Uses appropriate design patterns
+- [ ] Fits existing architecture (Page → Hook → Client → Backend)
+- [ ] No duplicate code (DRY principle)
+- [ ] Single Source of Truth maintained
+
+### Dependencies & Safety
+- [ ] **Dependency analysis completed** (traced all usages with `grep`)
+- [ ] **Type signature changes verified** (backward compatibility checked)
+- [ ] **SSR/hydration edge cases considered**
+- [ ] **Null handling verified** (no `0` sentinels, proper `null` checks)
+- [ ] No breaking changes to existing functionality
+
+### Backend (Java/Spring Boot)
+- [ ] Controllers are thin (<5 lines per method)
+- [ ] Business logic in service layer
+- [ ] DTOs used for API boundaries (never expose entities)
+- [ ] Proper use of Lombok annotations
+- [ ] Import statements used (no fully qualified names)
+- [ ] Static Factory Methods in dedicated Mapper classes (`mapper/` package)
+- [ ] Environment variables configured correctly
+
+### Frontend (React/Next.js)
+- [ ] Components <300 lines (split if larger)
+- [ ] Components <7 `useState` hooks (extract to hook if more)
+- [ ] API calls in hooks, not components
+- [ ] Formatting functions in `utils/`, not components
+- [ ] Business logic in hooks, not components
+- [ ] **Auth utilities centralized** (using `getAuthToken()`, `getUserIdFromToken()`)
+- [ ] No duplicate token retrieval or JWT decoding
+- [ ] SSR-safe (handles `localStorage`/`sessionStorage` unavailability)
+
+### Code Quality
+- [ ] **Comments are brief, explain WHY not WHAT**
+- [ ] **NO EMOJIS in code or comments**
+- [ ] **No verbose/obvious comments**
+- [ ] Meaningful variable names
+- [ ] Error handling implemented
+- [ ] Loading states for async operations
+- [ ] Type safety (no `any` without justification)
+
+### UI/UX (Frontend)
+- [ ] All interactive elements have `cursor-pointer`
+- [ ] All buttons have `type` attribute
+- [ ] All interactive elements have `title` attribute
+- [ ] Uses `showToast()` instead of `alert()` for notifications
+- [ ] Follows brand color system (acm-pink, acm-orange)
+- [ ] Proper hover states with transitions
+- [ ] Disabled states where applicable
+- [ ] Consistent spacing and styling
+- [ ] Accessibility attributes (labels, alt text)
+
+### File Management
+- [ ] Legacy/unused code identified and removed or documented
+- [ ] File usage verified before deletion/modification
+- [ ] No unnecessary markdown files created
+- [ ] Existing docs updated instead of creating new ones
+
+### Testing & Verification
+- [ ] Happy path works
+- [ ] Null/undefined handling works
+- [ ] SSR doesn't crash
+- [ ] Error states handled gracefully
+- [ ] Type safety verified
+

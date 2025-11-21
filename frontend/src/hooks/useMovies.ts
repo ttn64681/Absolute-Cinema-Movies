@@ -1,18 +1,26 @@
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
-import { buildUrl, endpoints } from '@/config/api';
+import { movieClient } from '@/clients/movieClient';
 import { BackendMovie, PaginatedMovieResponse } from '@/types/movie';
+import { CACHE_DURATION, initialPaginationState, createPaginationState } from '@/utils/pagination';
 
 /**
- * Facade hook for movie operations
- * Encapsulates all API calls, state management, pagination & error handling
+ * Hook for movie browsing operations
  *
- * Follows facade pattern: single interface for complex movie browsing subsystem
+ * Responsibilities:
+ * - React state management (movies, loading, error, pagination)
+ * - Client-side caching (5min TTL)
+ * - Pagination navigation
+ *
+ * Delegates to:
+ * - movieClient (Facade): API calls
+ * - pagination utils: Pagination helpers
  *
  * @param activeTab - 'nowplaying' | 'upcoming' - determines which movies to fetch
  * @returns Movie state, pagination info & navigation operations
  */
+
 // Cache for paginated movies data (per page)
 const moviesCache: Record<string, Record<number, PaginatedMovieResponse>> = {
   nowplaying: {},
@@ -23,19 +31,10 @@ const lastFetch: Record<string, Record<number, number>> = {
   upcoming: {},
 };
 
-// Cache duration: 5 minutes
-const CACHE_DURATION = 5 * 60 * 1000;
-
 export function useMovies(activeTab: 'nowplaying' | 'upcoming') {
   const [page, setPage] = useState(0);
   const [movies, setMovies] = useState<BackendMovie[]>([]);
-  const [pagination, setPagination] = useState({
-    currentPage: 0,
-    totalPages: 0,
-    totalElements: 0,
-    hasNext: false,
-    hasPrevious: false,
-  });
+  const [pagination, setPagination] = useState(initialPaginationState);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -51,51 +50,28 @@ export function useMovies(activeTab: 'nowplaying' | 'upcoming') {
       if (now - lastFetchTime < CACHE_DURATION && cached) {
         console.log(`Using cached ${activeTab} movies page ${pageNum}`);
         setMovies(cached.movies);
-        setPagination({
-          currentPage: cached.currentPage,
-          totalPages: cached.totalPages,
-          totalElements: cached.totalElements,
-          hasNext: cached.hasNext,
-          hasPrevious: cached.hasPrevious,
-        });
+        setPagination(createPaginationState(cached));
         setError(null);
         return;
       }
 
-      // Fetch from API
+      // Fetch from API using movieClient facade
       setIsLoading(true);
       setError(null);
       try {
-        const endpoint =
-          activeTab === 'nowplaying' ? endpoints.movies.browseNowPlaying : endpoints.movies.browseUpcoming;
-        const url = `${buildUrl(endpoint)}?page=${pageNum}`;
-
-        const response = await fetch(url);
-        if (!response.ok) {
-          throw new Error(`Failed to fetch movies: ${response.status}`);
-        }
-
-        const responseText = await response.text();
-        if (!responseText.trim()) {
-          throw new Error('Empty response from server');
-        }
-
-        const data: PaginatedMovieResponse = JSON.parse(responseText);
+        const data =
+          activeTab === 'nowplaying'
+            ? await movieClient.getNowPlaying(pageNum)
+            : await movieClient.getUpcoming(pageNum);
 
         // Update cache
-        if (!moviesCache[cacheKey]) moviesCache[cacheKey] = {};
-        if (!lastFetch[cacheKey]) lastFetch[cacheKey] = {};
-        moviesCache[cacheKey][pageNum] = data;
-        lastFetch[cacheKey][pageNum] = now;
+        if (!moviesCache[cacheKey]) moviesCache[cacheKey] = {}; // Init cache for this tab if not exists
+        if (!lastFetch[cacheKey]) lastFetch[cacheKey] = {}; // Init last fetch time for this tab if not exists
+        moviesCache[cacheKey][pageNum] = data; // Update cache w/ new data
+        lastFetch[cacheKey][pageNum] = now; // Update last fetch time w/ curr time
 
         setMovies(data.movies);
-        setPagination({
-          currentPage: data.currentPage,
-          totalPages: data.totalPages,
-          totalElements: data.totalElements,
-          hasNext: data.hasNext,
-          hasPrevious: data.hasPrevious,
-        });
+        setPagination(createPaginationState(data));
       } catch (err) {
         console.error('Error fetching movies:', err);
         const errorMessage = err instanceof Error ? err.message : 'Failed to load movies';

@@ -93,7 +93,7 @@ public class AdminController {
             String token = jwtUtil.generateToken(admin.getEmail(), admin.getId(), "ADMIN", request.isRememberMe());
             String refreshToken = jwtUtil.generateRefreshToken(admin.getEmail(), admin.getId(), "ADMIN", request.isRememberMe());
 
-            // Step 3: Create admin DTO using factory method (Factory Method pattern)
+            // Step 3: Create admin DTO using static factory method
             AuthResponse.UserDto adminDto = UserDtoFactory.fromAdmin(admin);
 
             // Step 4: Return success response with tokens and admin data

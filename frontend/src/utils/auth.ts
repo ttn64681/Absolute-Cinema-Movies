@@ -34,3 +34,12 @@ export function getUserIdFromToken(): number | null {
     return null;
   }
 }
+
+/**
+ * Get refresh token from localStorage or sessionStorage
+ * @returns Refresh token string or null if not found
+ */
+export function getRefreshToken(): string | null {
+  if (typeof window === 'undefined') return null;
+  return localStorage.getItem('refreshToken') || sessionStorage.getItem('refreshToken');
+}

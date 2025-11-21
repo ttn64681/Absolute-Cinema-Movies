@@ -8,8 +8,15 @@ import lombok.AllArgsConstructor;
 import lombok.Setter;
 
 /**
- * Complete set of Movie attributes.
- * Used when the Admin adds a new Movie.
+ * Movie DTO - Full movie entity data
+ * 
+ * Used by:
+ * - MovieController.createMovie() -> Request (Admin creates movie)
+ * - MovieController.getMovieById() -> Response (Virtual Proxy - returns full entity)
+ * - MovieController.updateMovie() -> Request (Admin updates movie)
+ * 
+ * Contains complete movie information including cast, directors, producers
+ * For browsing (lightweight), use MovieSummary instead
  */
 @Getter
 @Setter

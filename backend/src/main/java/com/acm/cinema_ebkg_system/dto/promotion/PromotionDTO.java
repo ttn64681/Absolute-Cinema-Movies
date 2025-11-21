@@ -10,6 +10,17 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 
+/**
+ * Promotion DTO - Used for both request and response
+ * 
+ * Used by:
+ * - PromotionController.getAllPromotions() -> Response
+ * - PromotionController.getPromotionById() -> Response
+ * - PromotionController.createPromotion() -> Request
+ * - PromotionController.updatePromotion() -> Request
+ * 
+ * Represents a promotional offer with discount code and expiration
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

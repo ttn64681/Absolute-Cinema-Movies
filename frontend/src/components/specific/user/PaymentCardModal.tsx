@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { PaymentCardFormData } from '@/types/payment';
+import { displayCardNumber } from '@/utils/payment';
 
 interface PaymentCardModalProps {
   isOpen: boolean;
@@ -38,8 +39,8 @@ export default function PaymentCardModal({
   // Update form data when initialData changes (when switching between Add/Edit)
   useEffect(() => {
     if (initialData) {
-      // Don't pre-fill card number if it's masked (server-side masking for security)
-      const cardNumber = initialData.cardNumber?.startsWith('****') ? '' : initialData.cardNumber || '';
+      // Don't pre-fill card number if it's masked (uses displayCardNumber util for consistency)
+      const cardNumber = displayCardNumber(initialData.cardNumber || '').startsWith('****') ? '' : initialData.cardNumber || '';
       setFormData({
         cardId: initialData.cardId || 0,
         cardType: initialData.cardType || '',
