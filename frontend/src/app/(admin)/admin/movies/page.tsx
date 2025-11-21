@@ -8,149 +8,7 @@ import { Movie } from '@/types/admin';
 import MovieFormModal, { AdminMovie } from '@/components/specific/admin/MovieFormModal';
 import ScheduleModal from '@/components/specific/admin/ScheduleModal';
 
-
-// hardcoded movies for now
-const moviesList: Movie[] = [
-  {
-    id: 1,
-    title: 'Oldboy',
-    date: '12/15/2024',
-    time: '6:30PM',
-    _meta: {
-      showtimes: [
-        { date: '12/15/2024', time: '6:30', ampm: 'PM', room: 'A' },
-        { date: '12/16/2024', time: '8:00', ampm: 'PM', room: 'B' },
-        { date: '12/17/2024', time: '7:30', ampm: 'PM', room: 'C' },
-      ],
-    },
-  },
-  {
-    id: 2,
-    title: 'Him',
-    date: '12/20/2024',
-    time: '8:00PM',
-    _meta: {
-      showtimes: [
-        { date: '12/20/2024', time: '8:00', ampm: 'PM', room: 'A' },
-        { date: '12/21/2024', time: '9:00', ampm: 'PM', room: 'B' },
-      ],
-    },
-  },
-  {
-    id: 3,
-    title: 'Beauty and the Beast',
-    date: '12/18/2024',
-    time: '6:45PM',
-    _meta: {
-      showtimes: [
-        { date: '12/18/2024', time: '6:45', ampm: 'PM', room: 'A' },
-        { date: '12/19/2024', time: '7:00', ampm: 'PM', room: 'C' },
-        { date: '12/20/2024', time: '6:45', ampm: 'PM', room: 'B' },
-      ],
-    },
-  },
-  {
-    id: 4,
-    title: 'Godzilla',
-    date: '12/22/2024',
-    time: '9:15PM',
-    _meta: {
-      showtimes: [
-        { date: '12/22/2024', time: '9:15', ampm: 'PM', room: 'A' },
-        { date: '12/23/2024', time: '9:30', ampm: 'PM', room: 'B' },
-      ],
-    },
-  },
-  {
-    id: 5,
-    title: 'Superman',
-    date: '12/16/2024',
-    time: '7:00PM',
-    _meta: {
-      showtimes: [
-        { date: '12/16/2024', time: '7:00', ampm: 'PM', room: 'A' },
-        { date: '12/17/2024', time: '7:15', ampm: 'PM', room: 'B' },
-        { date: '12/18/2024', time: '7:00', ampm: 'PM', room: 'C' },
-      ],
-    },
-  },
-  {
-    id: 6,
-    title: 'Tron',
-    date: '12/19/2024',
-    time: '8:30PM',
-    _meta: {
-      showtimes: [
-        { date: '12/19/2024', time: '8:30', ampm: 'PM', room: 'B' },
-        { date: '12/20/2024', time: '8:45', ampm: 'PM', room: 'C' },
-      ],
-    },
-  },
-  {
-    id: 7,
-    title: 'The Conjuring',
-    date: '12/21/2024',
-    time: '10:00PM',
-    _meta: {
-      showtimes: [
-        { date: '12/21/2024', time: '10:00', ampm: 'PM', room: 'A' },
-        { date: '12/22/2024', time: '10:15', ampm: 'PM', room: 'B' },
-      ],
-    },
-  },
-  {
-    id: 8,
-    title: 'Demon Slayer',
-    date: '12/17/2024',
-    time: '6:30PM',
-    _meta: {
-      showtimes: [
-        { date: '12/17/2024', time: '6:30', ampm: 'PM', room: 'C' },
-        { date: '12/18/2024', time: '6:45', ampm: 'PM', room: 'A' },
-        { date: '12/19/2024', time: '6:30', ampm: 'PM', room: 'B' },
-      ],
-    },
-  },
-  {
-    id: 9,
-    title: 'The Long Walk',
-    date: '12/23/2024',
-    time: '7:45PM',
-    _meta: {
-      showtimes: [
-        { date: '12/23/2024', time: '7:45', ampm: 'PM', room: 'A' },
-        { date: '12/24/2024', time: '8:00', ampm: 'PM', room: 'B' },
-        { date: '01/01/2025', time: '7:45', ampm: 'PM', room: 'C' },
-      ],
-    },
-  },
-  {
-    id: 10,
-    title: 'Good Boy',
-    date: '12/24/2024',
-    time: '5:30PM',
-    _meta: {
-      showtimes: [
-        { date: '12/24/2024', time: '5:30', ampm: 'PM', room: 'C' },
-        { date: '12/25/2024', time: '5:45', ampm: 'PM', room: 'A' },
-        { date: '01/02/2025', time: '5:30', ampm: 'PM', room: 'B' },
-      ],
-    },
-  },
-  {
-    id: 11,
-    title: 'Downton Abbey',
-    date: '12/25/2024',
-    time: '4:00PM',
-    _meta: {
-      showtimes: [
-        { date: '12/25/2024', time: '4:00', ampm: 'PM', room: 'B' },
-        { date: '12/26/2024', time: '4:15', ampm: 'PM', room: 'C' },
-        { date: '01/03/2025', time: '4:00', ampm: 'PM', room: 'A' },
-      ],
-    },
-  },
-];
+import { useAdminMovies } from '@/hooks/useAdminMovies';
 
 
 // Note: Will need to make a backend endpoint to return a movieshow with 
@@ -173,6 +31,163 @@ function getAmpmFromTime(time: string): 'AM' | 'PM' {
 }
 
 export default function AdminMoviesPage() {
+  
+  const {
+    adminMovies,
+    isLoading: isLoadingMovies,
+    // pagination,
+    // goToNextPage,
+    // goToPreviousPage,
+    // goToThisPage,
+  } = useAdminMovies();
+
+    // hardcoded movies for now
+  const fallbackMoviesList: Movie[] = [
+    {
+      id: 1,
+      title: 'Oldboy',
+      date: '12/15/2024',
+      time: '6:30PM',
+      _meta: {
+        showtimes: [
+          { date: '12/15/2024', time: '6:30', ampm: 'PM', room: 'A' },
+          { date: '12/16/2024', time: '8:00', ampm: 'PM', room: 'B' },
+          { date: '12/17/2024', time: '7:30', ampm: 'PM', room: 'C' },
+        ],
+      },
+    },
+    {
+      id: 2,
+      title: 'Him',
+      date: '12/20/2024',
+      time: '8:00PM',
+      _meta: {
+        showtimes: [
+          { date: '12/20/2024', time: '8:00', ampm: 'PM', room: 'A' },
+          { date: '12/21/2024', time: '9:00', ampm: 'PM', room: 'B' },
+        ],
+      },
+    },
+    {
+      id: 3,
+      title: 'Beauty and the Beast',
+      date: '12/18/2024',
+      time: '6:45PM',
+      _meta: {
+        showtimes: [
+          { date: '12/18/2024', time: '6:45', ampm: 'PM', room: 'A' },
+          { date: '12/19/2024', time: '7:00', ampm: 'PM', room: 'C' },
+          { date: '12/20/2024', time: '6:45', ampm: 'PM', room: 'B' },
+        ],
+      },
+    },
+    {
+      id: 4,
+      title: 'Godzilla',
+      date: '12/22/2024',
+      time: '9:15PM',
+      _meta: {
+        showtimes: [
+          { date: '12/22/2024', time: '9:15', ampm: 'PM', room: 'A' },
+          { date: '12/23/2024', time: '9:30', ampm: 'PM', room: 'B' },
+        ],
+      },
+    },
+    {
+      id: 5,
+      title: 'Superman',
+      date: '12/16/2024',
+      time: '7:00PM',
+      _meta: {
+        showtimes: [
+          { date: '12/16/2024', time: '7:00', ampm: 'PM', room: 'A' },
+          { date: '12/17/2024', time: '7:15', ampm: 'PM', room: 'B' },
+          { date: '12/18/2024', time: '7:00', ampm: 'PM', room: 'C' },
+        ],
+      },
+    },
+    {
+      id: 6,
+      title: 'Tron',
+      date: '12/19/2024',
+      time: '8:30PM',
+      _meta: {
+        showtimes: [
+          { date: '12/19/2024', time: '8:30', ampm: 'PM', room: 'B' },
+          { date: '12/20/2024', time: '8:45', ampm: 'PM', room: 'C' },
+        ],
+      },
+    },
+    {
+      id: 7,
+      title: 'The Conjuring',
+      date: '12/21/2024',
+      time: '10:00PM',
+      _meta: {
+        showtimes: [
+          { date: '12/21/2024', time: '10:00', ampm: 'PM', room: 'A' },
+          { date: '12/22/2024', time: '10:15', ampm: 'PM', room: 'B' },
+        ],
+      },
+    },
+    {
+      id: 8,
+      title: 'Demon Slayer',
+      date: '12/17/2024',
+      time: '6:30PM',
+      _meta: {
+        showtimes: [
+          { date: '12/17/2024', time: '6:30', ampm: 'PM', room: 'C' },
+          { date: '12/18/2024', time: '6:45', ampm: 'PM', room: 'A' },
+          { date: '12/19/2024', time: '6:30', ampm: 'PM', room: 'B' },
+        ],
+      },
+    },
+    {
+      id: 9,
+      title: 'The Long Walk',
+      date: '12/23/2024',
+      time: '7:45PM',
+      _meta: {
+        showtimes: [
+          { date: '12/23/2024', time: '7:45', ampm: 'PM', room: 'A' },
+          { date: '12/24/2024', time: '8:00', ampm: 'PM', room: 'B' },
+          { date: '01/01/2025', time: '7:45', ampm: 'PM', room: 'C' },
+        ],
+      },
+    },
+    {
+      id: 10,
+      title: 'Good Boy',
+      date: '12/24/2024',
+      time: '5:30PM',
+      _meta: {
+        showtimes: [
+          { date: '12/24/2024', time: '5:30', ampm: 'PM', room: 'C' },
+          { date: '12/25/2024', time: '5:45', ampm: 'PM', room: 'A' },
+          { date: '01/02/2025', time: '5:30', ampm: 'PM', room: 'B' },
+        ],
+      },
+    },
+    {
+      id: 11,
+      title: 'Downton Abbey',
+      date: '12/25/2024',
+      time: '4:00PM',
+      _meta: {
+        showtimes: [
+          { date: '12/25/2024', time: '4:00', ampm: 'PM', room: 'B' },
+          { date: '12/26/2024', time: '4:15', ampm: 'PM', room: 'C' },
+          { date: '01/03/2025', time: '4:00', ampm: 'PM', room: 'A' },
+        ],
+      },
+    },
+  ];
+
+  // Use adminMovies if available; otherwise, fall back to fallbackMoviesList
+  const moviesList = adminMovies && adminMovies.length > 0 ? adminMovies : fallbackMoviesList;
+  console.log(moviesList);
+
   const [movies, setMovies] = useState(moviesList); // movies list
   const [showModal, setShowModal] = useState(false); // add/edit movie popup visibility
   const [editingMovie, setEditingMovie] = useState<AdminMovie | null>(null); // movie currently being edited, if any

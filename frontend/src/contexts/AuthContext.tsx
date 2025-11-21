@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, useMemo, useCallback, useRef, ReactNode } from 'react';
-import { authAPI, AuthResponse } from '@/services/auth';
+import { authAPI, AuthResponse } from '@/clients/auth';
 import { getAuthToken } from '@/utils/auth';
 
 interface User {

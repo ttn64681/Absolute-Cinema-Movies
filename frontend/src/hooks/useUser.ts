@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { BackendUser } from '@/types/user';
-import { getUserInfo, updateUserInfo, changePassword } from '@/services/userClient';
+import { getUserInfo, updateUserInfo, changePassword } from '@/clients/userClient';
 
 // useUser: Hook that translates user data between the frontend and backend.
 

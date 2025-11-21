@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import NavBar from '@/components/common/navBar/NavBar';
 import { useRegistration } from '@/contexts/RegistrationContext';
-import { validatePhoneNumber } from '@/services/auth';
+import { validatePhoneNumber } from '@/clients/auth';
 import AuthInput from '@/components/common/auth/AuthInput';
 
 export default function RegisterStep2Page() {

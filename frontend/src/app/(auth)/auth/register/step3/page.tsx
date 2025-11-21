@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useRegistration } from '@/contexts/RegistrationContext';
-import { authAPI } from '@/services/auth';
+import { authAPI } from '@/clients/auth';
 import AuthFormContainer from '@/components/common/auth/AuthFormContainer';
 import AuthButtonGroup from '@/components/common/auth/AuthButtonGroup';
 import PaymentSection from '@/components/specific/auth/PaymentSection';
