@@ -1,6 +1,7 @@
 package com.acm.cinema_ebkg_system.service;
 
-import com.acm.cinema_ebkg_system.dto.payment.PaymentCardDTO;
+import com.acm.cinema_ebkg_system.dto.payment.PaymentCardRequestDTO;
+import com.acm.cinema_ebkg_system.dto.payment.PaymentCardResponseDTO;
 import com.acm.cinema_ebkg_system.model.PaymentCard;
 import com.acm.cinema_ebkg_system.model.Address;
 import com.acm.cinema_ebkg_system.model.User;
@@ -252,7 +253,7 @@ public class PaymentCardService {
      * @return Created PaymentCard
      */
     @Transactional
-    public PaymentCard createPaymentCardFromDto(PaymentCardDTO dto) {
+    public PaymentCard createPaymentCardFromDto(PaymentCardRequestDTO dto) {
         // Get user
         User user = userService.getUserById(dto.getUserId());
         
@@ -288,7 +289,7 @@ public class PaymentCardService {
      * @return Updated PaymentCard
      */
     @Transactional
-    public PaymentCard updatePaymentCardFromDto(Long paymentCardId, PaymentCardDTO dto) {
+    public PaymentCard updatePaymentCardFromDto(Long paymentCardId, PaymentCardRequestDTO dto) {
         // Get existing payment card
         PaymentCard existingCard = getPaymentCardById(paymentCardId)
             .orElseThrow(() -> new RuntimeException("Payment card not found"));

@@ -105,7 +105,7 @@ public class AuthService {
         
         // Step 4: Create payment cards and billing addresses if provided
         if (request.getPaymentCards() != null && !request.getPaymentCards().isEmpty()) {
-            for (com.acm.cinema_ebkg_system.dto.payment.PaymentCardDTO cardDto : request.getPaymentCards()) {
+            for (com.acm.cinema_ebkg_system.dto.payment.PaymentCardRequestDTO cardDto : request.getPaymentCards()) {
                 // Create billing address for this payment card
                 Address billingAddress = new Address();
                 billingAddress.setUser(savedUser);

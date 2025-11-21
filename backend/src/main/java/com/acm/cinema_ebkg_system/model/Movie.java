@@ -94,7 +94,7 @@ public class Movie {
         return title;
     }
 
-    public String getStatus() {
+    public MovieStatus getStatus() {
         return status;
     }
 
@@ -151,7 +151,7 @@ public class Movie {
         this.title = title;
     }
 
-    public void setStatus(String status) {
+    public void setStatus(MovieStatus status) {
         this.status = status;
     }
 

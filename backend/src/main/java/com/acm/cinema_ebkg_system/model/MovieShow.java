@@ -69,11 +69,10 @@ public class MovieShow {
     public MovieShow() {}
 
     // Constructor
-    public MovieShow(Long id, Movie movie, ShowRoom showRoom, String status, Integer availableSeats, List<ShowSeat> seats, LocalDateTime createdAt, LocalDateTime updatedAt) {
+    public MovieShow(Long id, Movie movie, ShowRoom showRoom, Integer availableSeats, List<ShowSeat> seats, LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
         this.movie = movie;
         this.showRoom = showRoom;
-        this.status = status;
         this.availableSeats = availableSeats;
         this.seats = seats;
         this.createdAt = createdAt;
@@ -93,8 +92,8 @@ public class MovieShow {
         return showRoom;
     }
 
-    public String getStatus() {
-        return status;
+    public ShowTime getShowTime() {
+        return showTime;
     }
 
     public Integer getAvailableSeats() {
@@ -126,8 +125,8 @@ public class MovieShow {
         this.showRoom = showRoom;
     }
 
-    public void setStatus(String status) {
-        this.status = status;
+    public void setShowTime(ShowTime showTime) {
+        this.showTime = showTime;
     }
 
     public void setAvailableSeats(Integer availableSeats) {

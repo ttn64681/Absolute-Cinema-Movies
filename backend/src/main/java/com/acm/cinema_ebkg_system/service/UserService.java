@@ -599,7 +599,7 @@ public class UserService {
             );
         }
         
-        return new com.acm.cinema_ebkg_system.dto.user.UserProfileDTO(userDto, addressDto);
+        return new com.acm.cinema_ebkg_system.dto.user.UserProfileDTO(userDto, addressDto, null, null);
     }
 
 }
