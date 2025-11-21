@@ -1,0 +1,38 @@
+/* Profile page specific styles */
+.profileInput {
+  width: 100%;
+  padding: 0.75rem;
+  border-radius: 0.375rem;
+  background-color: #242424;
+  color: white;
+  font-family: var(--font-afacad);
+  border: 2px solid #FF478B;
+  outline: none;
+  -webkit-box-shadow: 0 0 0 1000px #242424 inset;
+  -webkit-text-fill-color: white;
+}
+
+.profileInput:focus {
+  border-color: #FF478B;
+}
+
+.profileInput::placeholder {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.emailInput {
+  width: 100%;
+  padding: 0.75rem;
+  border-radius: 0.375rem;
+  background-color: #2B2B2B;
+  color: rgba(255, 255, 255, 0.7);
+  font-family: var(--font-afacad);
+  border: 2px solid #4A4A4A;
+  outline: none;
+  -webkit-box-shadow: 0 0 0 1000px #2B2B2B inset;
+  -webkit-text-fill-color: white;
+}
+
+.emailInput:focus {
+  outline: none;
+}

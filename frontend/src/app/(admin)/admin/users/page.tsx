@@ -106,14 +106,14 @@ function AdminUsersPage() {
           className="text-gray-300 hover:text-white transition-colors"
           style={{ fontWeight: 'bold' }}
         >
-          Movies & Showtimes
+          Manage Movies
         </Link>
         <Link
           href="/admin/pricing"
           className="text-gray-300 hover:text-white transition-colors"
           style={{ fontWeight: 'bold' }}
         >
-          Pricing & Promotions
+          Manage Promotions
         </Link>
         <Link href="/admin/users" className="relative" style={{ color: '#FF478B', fontWeight: 'bold' }}>
           Manage Users

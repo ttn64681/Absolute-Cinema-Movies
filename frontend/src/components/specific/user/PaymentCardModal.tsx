@@ -38,12 +38,14 @@ export default function PaymentCardModal({
   // Update form data when initialData changes (when switching between Add/Edit)
   useEffect(() => {
     if (initialData) {
+      // Don't pre-fill card number if it's masked (server-side masking for security)
+      const cardNumber = initialData.cardNumber?.startsWith('****') ? '' : initialData.cardNumber || '';
       setFormData({
         cardId: initialData.cardId || 0,
         cardType: initialData.cardType || '',
-        cardNumber: initialData.cardNumber || '',
+        cardNumber: cardNumber,
         expirationDate: initialData.expirationDate || '',
-        cvv: initialData.cvv || '',
+        cvv: '', // Never pre-fill CVV for security
         cardholderName: initialData.cardholderName || '',
         billingStreet: initialData.billingStreet || '',
         billingCity: initialData.billingCity || '',

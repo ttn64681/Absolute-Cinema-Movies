@@ -10,36 +10,12 @@ import styles from './profile.module.css';
 
 // Hook to retrieve user from backend
 import { useUser } from '@/hooks/useUser';
-
-// Decode the token for the current login session
-function decodeJWT(token: string) {
-  const [, payloadBase64] = token.split('.');
-  const decodedPayload = Buffer.from(payloadBase64, 'base64').toString('utf-8');
-
-  return JSON.parse(decodedPayload);
-}
+import { getUserIdFromToken } from '@/utils/auth';
 
 // Get the ID of the logged in user using the token
-function getUserID() {
-  // Check if we're on the client side before accessing storage
-  if (typeof window === 'undefined') {
-    return 0; // Return default value during SSR
-  }
-
-  // Check localStorage first, then sessionStorage
-  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-  //console.log(token);
-
-  if (token) {
-    const userData = decodeJWT(token);
-    //console.log("Decoded User Data:", userData);
-    const userId = userData.userId;
-    //console.log("User ID:", userId);
-    return userId;
-  } else {
-    // If the token is somehow not present, return 0 as a failsafe, which is an unused ID
-    return 0;
-  }
+function getUserID(): number | null {
+  // getUserIdFromToken() already handles SSR (returns null)
+  return getUserIdFromToken();
 }
 
 function validatePhoneNumber(phoneNumber: string) {

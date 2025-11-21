@@ -82,6 +82,14 @@ export const apiConfig = {
       setDefaultCard: (userId: number, cardId: number) => `/api/payment-card/user/${userId}/set-default/${cardId}`,
     },
 
+    // PROMOTION ENDPOINTS
+    promotions: {
+      getPromotions: () => '/api/promotion/' ,
+      addPromotion: () => '/api/promotion/',
+      updatePromotion: (promotionId: number) => `/api/promotion/${promotionId}`,
+      deletePromotion: (promotionId: number) => `/api/promotion/${promotionId}`,
+    },
+
     // 🔐 AUTH ENDPOINTS
     auth: {
       login: '/api/auth/login',

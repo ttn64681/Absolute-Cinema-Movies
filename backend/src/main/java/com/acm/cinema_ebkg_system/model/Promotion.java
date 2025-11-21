@@ -2,9 +2,17 @@ package com.acm.cinema_ebkg_system.model;
 
 
 import jakarta.persistence.*;
+import lombok.Data;
+
+import com.acm.cinema_ebkg_system.enums.DiscountType;
+import com.acm.cinema_ebkg_system.enums.PromotionStatus;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+
 import jakarta.validation.constraints.NotBlank;
 import java.time.LocalDateTime;
+
+
 
 /**
  * Promotion Entity - Represents promotional offers and discounts
@@ -18,8 +26,11 @@ import java.time.LocalDateTime;
  * - Can be applied to bookings
  * - Tracks expiration dates and usage limits
  */
+@Data
+//@NoArgsConstructor
+//@AllArgsConstructor
 @Entity
-@Table(name = "promotions")
+@Table(name = "promotion")
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 // TODO: Uncomment entire class when implementing the promotion system
 public class Promotion {
@@ -27,163 +38,59 @@ public class Promotion {
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "promotion_id")
-    private Long promotionId;
-    
+    @Column(name = "id")
+    private Long id;
     // Promotional code (e.g., "FIRST-TIME-20")
     @NotBlank
     @Column(name = "promo_code", nullable = false, unique = true)
     private String promoCode;
-    
+
+    @NotBlank
+    @Column(name = "image_link", nullable = false)
+    private String imageLink;
+
     // Discount percentage or fixed amount
     @Column(name = "discount_value", nullable = false, precision = 10, scale = 2)
     private java.math.BigDecimal discountValue;
-    
+
     // Discount type: 'percentage' or 'fixed'
-    @Column(name = "discount_type", nullable = false, length = 20)
-    private String discountType;
-    
+    //@JdbcType(org.hibernate.type.descriptor.jdbc.EnumJdbcType.class)
+    @Enumerated(EnumType.STRING)
+    @Column(name = "discount_type", nullable = false, columnDefinition = "discount_type")
+    private DiscountType discountType;
+
     // Promotional title/description
     @Column(name = "title", nullable = false)
     private String title;
-    
+
     // Description of the promotion
-    @Column(name = "description", length = 500)
+    @Column(name = "description", length = 500, nullable = false)
     private String description;
-    
-    // Start date of promotion validity
-    @Column(name = "start_date")
-    private LocalDateTime startDate;
-    
+
     // End date of promotion validity
-    @Column(name = "end_date")
-    private LocalDateTime endDate;
-    
-    // Usage limit (null = unlimited)
-    @Column(name = "usage_limit")
-    private Integer usageLimit;
-    
-    // Current usage count
-    @Column(name = "current_usage")
-    private Integer currentUsage = 0;
-    
+    @Column(name = "expiration_date", nullable = false)    
+    private LocalDateTime expirationDate;    
+
     // Timestamp when record was created
-    @Column(name = "created_at")
+    @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
-    
+
     // Timestamp when record was last updated
-    @Column(name = "updated_at")
+    @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
-    // Default constructor
-    public Promotion() {}
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
+    private PromotionStatus status;
     
-    @PrePersist
+    // @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
     }
     
-    @PreUpdate
+    // @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
-    }
-
-    // Getters
-    public Long getPromotionId() {
-        return promotionId;
-    }
-
-    public String getPromoCode() {
-        return promoCode;
-    }
-
-    public java.math.BigDecimal getDiscountValue() {
-        return discountValue;
-    }
-
-    public String getDiscountType() {
-        return discountType;
-    }
-
-    public String getTitle() {
-        return title;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public LocalDateTime getStartDate() {
-        return startDate;
-    }
-
-    public LocalDateTime getEndDate() {
-        return endDate;
-    }
-
-    public Integer getUsageLimit() {
-        return usageLimit;
-    }
-
-    public Integer getCurrentUsage() {
-        return currentUsage;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
-    // Setters
-    public void setPromotionId(Long promotionId) {
-        this.promotionId = promotionId;
-    }
-
-    public void setPromoCode(String promoCode) {
-        this.promoCode = promoCode;
-    }
-
-    public void setDiscountValue(java.math.BigDecimal discountValue) {
-        this.discountValue = discountValue;
-    }
-
-    public void setDiscountType(String discountType) {
-        this.discountType = discountType;
-    }
-
-    public void setTitle(String title) {
-        this.title = title;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public void setStartDate(LocalDateTime startDate) {
-        this.startDate = startDate;
-    }
-
-    public void setEndDate(LocalDateTime endDate) {
-        this.endDate = endDate;
-    }
-
-    public void setUsageLimit(Integer usageLimit) {
-        this.usageLimit = usageLimit;
-    }
-
-    public void setCurrentUsage(Integer currentUsage) {
-        this.currentUsage = currentUsage;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
     }
 }

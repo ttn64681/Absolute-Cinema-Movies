@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import NavBar from '@/components/common/navBar/NavBar';
 import { useRegistration } from '@/contexts/RegistrationContext';
 import { validatePhoneNumber } from '@/services/auth';
+import AuthInput from '@/components/common/auth/AuthInput';
 
 export default function RegisterStep2Page() {
   const { data, updateData, isStepValid } = useRegistration();
@@ -13,27 +14,37 @@ export default function RegisterStep2Page() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setErrors({});
+    // Create new errors object to avoid async state issues
+    const newErrors: { [key: string]: string } = {};
 
     // Validate first name
     if (!data.firstName.trim()) {
-      setErrors((prev) => ({ ...prev, firstName: 'First name is required' }));
+      newErrors.firstName = 'First name is required';
     }
 
     // Validate last name
     if (!data.lastName.trim()) {
-      setErrors((prev) => ({ ...prev, lastName: 'Last name is required' }));
+      newErrors.lastName = 'Last name is required';
     }
 
     // Validate phone number
     if (!data.phoneNumber.trim()) {
-      setErrors((prev) => ({ ...prev, phoneNumber: 'Phone number is required' }));
+      newErrors.phoneNumber = 'Phone number is required';
     } else if (!validatePhoneNumber(data.phoneNumber)) {
-      setErrors((prev) => ({ ...prev, phoneNumber: 'Please enter a valid phone number' }));
+      newErrors.phoneNumber = 'Please enter a valid phone number';
+    }
+
+    // Set errors and only proceed if no errors
+    // Using newErrors instead of checking old errors state prevents async issues
+    setErrors(newErrors);
+
+    // If there are validation errors, don't proceed
+    if (Object.keys(newErrors).length > 0) {
+      return;
     }
 
     // If no errors, proceed to next step
-    if (Object.keys(errors).length === 0 && isStepValid(2)) {
+    if (isStepValid(2)) {
       router.push('/auth/register/step3');
     }
   };
@@ -54,54 +65,50 @@ export default function RegisterStep2Page() {
               <p className="text-white/70 text-sm mt-1">Step 2 of 3</p>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div>
-                <label htmlFor="firstName" className="block text-white text-sm mb-2">
-                  First Name<span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  id="firstName"
-                  value={data.firstName}
-                  onChange={(e) => updateData({ firstName: e.target.value })}
-                  placeholder="Input text"
-                  className={`w-full px-4 py-3 rounded-md bg-white/10 border ${errors.firstName ? 'border-red-500' : 'border-white/20'} text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-acm-pink focus:border-transparent`}
-                  required
-                />
-                {errors.firstName && <p className="text-red-400 text-sm mt-1">{errors.firstName}</p>}
+            {Object.keys(errors).length > 0 && (
+              <div className="mb-6 p-4 bg-red-900/50 border border-red-500 rounded-md">
+                <p className="text-red-200 text-sm font-semibold mb-2">Please fix the following errors:</p>
+                <ul className="list-disc list-inside text-red-200 text-sm space-y-1">
+                  {errors.firstName && <li>{errors.firstName}</li>}
+                  {errors.lastName && <li>{errors.lastName}</li>}
+                  {errors.phoneNumber && <li>{errors.phoneNumber}</li>}
+                </ul>
               </div>
+            )}
 
-              <div>
-                <label htmlFor="lastName" className="block text-white text-sm mb-2">
-                  Last Name<span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  id="lastName"
-                  value={data.lastName}
-                  onChange={(e) => updateData({ lastName: e.target.value })}
-                  placeholder="Input text"
-                  className={`w-full px-4 py-3 rounded-md bg-white/10 border ${errors.lastName ? 'border-red-500' : 'border-white/20'} text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-acm-pink focus:border-transparent`}
-                  required
-                />
-                {errors.lastName && <p className="text-red-400 text-sm mt-1">{errors.lastName}</p>}
-              </div>
+            <form onSubmit={handleSubmit} className="space-y-6" noValidate>
+              <AuthInput
+                id="firstName"
+                label="First Name"
+                type="text"
+                value={data.firstName}
+                onChange={(e) => updateData({ firstName: e.target.value })}
+                placeholder="Input text"
+                error={errors.firstName}
+                required={true}
+              />
 
-              <div>
-                <label htmlFor="phoneNumber" className="block text-white text-sm mb-2">
-                  Phone Number<span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="tel"
-                  id="phoneNumber"
-                  value={data.phoneNumber}
-                  onChange={(e) => updateData({ phoneNumber: e.target.value })}
-                  placeholder="Input text"
-                  className={`w-full px-4 py-3 rounded-md bg-white/10 border ${errors.phoneNumber ? 'border-red-500' : 'border-white/20'} text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-acm-pink focus:border-transparent`}
-                  required
-                />
-                {errors.phoneNumber && <p className="text-red-400 text-sm mt-1">{errors.phoneNumber}</p>}
-              </div>
+              <AuthInput
+                id="lastName"
+                label="Last Name"
+                type="text"
+                value={data.lastName}
+                onChange={(e) => updateData({ lastName: e.target.value })}
+                placeholder="Input text"
+                error={errors.lastName}
+                required={true}
+              />
+
+              <AuthInput
+                id="phoneNumber"
+                label="Phone Number"
+                type="tel"
+                value={data.phoneNumber}
+                onChange={(e) => updateData({ phoneNumber: e.target.value })}
+                placeholder="Input text"
+                error={errors.phoneNumber}
+                required={true}
+              />
 
               {/* Home Address - Optional */}
               <div className="pt-4 border-t border-white/10">

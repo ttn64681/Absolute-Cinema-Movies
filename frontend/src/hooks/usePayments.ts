@@ -3,6 +3,7 @@
 import { BackendPayment } from '@/types/payment';
 import { useState, useEffect } from 'react';
 import { buildUrl, endpoints } from '@/config/api';
+import { getAuthToken } from '@/utils/auth';
 
 export function usePayments(userId: number) {
   const [payments, setPayments] = useState<BackendPayment[]>([]);
@@ -12,7 +13,7 @@ export function usePayments(userId: number) {
   async function fetchPayments() {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+      const token = getAuthToken();
       // Fetch payment cards from new endpoint
       const response = await fetch(buildUrl(endpoints.paymentCards.getUserPaymentCards(userId)), {
         method: 'GET',
@@ -73,7 +74,7 @@ export function usePayments(userId: number) {
   async function addPayment(newPayment: Omit<BackendPayment, 'id' | 'user_id'>) {
     console.log('New payment:', newPayment);
     try {
-      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+      const token = getAuthToken();
       const response = await fetch(buildUrl(endpoints.paymentCards.createPaymentCard()), {
         method: 'POST',
         headers: {
@@ -95,7 +96,7 @@ export function usePayments(userId: number) {
 
   async function updatePayment(currentPaymentId: number, updatedPayment: Partial<BackendPayment>) {
     try {
-      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+      const token = getAuthToken();
       const response = await fetch(buildUrl(endpoints.paymentCards.updatePaymentCard(currentPaymentId)), {
         method: 'PUT',
         headers: {
@@ -117,7 +118,7 @@ export function usePayments(userId: number) {
 
   async function deletePayment(currentPaymentId: number) {
     try {
-      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+      const token = getAuthToken();
       const response = await fetch(buildUrl(endpoints.paymentCards.deletePaymentCard(currentPaymentId)), {
         method: 'DELETE',
         headers: {

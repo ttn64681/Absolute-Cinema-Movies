@@ -18,3 +18,14 @@ export interface BackendMovie {
   directors: string;
   producers: string;
 }
+
+// Paginated movie response from backend
+export interface PaginatedMovieResponse {
+  movies: BackendMovie[];
+  currentPage: number;
+  totalPages: number;
+  totalElements: number;
+  hasNext: boolean;
+  hasPrevious: boolean;
+  pageSize: number;
+}

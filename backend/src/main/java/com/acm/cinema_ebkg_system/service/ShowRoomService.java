@@ -1,5 +1,6 @@
 package com.acm.cinema_ebkg_system.service;
 
+import com.acm.cinema_ebkg_system.model.Movie;
 import com.acm.cinema_ebkg_system.model.ShowRoom;
 import com.acm.cinema_ebkg_system.repository.ShowRoomRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +24,17 @@ public class ShowRoomService {
         return showRoomRepository.findAll();
     }
     
+    // Get a show room by room ID 
+    public ShowRoom getShowRoomById(Long roomId) {
+         return showRoomRepository.findById(roomId)
+                .orElseThrow(() -> new RuntimeException("Showroom not found with id: " + roomId));
+    }
+    // Get a show room by room name
+    public ShowRoom getShowRoomByName(String name) {
+        return showRoomRepository.findByName(name)
+                .orElseThrow(() -> new RuntimeException("Showroom not found with name: " + name));
+    }
+
     /**
      * Create a new show room (admin only)
      * @param showRoom - ShowRoom: Show room object with name and capacity

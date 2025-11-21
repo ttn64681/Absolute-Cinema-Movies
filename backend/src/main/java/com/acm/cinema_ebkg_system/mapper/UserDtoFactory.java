@@ -2,25 +2,31 @@ package com.acm.cinema_ebkg_system.mapper;
 
 import com.acm.cinema_ebkg_system.dto.auth.AuthResponse.UserDto;
 import com.acm.cinema_ebkg_system.model.User;
-import com.acm.cinema_ebkg_system.model.Address;
 import com.acm.cinema_ebkg_system.model.Admin;
 
 /**
  * UserDto Factory - Creates UserDto instances from various entity types
  * 
- * Follows Factory Method pattern with centralized factory class.
- * This provides better separation of concerns compared to static methods
- * within the DTO class itself.
+ * Uses Static Factory Methods pattern (Joshua Bloch's pattern from Effective Java).
+ * This is NOT the Factory Method Pattern (Gang of Four) - we're using static utility methods
+ * rather than inheritance/polymorphism.
+ * 
+ * Benefits:
+ * - Centralized conversion logic (single place to update)
+ * - Clear, descriptive method names (fromUser, fromAdmin)
+ * - Encapsulates entity-to-DTO conversion logic
+ * - Better separation of concerns than putting methods in DTO class
  * 
  * Usage:
  * - UserDtoFactory.fromUser(user)
- * - UserDtoFactory.fromUserWithAddress(user, address)
  * - UserDtoFactory.fromAdmin(admin)
+ * 
+ * Note: Address information is provided separately via UserProfileDTO when needed.
  */
 public class UserDtoFactory {
     
     /**
-     * Factory method: Creates UserDto from User entity (basic info only)
+     * Static factory method: Creates UserDto from User entity (basic info only)
      * 
      * @param user User entity to convert
      * @return UserDto with basic user information (no address)
@@ -31,34 +37,12 @@ public class UserDtoFactory {
             user.getEmail(),
             user.getFirstName(),
             user.getLastName(),
-            user.getPhoneNumber(),
-            null, null, null
+            user.getPhoneNumber()
         );
     }
     
     /**
-     * Factory method: Creates UserDto with address information
-     * Used when address data is available and needed
-     * 
-     * @param user User entity to convert
-     * @param address Address entity (can be null)
-     * @return UserDto with user and address information
-     */
-    public static UserDto fromUserWithAddress(User user, Address address) {
-        return new UserDto(
-            user.getId(),
-            user.getEmail(),
-            user.getFirstName(),
-            user.getLastName(),
-            user.getPhoneNumber(),
-            address != null ? address.getStreet() : null,
-            address != null ? address.getState() : null,
-            address != null ? address.getCountry() : null
-        );
-    }
-    
-    /**
-     * Factory method: Creates UserDto from Admin entity
+     * Static factory method: Creates UserDto from Admin entity
      * Admin doesn't have firstName/lastName, so uses "Admin" as defaults
      * 
      * @param admin Admin entity to convert
@@ -70,8 +54,7 @@ public class UserDtoFactory {
             admin.getEmail(),
             "Admin",
             "Admin",
-            null,
-            null, null, null
+            null
         );
     }
 }
