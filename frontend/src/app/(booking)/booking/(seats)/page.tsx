@@ -156,10 +156,8 @@ function SeatingPageContent() {
       // Navigate to next page with seat display IDs (e.g., "1A,2B") - NOT database IDs
       // The backend will find seats by showId + row/number when creating the booking
       router.push(`/booking/ticket-age?seats=${encodeURIComponent(selectedSeats.length)}&seatIds=${encodeURIComponent(selectedSeats.join(','))}&showId=${encodeURIComponent(showId.toString())}&title=${encodeURIComponent(movieTitle)}&date=${encodeURIComponent(date)}&time=${encodeURIComponent(time)}`);
-    } else {
-      // Reservation failed
-      alert('Failed to reserve seats. Please try again.');
     }
+    // Note: Error messages are already shown in reserveSelectedSeats, so no need to show another alert here
     // If reservation fails, alert is shown in reserveSelectedSeats, so don't navigate
   };
 

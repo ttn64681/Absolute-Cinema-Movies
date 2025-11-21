@@ -75,7 +75,7 @@ public class SeatController {
             Long userId = getUserIdFromRequest(httpRequest);
             if (userId == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(createErrorResponse("User not authenticated"));
+                    .body(createErrorResponse("You need to be a logged in user to reserve seats"));
             }
             
             // Log the request details
@@ -99,8 +99,15 @@ public class SeatController {
             System.out.println("POST /api/seats/reserve - Success, reserved seat IDs: " + reservedSeatIds);
             return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
+            // Check if it's an authentication error or booking conflict
+            String errorMessage = e.getMessage();
+            if (errorMessage != null && (errorMessage.contains("already been booked") || 
+                                         errorMessage.contains("already reserved"))) {
+                return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(createErrorResponse(errorMessage));
+            }
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(createErrorResponse(e.getMessage()));
+                .body(createErrorResponse(errorMessage));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(createErrorResponse("Failed to reserve seats: " + e.getMessage()));
@@ -122,7 +129,7 @@ public class SeatController {
             Long userId = getUserIdFromRequest(httpRequest);
             if (userId == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(createErrorResponse("User not authenticated"));
+                    .body(createErrorResponse("You need to be a logged in user to release seats"));
             }
             
             // Release the seats by showId and seat row/number
@@ -153,7 +160,7 @@ public class SeatController {
             Long userId = getUserIdFromRequest(httpRequest);
             if (userId == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(createErrorResponse("User not authenticated"));
+                    .body(createErrorResponse("You need to be a logged in user to release seats"));
             }
             
             // Release the seats

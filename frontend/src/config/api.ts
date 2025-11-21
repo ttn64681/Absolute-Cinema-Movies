@@ -161,6 +161,40 @@ api.interceptors.request.use(
   }
 );
 
+// Add response interceptor to handle errors and ensure error messages are preserved
+api.interceptors.response.use(
+  (response) => {
+    // Return successful responses as-is
+    return response;
+  },
+  (error) => {
+    // Enhance error object with better error message extraction
+    if (error.response) {
+      const responseData = error.response.data;
+      
+      // If response has error message in data, attach it to error object for easier access
+      if (responseData && typeof responseData === 'object') {
+        if (responseData.error) {
+          error.userMessage = responseData.error;
+        } else if (responseData.message) {
+          error.userMessage = responseData.message;
+        }
+      }
+      
+      // Set default user-friendly messages for common status codes
+      if (!error.userMessage) {
+        if (error.response.status === 401 || error.response.status === 403) {
+          error.userMessage = 'You need to be a logged in user to reserve seats';
+        } else if (error.response.status === 409) {
+          error.userMessage = 'Seats have already been booked. Please select different seats.';
+        }
+      }
+    }
+    
+    return Promise.reject(error);
+  }
+);
+
 // Export individual functions for convenience
 export const { buildUrl, endpoints } = apiConfig;
 

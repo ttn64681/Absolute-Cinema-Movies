@@ -212,7 +212,10 @@ public class ShowSeatService {
         List<ShowSeat> seatsToSave = new ArrayList<>();
         LocalDateTime now = LocalDateTime.now();
         
-        // Process each seat selection
+        // First pass: Validate all seats and check for conflicts
+        List<String> bookedSeats = new ArrayList<>();
+        List<String> reservedSeats = new ArrayList<>();
+        
         for (ReserveSeatsRequest.SeatSelection seatSelection : request.getSeats()) {
             String seatRow = seatSelection.getSeatRow();
             String seatNumber = seatSelection.getSeatNumber();
@@ -226,25 +229,52 @@ public class ShowSeatService {
                 .findByMovieShowIdAndSeatRowAndSeatNumber(request.getShowId(), seatRow, seatNumber)
                 .orElse(null);
             
+            if (seat != null && !seat.getIsAvailable()) {
+                // Check if reservation has expired (older than 10 minutes)
+                if (seat.getReservedAt() != null) {
+                    long minutesSinceReservation = ChronoUnit.MINUTES.between(seat.getReservedAt(), now);
+                    if (minutesSinceReservation < 10) {
+                        // Still within 10-minute window - seat is taken
+                        reservedSeats.add(seatRow + seatNumber);
+                    }
+                    // If expired, we'll release it in the second pass
+                } else {
+                    // Seat is permanently booked (no reserved_at timestamp)
+                    bookedSeats.add(seatRow + seatNumber);
+                }
+            }
+        }
+        
+        // If any seats are already booked or reserved, throw error with details
+        if (!bookedSeats.isEmpty()) {
+            String seatList = String.join(", ", bookedSeats);
+            throw new RuntimeException("Seats have already been booked: " + seatList + ". Please select different seats.");
+        }
+        if (!reservedSeats.isEmpty()) {
+            String seatList = String.join(", ", reservedSeats);
+            throw new RuntimeException("Seats are already reserved: " + seatList + ". Please select different seats.");
+        }
+        
+        // Second pass: Process each seat selection (all seats are available at this point)
+        for (ReserveSeatsRequest.SeatSelection seatSelection : request.getSeats()) {
+            String seatRow = seatSelection.getSeatRow();
+            String seatNumber = seatSelection.getSeatNumber();
+            
+            // Try to find existing seat
+            ShowSeat seat = showSeatRepository
+                .findByMovieShowIdAndSeatRowAndSeatNumber(request.getShowId(), seatRow, seatNumber)
+                .orElse(null);
+            
             if (seat != null) {
-                // Seat exists - check if it's available
-                if (!seat.getIsAvailable()) {
-                    // Check if reservation has expired (older than 10 minutes)
-                    if (seat.getReservedAt() != null) {
-                        long minutesSinceReservation = ChronoUnit.MINUTES.between(seat.getReservedAt(), now);
-                        if (minutesSinceReservation >= 10) {
-                            // Reservation expired - release the seat
-                            seat.setIsAvailable(true);
-                            seat.setReservedAt(null);
-                            seat.setUpdatedAt(now);
-                            System.out.println("Reservation expired for seat " + seatRow + seatNumber + " (reserved " + minutesSinceReservation + " minutes ago)");
-                        } else {
-                            // Still within 10-minute window - seat is taken
-                            throw new RuntimeException("Seat " + seatRow + seatNumber + " is already reserved");
-                        }
-                    } else {
-                        // Seat is permanently booked (no reserved_at timestamp)
-                        throw new RuntimeException("Seat " + seatRow + seatNumber + " is already booked");
+                // Check if reservation has expired (older than 10 minutes) and release if needed
+                if (seat.getReservedAt() != null) {
+                    long minutesSinceReservation = ChronoUnit.MINUTES.between(seat.getReservedAt(), now);
+                    if (minutesSinceReservation >= 10) {
+                        // Reservation expired - release the seat
+                        seat.setIsAvailable(true);
+                        seat.setReservedAt(null);
+                        seat.setUpdatedAt(now);
+                        System.out.println("Reservation expired for seat " + seatRow + seatNumber + " (reserved " + minutesSinceReservation + " minutes ago)");
                     }
                 }
                 // Seat exists and is available - mark as reserved with timestamp

@@ -1,12 +1,7 @@
 package com.acm.cinema_ebkg_system.controller;
 
 import com.acm.cinema_ebkg_system.model.PaymentCard;
-import com.acm.cinema_ebkg_system.model.Address;
-import com.acm.cinema_ebkg_system.model.User;
-import com.acm.cinema_ebkg_system.enums.AddressType;
 import com.acm.cinema_ebkg_system.service.PaymentCardService;
-import com.acm.cinema_ebkg_system.service.AddressService;
-import com.acm.cinema_ebkg_system.service.UserService;
 import com.acm.cinema_ebkg_system.dto.payment.PaymentCardDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -24,12 +19,6 @@ public class PaymentCardController {
     @Autowired // Spring automatically provides service instance (dependency injection)
     private PaymentCardService paymentCardService;
     
-    @Autowired
-    private AddressService addressService;
-    
-    @Autowired
-    private UserService userService;
-    
     /**
      * GET /api/payment-cards/user/{userId}
      * Input: userId (Long) in URL path
@@ -38,14 +27,7 @@ public class PaymentCardController {
     @GetMapping("/user/{userId}")
     public ResponseEntity<?> getUserPaymentCards(@PathVariable Long userId) {
         try {
-            List<PaymentCard> cards = paymentCardService.getUserPaymentCards(userId);
-            // Load billing address for each card
-            for (PaymentCard card : cards) {
-                if (card.getAddressId() != null) {
-                    Optional<Address> address = addressService.getAddressById(card.getAddressId());
-                    address.ifPresent(card::setAddress);
-                }
-            }
+            List<PaymentCard> cards = paymentCardService.getUserPaymentCardsWithAddresses(userId);
             return ResponseEntity.ok(cards);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Error fetching payment cards: " + e.getMessage());
@@ -72,31 +54,7 @@ public class PaymentCardController {
     @PostMapping
     public ResponseEntity<?> createPaymentCard(@RequestBody PaymentCardDTO dto) {
         try {
-            // Get user
-            User user = userService.getUserById(dto.getUserId());
-            
-            // Create billing address
-            Address address = new Address();
-            address.setUser(user);
-            address.setAddressType(AddressType.billing);
-            address.setStreet(dto.getBillingStreet());
-            address.setCity(dto.getBillingCity());
-            address.setState(dto.getBillingState());
-            address.setZip(dto.getBillingZip());
-            address.setCountry(dto.getBillingCountry() != null ? dto.getBillingCountry() : "US");
-            Address savedAddress = addressService.createAddress(address);
-            
-            // Create payment card
-            PaymentCard paymentCard = new PaymentCard();
-            paymentCard.setUser(user);
-            paymentCard.setAddress(savedAddress);
-            paymentCard.setCardNumber(dto.getCardNumber());
-            paymentCard.setCardholderName(dto.getCardholderName());
-            paymentCard.setPaymentCardType(dto.getCardType());
-            paymentCard.setExpirationDate(dto.getExpirationDate());
-            paymentCard.setIsDefault(dto.getIsDefault() != null ? dto.getIsDefault() : false);
-            
-            PaymentCard created = paymentCardService.createPaymentCard(paymentCard);
+            PaymentCard created = paymentCardService.createPaymentCardFromDto(dto);
             return ResponseEntity.ok(created);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Error creating payment card: " + e.getMessage());
@@ -113,29 +71,7 @@ public class PaymentCardController {
             @PathVariable Long paymentCardId, 
             @RequestBody PaymentCardDTO dto) {
         try {
-            // Get existing payment card
-            PaymentCard existingCard = paymentCardService.getPaymentCardById(paymentCardId)
-                .orElseThrow(() -> new RuntimeException("Payment card not found"));
-            
-            // Update card fields
-            existingCard.setPaymentCardType(dto.getCardType());
-            existingCard.setCardNumber(dto.getCardNumber());
-            existingCard.setCardholderName(dto.getCardholderName());
-            existingCard.setExpirationDate(dto.getExpirationDate());
-            existingCard.setIsDefault(dto.getIsDefault() != null ? dto.getIsDefault() : false);
-            
-            // Update billing address
-            if (existingCard.getAddress() != null) {
-                Address address = existingCard.getAddress();
-                address.setStreet(dto.getBillingStreet());
-                address.setCity(dto.getBillingCity());
-                address.setState(dto.getBillingState());
-                address.setZip(dto.getBillingZip());
-                address.setCountry(dto.getBillingCountry() != null ? dto.getBillingCountry() : "US");
-                addressService.updateAddress(address);
-            }
-            
-            PaymentCard updated = paymentCardService.updatePaymentCard(existingCard);
+            PaymentCard updated = paymentCardService.updatePaymentCardFromDto(paymentCardId, dto);
             return ResponseEntity.ok(updated);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());

@@ -2,12 +2,10 @@ package com.acm.cinema_ebkg_system.controller;
 
 import com.acm.cinema_ebkg_system.dto.auth.AuthResponse;
 import com.acm.cinema_ebkg_system.dto.auth.LoginRequest;
-import com.acm.cinema_ebkg_system.mapper.UserDtoFactory;
 import com.acm.cinema_ebkg_system.model.Admin;
 import com.acm.cinema_ebkg_system.model.User;
 import com.acm.cinema_ebkg_system.service.AdminService;
 import com.acm.cinema_ebkg_system.service.UserService;
-import com.acm.cinema_ebkg_system.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -51,9 +49,6 @@ public class AdminController {
     @Autowired
     private UserService userService;
 
-    @Autowired
-    private JwtUtil jwtUtil;
-
     // ========== UTILITY ENDPOINTS ==========
     
     /**
@@ -79,34 +74,17 @@ public class AdminController {
     /**
      * Admin login endpoint - authenticates admin users
      * 
-     * Process Flow:
-     * 1. Authenticate admin credentials (email/password)
-     * 2. Check if admin is active
-     * 3. Generate JWT tokens for admin session
-     * 4. Return success response with tokens and admin data
+     * Delegates authentication, token generation, and DTO creation to AdminService.
      * 
-     * @param request LoginRequest containing email and password
+     * @param request LoginRequest containing email, password, and rememberMe flag
      * @return ResponseEntity<AuthResponse> with success status, tokens, and admin info
      */
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> adminLogin(@RequestBody LoginRequest request) {
         try {
-            // Step 1: Authenticate admin credentials
-            Admin admin = adminService.authenticateAdmin(request.getEmail(), request.getPassword());
-            
-            // Step 2: Generate new JWT tokens for authenticated admin session with ADMIN role
-            String token = jwtUtil.generateToken(admin.getEmail(), admin.getId(), "ADMIN", request.isRememberMe());
-            String refreshToken = jwtUtil.generateRefreshToken(admin.getEmail(), admin.getId(), "ADMIN", request.isRememberMe());
-
-            // Step 3: Create admin DTO using factory method (Factory Method pattern)
-            AuthResponse.UserDto adminDto = UserDtoFactory.fromAdmin(admin);
-
-            // Step 4: Return success response with tokens and admin data
-            AuthResponse response = new AuthResponse(true, "Admin login successful", token, refreshToken, adminDto);
+            AuthResponse response = adminService.adminLogin(request);
             return ResponseEntity.ok(response);
-
         } catch (Exception e) {
-            // Handle authentication failures
             AuthResponse response = new AuthResponse(false, e.getMessage());
             return ResponseEntity.badRequest().body(response);
         }

@@ -47,6 +47,9 @@ public class UserService {
     private AddressRepository addressRepository;
     
     @Autowired
+    private AddressService addressService;  // Service for address operations
+    
+    @Autowired
     private EmailService emailService;  // Data access layer for user operations
 
     // ========== SECURITY COMPONENTS ==========
@@ -563,6 +566,40 @@ public class UserService {
             throw new RuntimeException("User is already verified");
         }
         return generateVerificationToken(user);
+    }
+
+    /**
+     * Get user profile with home address
+     * 
+     * Combines user information and home address into a UserProfileDTO.
+     * 
+     * @param userId User ID to get profile for
+     * @return UserProfileDTO containing user info and home address (if available)
+     * @throws RuntimeException if user not found
+     */
+    public com.acm.cinema_ebkg_system.dto.user.UserProfileDTO getUserProfile(Long userId) {
+        User user = getUserById(userId);
+        Optional<Address> homeAddressOpt = addressService.getUserHomeAddress(userId);
+        
+        // Convert User entity to UserDto using factory method (excludes sensitive data)
+        com.acm.cinema_ebkg_system.dto.auth.AuthResponse.UserDto userDto = 
+            com.acm.cinema_ebkg_system.mapper.UserDtoFactory.fromUser(user);
+        
+        // Convert Address entity to AddressDTO if present
+        com.acm.cinema_ebkg_system.dto.user.UserProfileDTO.AddressDTO addressDto = null;
+        if (homeAddressOpt.isPresent()) {
+            Address homeAddress = homeAddressOpt.get();
+            addressDto = new com.acm.cinema_ebkg_system.dto.user.UserProfileDTO.AddressDTO(
+                homeAddress.getId(),
+                homeAddress.getStreet(),
+                homeAddress.getCity(),
+                homeAddress.getState(),
+                homeAddress.getZip(),
+                homeAddress.getCountry()
+            );
+        }
+        
+        return new com.acm.cinema_ebkg_system.dto.user.UserProfileDTO(userDto, addressDto);
     }
 
 }

@@ -1,14 +1,10 @@
 package com.acm.cinema_ebkg_system.controller;
 
 import com.acm.cinema_ebkg_system.model.User;
-import com.acm.cinema_ebkg_system.model.Address;
 import com.acm.cinema_ebkg_system.service.UserService;
-import com.acm.cinema_ebkg_system.service.AddressService;
 import com.acm.cinema_ebkg_system.dto.user.UserUpdateRequest;
 import com.acm.cinema_ebkg_system.dto.user.PasswordChangeRequest;
 import com.acm.cinema_ebkg_system.dto.user.UserProfileDTO;
-import com.acm.cinema_ebkg_system.dto.auth.AuthResponse;
-import com.acm.cinema_ebkg_system.mapper.UserDtoFactory;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -18,7 +14,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
-import java.util.Optional;
 
 @RestController // Bean that creates a RESTful controller class that handles HTTP requests
 @RequestMapping("/api")
@@ -26,12 +21,10 @@ public class UserController {
     
     // Dependency injection of services for business logic
     private final UserService userService;
-    private final AddressService addressService;
 
     // Constructor injection - Spring automatically provides service instances
-    public UserController(UserService userService, AddressService addressService) {
+    public UserController(UserService userService) {
         this.userService = userService;
-        this.addressService = addressService;
     }
     
     // GET /api/user/info - Get current user's information (userId from JWT in frontend)
@@ -41,29 +34,10 @@ public class UserController {
     }
     
     // GET /api/user/profile - Get user profile (user info + home address)
+    // Delegates DTO conversion logic to UserService
     @GetMapping("/user/profile")
     public UserProfileDTO getUserProfile(@org.springframework.web.bind.annotation.RequestParam Long userId) {
-        User user = userService.getUserById(userId);
-        Optional<Address> homeAddressOpt = addressService.getUserHomeAddress(userId);
-        
-        // Convert User entity to UserDto using factory method (excludes sensitive data)
-        AuthResponse.UserDto userDto = UserDtoFactory.fromUser(user);
-        
-        // Convert Address entity to AddressDTO if present
-        UserProfileDTO.AddressDTO addressDto = null;
-        if (homeAddressOpt.isPresent()) {
-            Address homeAddress = homeAddressOpt.get();
-            addressDto = new UserProfileDTO.AddressDTO(
-                homeAddress.getId(),
-                homeAddress.getStreet(),
-                homeAddress.getCity(),
-                homeAddress.getState(),
-                homeAddress.getZip(),
-                homeAddress.getCountry()
-            );
-        }
-        
-        return new UserProfileDTO(userDto, addressDto);
+        return userService.getUserProfile(userId);
     }
     
     // PUT /api/user/info - Update current user's personal information

@@ -381,8 +381,57 @@ export function useSeats(showId?: number) {
       return true;
     } catch (err: any) {
       console.error('Error reserving seats:', err);
-      const errorMsg = err.response?.data?.error || err.message || 'Unknown error';
-      alert(`Failed to reserve seats: ${errorMsg}`);
+      console.error('Error response:', err.response);
+      console.error('Error response data:', err.response?.data);
+      console.error('Error response status:', err.response?.status);
+      console.error('Error userMessage:', err.userMessage);
+      
+      // Extract error message with priority order
+      let errorMsg = '';
+      
+      // Priority 1: Check if interceptor set a userMessage
+      if (err.userMessage && err.userMessage !== 'Forbidden' && err.userMessage !== 'Unauthorized') {
+        errorMsg = err.userMessage;
+      }
+      // Priority 2: Extract from response data
+      else if (err.response?.data) {
+        const responseData = err.response.data;
+        
+        if (typeof responseData === 'string') {
+          // Response is a plain string
+          if (responseData !== 'Forbidden' && responseData !== 'Unauthorized') {
+            errorMsg = responseData;
+          }
+        } else if (typeof responseData === 'object' && responseData !== null) {
+          // Response is an object - check for error or message fields
+          if (responseData.error && responseData.error !== 'Forbidden' && responseData.error !== 'Unauthorized') {
+            errorMsg = String(responseData.error);
+          } else if (responseData.message && responseData.message !== 'Forbidden' && responseData.message !== 'Unauthorized') {
+            errorMsg = String(responseData.message);
+          }
+        }
+      }
+      
+      // Priority 3: Use status code to determine message (if we don't have a good message yet)
+      if (!errorMsg || errorMsg.trim() === '' || errorMsg === 'Forbidden' || errorMsg === 'Unauthorized') {
+        const status = err.response?.status;
+        if (status === 401 || status === 403) {
+          errorMsg = 'You need to be a logged in user to reserve seats';
+        } else if (status === 409) {
+          errorMsg = 'Seats have already been booked. Please select different seats.';
+        } else {
+          // For any other error, use a generic message
+          errorMsg = 'Unable to reserve seats. Please try again.';
+        }
+      }
+      
+      // Final safety check - never show "Forbidden" or "Unauthorized"
+      if (errorMsg === 'Forbidden' || errorMsg === 'Unauthorized' || !errorMsg || errorMsg.trim() === '') {
+        errorMsg = 'You need to be a logged in user to reserve seats';
+      }
+      
+      // Show clean error message
+      alert(errorMsg);
       return false;
     }
   };
