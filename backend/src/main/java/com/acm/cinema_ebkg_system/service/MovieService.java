@@ -216,13 +216,34 @@ public class MovieService {
     }
 
     // ===== MOVIE CRUD OPERATIONS ===== //
+    
     /**
      * Creates a new movie.
+     * Handles DTO to Entity conversion 
      * Evicts all pagination caches (pagination changes when movie count changes)
+     * 
+     * @param movieDTO MovieDTO from controller
+     * @return Persisted Movie entity
      */
     @CacheEvict(value = {"nowPlayingMovies", "upcomingMovies", "searchNowPlayingMovies", "searchUpcomingMovies"}, allEntries = true)
-    public Movie createMovie(Movie movie) {
-        return movieRepository.save(movie);
+    public Movie createMovie(com.acm.cinema_ebkg_system.dto.movie.MovieDTO movieDTO) {
+        // Business logic: DTO to Entity conversion
+        Movie newMovie = new Movie();
+        newMovie.setTitle(movieDTO.getTitle());
+        newMovie.setStatus(com.acm.cinema_ebkg_system.enums.MovieStatus.upcoming); // default status (no shows scheduled)
+        newMovie.setGenres(movieDTO.getGenres());
+        newMovie.setRating(movieDTO.getRating());
+        newMovie.setRelease_date(movieDTO.getRelease_date());
+        newMovie.setSynopsis(movieDTO.getSynopsis());
+        newMovie.setTrailer_link(movieDTO.getTrailer_link());
+        newMovie.setPoster_link(movieDTO.getPoster_link());
+        newMovie.setCast_names(movieDTO.getCast_names());
+        newMovie.setDirectors(movieDTO.getDirectors());
+        newMovie.setProducers(movieDTO.getProducers());
+        newMovie.setScore(movieDTO.getScore());
+        newMovie.setDuration(movieDTO.getDuration());
+        
+        return movieRepository.save(newMovie);
     }
 
     /**

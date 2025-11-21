@@ -10,10 +10,9 @@ import lombok.NoArgsConstructor;
  * LEGACY - Payment Request DTO for old PaymentInfo system
  * 
  * @deprecated This DTO is for the legacy PaymentInfo system (PaymentController).
- * Use PaymentCardRequestDTO and PaymentCardController for new payment card functionality.
+ * PaymentCardRequestDTO and PaymentCardController are the new payment card functionality.
  * 
- * Status: Still used by PaymentController/PaymentService but NOT used by frontend.
- * Consider migrating to PaymentCard system before removing.
+ * (Still used by PaymentController/PaymentService but NOT used by frontend.)
  */
 @Deprecated
 @Data

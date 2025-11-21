@@ -20,7 +20,6 @@ import com.acm.cinema_ebkg_system.service.PaymentService;
 @RequestMapping("/api/users/{userId}/payment")
 public class PaymentController {
 
-    // Dependency injection of PaymentService for business logic
     private final PaymentService paymentService;
 
     public PaymentController(PaymentService paymentService) {

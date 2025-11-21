@@ -10,14 +10,19 @@ import com.acm.cinema_ebkg_system.dto.payment.PaymentCardRequestDTO;
 /**
  * Registration Request DTO
  * 
- * Design Decision: Uses PaymentCardRequestDTO instead of nested class
- * to follow DRY principle and maintain single source of truth
- * for payment card structure.
+ * Used by:
+ * - AuthController.register() → Request
+ * 
+ * Contains user account info, optional home address, and optional payment cards (up to 3)
+ * Response: AuthResponse with JWT tokens and user info
+ * 
+ * Note: paymentCards is a List<PaymentCardRequestDTO>, max 3 cards allowed
  */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class RegisterRequest {
+    // User Info
     private String email;
     private String password;
     private String firstName;
@@ -25,14 +30,13 @@ public class RegisterRequest {
     private String phoneNumber;
     private Boolean enrolledForPromotions;
     
-    // Home address fields (optional)
+    // Optional Home Address fields
     private String homeAddress;
     private String homeCity;
     private String homeState;
     private String homeZip;
     private String homeCountry;
     
-    // Use PaymentCardRequestDTO instead of nested class (DRY principle)
-    // Note: userId will be set by backend after user creation
+    // Optional Payment Card(s)
     private List<PaymentCardRequestDTO> paymentCards; // Up to 3 payment cards
 }

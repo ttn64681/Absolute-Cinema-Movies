@@ -2,8 +2,24 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { buildUrl, endpoints } from '@/config/api';
+import { movieClient } from '@/clients/movieClient';
 import { BackendMovie, PaginatedMovieResponse } from '@/types/movie';
+import { CACHE_DURATION, initialPaginationState, createPaginationState } from '@/utils/pagination';
+
+/**
+ * Hook for movie search operations
+ * 
+ * Responsibilities:
+ * - React state management for search results (Now Playing & Upcoming)
+ * - Client-side caching (5min TTL, keyed by search query)
+ * - Pagination navigation for both sections
+ * 
+ * Delegates to:
+ * - movieClient (Facade): API calls
+ * - pagination utils: Pagination helpers
+ * 
+ * @returns Search results state, pagination info & operations for both sections
+ */
 
 // Cache for paginated search results (per search query + page)
 const searchCache: Record<string, Record<string, Record<number, PaginatedMovieResponse>>> = {
@@ -15,9 +31,6 @@ const lastSearchFetch: Record<string, Record<string, Record<number, number>>> = 
   upcoming: {},
 };
 
-// Cache duration: 5 minutes
-const CACHE_DURATION = 5 * 60 * 1000;
-
 export function useMovieSearch() {
   const searchParams = useSearchParams();
 
@@ -26,20 +39,8 @@ export function useMovieSearch() {
   const [upcomingMovies, setUpcomingMovies] = useState<BackendMovie[]>([]);
 
   // Pagination state for each section
-  const [nowPlayingPagination, setNowPlayingPagination] = useState({
-    currentPage: 0,
-    totalPages: 0,
-    totalElements: 0,
-    hasNext: false,
-    hasPrevious: false,
-  });
-  const [upcomingPagination, setUpcomingPagination] = useState({
-    currentPage: 0,
-    totalPages: 0,
-    totalElements: 0,
-    hasNext: false,
-    hasPrevious: false,
-  });
+  const [nowPlayingPagination, setNowPlayingPagination] = useState(initialPaginationState);
+  const [upcomingPagination, setUpcomingPagination] = useState(initialPaginationState);
 
   // Page state for each section
   const [nowPlayingPage, setNowPlayingPage] = useState(0);
@@ -75,22 +76,10 @@ export function useMovieSearch() {
       if (!hasParams) {
         if (type === 'nowplaying') {
           setNowPlayingMovies([]);
-          setNowPlayingPagination({
-            currentPage: 0,
-            totalPages: 0,
-            totalElements: 0,
-            hasNext: false,
-            hasPrevious: false,
-          });
+          setNowPlayingPagination(initialPaginationState);
         } else {
           setUpcomingMovies([]);
-          setUpcomingPagination({
-            currentPage: 0,
-            totalPages: 0,
-            totalElements: 0,
-            hasNext: false,
-            hasPrevious: false,
-          });
+          setUpcomingPagination(initialPaginationState);
         }
         return;
       }
@@ -104,27 +93,15 @@ export function useMovieSearch() {
         console.log(`Using cached ${type} search results page ${pageNum}`);
         if (type === 'nowplaying') {
           setNowPlayingMovies(cached.movies);
-          setNowPlayingPagination({
-            currentPage: cached.currentPage,
-            totalPages: cached.totalPages,
-            totalElements: cached.totalElements,
-            hasNext: cached.hasNext,
-            hasPrevious: cached.hasPrevious,
-          });
+          setNowPlayingPagination(createPaginationState(cached));
         } else {
           setUpcomingMovies(cached.movies);
-          setUpcomingPagination({
-            currentPage: cached.currentPage,
-            totalPages: cached.totalPages,
-            totalElements: cached.totalElements,
-            hasNext: cached.hasNext,
-            hasPrevious: cached.hasPrevious,
-          });
+          setUpcomingPagination(createPaginationState(cached));
         }
         return;
       }
 
-      // Fetch from API
+      // Fetch from API using movieClient facade
       if (type === 'nowplaying') {
         setIsLoadingNowPlaying(true);
       } else {
@@ -132,15 +109,18 @@ export function useMovieSearch() {
       }
 
       try {
-        const endpoint = type === 'nowplaying' ? endpoints.movies.searchNowPlaying : endpoints.movies.searchUpcoming;
-        const url = `${buildUrl(endpoint)}?${queryString}&page=${pageNum}`;
+        // Parse query params for client
+        const searchFilters = {
+          title: searchParams.get('title') || undefined,
+          genres: searchParams.get('genres') || undefined,
+          month: searchParams.get('month') ? parseInt(searchParams.get('month')!) : undefined,
+          day: searchParams.get('day') ? parseInt(searchParams.get('day')!) : undefined,
+          year: searchParams.get('year') ? parseInt(searchParams.get('year')!) : undefined,
+        };
 
-        const response = await fetch(url);
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const data: PaginatedMovieResponse = await response.json();
+        const data = type === 'nowplaying'
+          ? await movieClient.searchNowPlaying(searchFilters, pageNum)
+          : await movieClient.searchUpcoming(searchFilters, pageNum);
 
         // Update cache
         if (!searchCache[type]) searchCache[type] = {};
@@ -152,22 +132,10 @@ export function useMovieSearch() {
 
         if (type === 'nowplaying') {
           setNowPlayingMovies(data.movies);
-          setNowPlayingPagination({
-            currentPage: data.currentPage,
-            totalPages: data.totalPages,
-            totalElements: data.totalElements,
-            hasNext: data.hasNext,
-            hasPrevious: data.hasPrevious,
-          });
+          setNowPlayingPagination(createPaginationState(data));
         } else {
           setUpcomingMovies(data.movies);
-          setUpcomingPagination({
-            currentPage: data.currentPage,
-            totalPages: data.totalPages,
-            totalElements: data.totalElements,
-            hasNext: data.hasNext,
-            hasPrevious: data.hasPrevious,
-          });
+          setUpcomingPagination(createPaginationState(data));
         }
       } catch (err) {
         console.error(`Error searching ${type} movies:`, err);

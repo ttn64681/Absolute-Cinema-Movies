@@ -2,23 +2,36 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { PaymentCard, PaymentCardFormData } from '@/types/payment';
-import { buildUrl, endpoints } from '@/config/api';
-import { getAuthToken } from '@/utils/auth';
+import { paymentClient } from '@/clients/paymentClient';
 
 /**
- * Facade hook for payment card operations
- * Encapsulates all API calls, state management, & error handling
+ * Payment Cards Hook - Manages payment cards with modal state
  * 
- * Follows facade pattern: single interface for complex payment card subsystem
+ * Follows the same pattern as useMovies:
+ * - Single hook for all payment card operations
+ * - Uses paymentClient facade for API calls
+ * - Handles modal state + business logic
+ * 
+ * Responsibilities:
+ * - Fetch/display cards
+ * - Create/update/delete cards (via client)
+ * - Modal state (open/close, mode, editing card)
+ * - Business logic (mode-based submit, delete confirmation)
  * 
  * @param userId - User ID for fetching cards
- * @returns Payment cards state & CRUD operations
+ * @returns Payment cards state, modal state & operations
  */
 export function usePaymentCards(userId: number | null) {
+  // Card data state
   const [paymentCards, setPaymentCards] = useState<PaymentCard[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Modal state (like useMovies has pagination state)
+  const [isOpen, setIsOpen] = useState(false);
+  const [mode, setMode] = useState<'Add' | 'Edit'>('Add');
+  const [editingCard, setEditingCard] = useState<PaymentCard | null>(null);
 
   // Fetch payment cards
   const fetchPaymentCards = useCallback(async () => {
@@ -31,28 +44,8 @@ export function usePaymentCards(userId: number | null) {
     setError(null);
 
     try {
-      const token = getAuthToken();
-      const response = await fetch(buildUrl(endpoints.paymentCards.getUserPaymentCards(userId)), {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: token ? `Bearer ${token}` : '',
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch payment cards');
-      }
-
-      const cards = (await response.json()) as PaymentCard[];
-
-      // Ensure cards is an array
-      if (Array.isArray(cards)) {
-        setPaymentCards(cards);
-      } else {
-        console.error('Expected array but got:', cards);
-        setPaymentCards([]);
-      }
+      const cards = await paymentClient.getCards(userId);
+      setPaymentCards(cards);
     } catch (err) {
       console.error('Error fetching payment cards:', err);
       setError('Failed to load payment cards');
@@ -62,134 +55,80 @@ export function usePaymentCards(userId: number | null) {
     }
   }, [userId]);
 
-  // Create payment card
-  const createCard = useCallback(async (formData: PaymentCardFormData): Promise<boolean> => {
-    if (!userId) return false;
+  // Modal operations
+  const openAdd = useCallback(() => {
+    setEditingCard(null);
+    setMode('Add');
+    setIsOpen(true);
+  }, []);
 
-    setIsSubmitting(true);
-    setError(null);
+  const openEdit = useCallback((card: PaymentCard) => {
+    setEditingCard(card);
+    setMode('Edit');
+    setIsOpen(true);
+  }, []);
 
-    try {
-      if (paymentCards.length >= 3) {
+  const close = useCallback(() => {
+    setIsOpen(false);
+    setEditingCard(null);
+  }, []);
+
+  // Business logic: Mode-based form submission
+  const handleSubmit = useCallback(
+    async (formData: PaymentCardFormData) => {
+      if (!userId) return;
+
+      // Validate max cards
+      if (mode === 'Add' && paymentCards.length >= 3) {
         setError('Maximum of 3 payment methods reached');
-        return false;
+        return;
       }
 
-      const token = getAuthToken();
-      const payload = {
-        userId,
-        cardType: formData.cardType,
-        cardNumber: formData.cardNumber.replace(/\s+/g, ''),
-        expirationDate: formData.expirationDate,
-        cardholderName: formData.cardholderName,
-        billingStreet: formData.billingStreet,
-        billingCity: formData.billingCity,
-        billingState: formData.billingState,
-        billingZip: formData.billingZip,
-        billingCountry: formData.billingCountry,
-        isDefault: formData.isDefault,
-      };
+      setIsSubmitting(true);
+      setError(null);
 
-      const response = await fetch(buildUrl(endpoints.paymentCards.createPaymentCard()), {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: token ? `Bearer ${token}` : '',
-        },
-        body: JSON.stringify(payload),
-      });
+      try {
+        if (mode === 'Add') {
+          await paymentClient.createCard(userId, formData);
+        } else if (editingCard) {
+          await paymentClient.updateCard(userId, editingCard.id, formData);
+        }
 
-      if (!response.ok) {
-        throw new Error('Failed to add payment card');
+        // Refresh cards and close modal
+        await fetchPaymentCards();
+        close();
+      } catch (err) {
+        console.error(`Error ${mode === 'Add' ? 'creating' : 'updating'} card:`, err);
+        setError(`Failed to ${mode === 'Add' ? 'add' : 'update'} payment card`);
+      } finally {
+        setIsSubmitting(false);
+      }
+    },
+    [userId, mode, editingCard, paymentCards.length, fetchPaymentCards, close]
+  );
+
+  // Business logic: Delete with confirmation
+  const handleDelete = useCallback(
+    async (cardId: number) => {
+      if (!confirm('Are you sure you want to delete this payment method?')) {
+        return;
       }
 
-      await fetchPaymentCards();
-      return true;
-    } catch (err) {
-      console.error('Error creating card:', err);
-      setError('Failed to add payment card');
-      return false;
-    } finally {
-      setIsSubmitting(false);
-    }
-  }, [userId, paymentCards.length, fetchPaymentCards]);
+      setIsSubmitting(true);
+      setError(null);
 
-  // Update payment card
-  const updateCard = useCallback(async (cardId: number, formData: PaymentCardFormData): Promise<boolean> => {
-    if (!userId) return false;
-
-    setIsSubmitting(true);
-    setError(null);
-
-    try {
-      const token = getAuthToken();
-      const payload = {
-        userId,
-        cardType: formData.cardType,
-        cardNumber: formData.cardNumber.replace(/\s+/g, ''),
-        expirationDate: formData.expirationDate,
-        cardholderName: formData.cardholderName,
-        billingStreet: formData.billingStreet,
-        billingCity: formData.billingCity,
-        billingState: formData.billingState,
-        billingZip: formData.billingZip,
-        billingCountry: formData.billingCountry,
-        isDefault: formData.isDefault,
-      };
-
-      const response = await fetch(buildUrl(endpoints.paymentCards.updatePaymentCard(cardId)), {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: token ? `Bearer ${token}` : '',
-        },
-        body: JSON.stringify(payload),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to update payment card');
+      try {
+        await paymentClient.deleteCard(cardId);
+        await fetchPaymentCards();
+      } catch (err) {
+        console.error('Error deleting card:', err);
+        setError('Failed to delete payment card');
+      } finally {
+        setIsSubmitting(false);
       }
-
-      await fetchPaymentCards();
-      return true;
-    } catch (err) {
-      console.error('Error updating card:', err);
-      setError('Failed to update payment card');
-      return false;
-    } finally {
-      setIsSubmitting(false);
-    }
-  }, [userId, fetchPaymentCards]);
-
-  // Delete payment card
-  const deleteCard = useCallback(async (cardId: number): Promise<boolean> => {
-    setIsSubmitting(true);
-    setError(null);
-
-    try {
-      const token = getAuthToken();
-      const response = await fetch(buildUrl(endpoints.paymentCards.deletePaymentCard(cardId)), {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: token ? `Bearer ${token}` : '',
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to delete payment card');
-      }
-
-      await fetchPaymentCards();
-      return true;
-    } catch (err) {
-      console.error('Error deleting card:', err);
-      setError('Failed to delete payment card');
-      return false;
-    } finally {
-      setIsSubmitting(false);
-    }
-  }, [fetchPaymentCards]);
+    },
+    [fetchPaymentCards]
+  );
 
   // Fetch cards when userId changes
   useEffect(() => {
@@ -197,18 +136,23 @@ export function usePaymentCards(userId: number | null) {
   }, [fetchPaymentCards]);
 
   return {
+    // Card data
     paymentCards,
     isLoading,
     error,
     isSubmitting,
-    createCard,
-    updateCard,
-    deleteCard,
+
+    // Modal state
+    isOpen,
+    mode,
+    editingCard,
+
+    // Operations
+    handleSubmit,
+    handleDelete,
+    openAdd,
+    openEdit,
+    close,
     refreshCards: fetchPaymentCards,
   };
 }
-
-
-
-
-

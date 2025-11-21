@@ -35,9 +35,6 @@ import java.util.List;
  * - Token validation before processing any request
  * - Automatic user authentication for Spring Security
  * - Role-based access control support
- * 
- * @author ACM Cinema Team
- * @version 1.0
  */
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {

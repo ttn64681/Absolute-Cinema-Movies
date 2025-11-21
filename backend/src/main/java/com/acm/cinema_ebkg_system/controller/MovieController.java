@@ -7,7 +7,6 @@ import org.springframework.validation.annotation.Validated;
 import com.acm.cinema_ebkg_system.model.Movie;
 import com.acm.cinema_ebkg_system.service.MovieService;
 import com.acm.cinema_ebkg_system.service.ShowTimeService;
-import com.acm.cinema_ebkg_system.enums.MovieStatus;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -154,7 +153,7 @@ public class MovieController {
 
     /**
      * Get full movie details by ID (including cast, directors, producers).
-     * Use this only when user clicks on a movie for detailed view.
+     * Called when selecting a movie for detailed view.
      */
     @GetMapping("/{movieId}")
     public Movie getMovieDetails(@PathVariable Long movieId) {
@@ -163,7 +162,7 @@ public class MovieController {
 
     /**
      * Get full movie details by title (including cast, directors, producers).
-     * Use this only when user clicks on a movie for detailed view.
+     * Called when searching for a movie by title.
      */
     @GetMapping("/title/{title}")
     public Movie getMovieDetailsByTitle(@PathVariable String title) {
@@ -173,33 +172,18 @@ public class MovieController {
     // ===== MOVIE CRUD OPERATIONS ===== //
     /**
      * POST api/movies/create
-     * Use when adding a new movie (when logged in as Admin).
+     * Called when adding a new movie (when logged in as Admin).
+     * 
+     * Takes MovieDTO, delegates to service for entity creation and persistence.
      */
     @PostMapping("/create")
     public ResponseEntity<?> createMovie(@RequestBody MovieDTO dto) {
         try {
-            // Create a new Movie object
-            Movie newMovie = new Movie();
-            newMovie.setTitle(dto.getTitle());
-            newMovie.setStatus(MovieStatus.upcoming); // default status (no movie shows scheduled)
-            newMovie.setGenres(dto.getGenres());
-            newMovie.setRating(dto.getRating());
-            newMovie.setRelease_date(dto.getRelease_date());
-            newMovie.setSynopsis(dto.getSynopsis());
-            newMovie.setTrailer_link(dto.getTrailer_link());
-            newMovie.setPoster_link(dto.getPoster_link());
-            newMovie.setCast_names(dto.getCast_names());
-            newMovie.setDirectors(dto.getDirectors());
-            newMovie.setProducers(dto.getProducers());
-            newMovie.setScore(dto.getScore());
-            newMovie.setDuration(dto.getDuration());
-
-            Movie created = movieService.createMovie(newMovie);
+            Movie created = movieService.createMovie(dto);
             return ResponseEntity.ok(created);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Error creating movie: " + e.getMessage());
         }
-
     }
 
     /**

@@ -47,7 +47,7 @@ public class UserController {
         User user = userService.getUserById(userId);
         Optional<Address> homeAddressOpt = addressService.getUserHomeAddress(userId);
         
-        // Convert User entity to UserDto using factory method (excludes sensitive data)
+        // Convert User entity to UserDto using static factory method (excludes sensitive data)
         AuthResponse.UserDto userDto = UserDtoFactory.fromUser(user);
         
         // Convert Address entity to AddressDTO if present
