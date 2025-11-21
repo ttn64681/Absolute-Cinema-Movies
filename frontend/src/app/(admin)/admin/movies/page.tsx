@@ -15,10 +15,10 @@ const moviesList: Movie[] = [
     id: 1,
     title: 'Oldboy',
     date: '12/15/2024',
-    time: '7:30PM',
+    time: '6:30PM',
     _meta: {
       showtimes: [
-        { date: '12/15/2024', time: '7:30', ampm: 'PM', room: 'A' },
+        { date: '12/15/2024', time: '6:30', ampm: 'PM', room: 'A' },
         { date: '12/16/2024', time: '8:00', ampm: 'PM', room: 'B' },
         { date: '12/17/2024', time: '7:30', ampm: 'PM', room: 'C' },
       ],
@@ -233,16 +233,16 @@ export default function AdminMoviesPage() {
   const openEditModal = (movie: Movie) => {
     const existingShowtimes = movie._meta?.showtimes;
     const defaultShowtime = {
-      date: movie.date,
-      time: movie.time.replace(/\s?(AM|PM)$/i, '').trim(),
-      ampm: getAmpmFromTime(movie.time),
+      date: movie.date || '',
+      time: movie.time.replace(/\s?(AM|PM)$/i, '').trim() || '',
+      ampm: getAmpmFromTime(movie.time) || '',
     };
     
     setEditingMovie({
       id: movie.id,
       title: movie.title,
-      date: movie.date,
-      time: movie.time,
+      date: movie.date || '',
+      time: movie.time || '',
       _meta: {
         ...movie._meta,
         showtimes: existingShowtimes || [defaultShowtime],
@@ -306,9 +306,9 @@ export default function AdminMoviesPage() {
       const movie = updatedMovies[movieIndex];
       const existingShowtimes = movie._meta?.showtimes || [
         {
-          date: movie.date,
-          time: movie.time.replace(/\s?(AM|PM)$/i, '').trim(),
-          ampm: getAmpmFromTime(movie.time),
+          date: movie.date || '',
+          time: movie.time.replace(/\s?(AM|PM)$/i, '').trim() || '',
+          ampm: getAmpmFromTime(movie.time) || '',
         },
       ];
 
@@ -402,7 +402,7 @@ export default function AdminMoviesPage() {
             ) : (
               paginatedMovies.map((movie) => {
               const allShowtimes = movie._meta?.showtimes || [
-                { date: movie.date, time: movie.time, ampm: getAmpmFromTime(movie.time), room: undefined },
+                { date: movie.date, time: movie.time, ampm: getAmpmFromTime(movie.time) || '', room: undefined },
               ];
               const hasShowtimes = movie._meta?.showtimes && movie._meta.showtimes.length > 0;
 

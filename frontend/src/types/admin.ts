@@ -7,8 +7,18 @@
 export interface AdminMovie {
   id: number;
   title: string;
-  date: string;
-  time: string;
+  date?: string;
+  time?: string;
+  status?: string;
+  genres?: string;
+  rating?: string;
+  release_date?: string;
+  synopsis?: string;
+  trailer_link?: string;
+  poster_link?: string;
+  cast_names?: string;
+  directors?: string;
+  producers?: string;
   _meta?: {
     showtimes?: Array<{ date: string; time: string; ampm: string; room?: string }>;
   };
@@ -16,6 +26,17 @@ export interface AdminMovie {
 
 // Alias for Movie type used in admin movies page
 export type Movie = AdminMovie;
+
+// Paginated movie response from backend
+export interface PaginatedMovieResponse {
+  movies: AdminMovie[];
+  currentPage: number;
+  totalPages: number;
+  totalElements: number;
+  hasNext: boolean;
+  hasPrevious: boolean;
+  pageSize: number;
+}
 
 // User interface for admin user management
 export interface StoredUser {
