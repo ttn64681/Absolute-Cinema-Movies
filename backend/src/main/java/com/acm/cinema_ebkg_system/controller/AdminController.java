@@ -248,28 +248,20 @@ public class AdminController {
 
     // ========== REQUEST DTOs ==========
     
+    @lombok.Data
+    @lombok.NoArgsConstructor
+    @lombok.AllArgsConstructor
     public static class CreateAdminRequest {
         private String email;
         private String password;
         private String profileImageLink;
-
-        // Getters and setters
-        public String getEmail() { return email; }
-        public void setEmail(String email) { this.email = email; }
-        public String getPassword() { return password; }
-        public void setPassword(String password) { this.password = password; }
-        public String getProfileImageLink() { return profileImageLink; }
-        public void setProfileImageLink(String profileImageLink) { this.profileImageLink = profileImageLink; }
     }
 
+    @lombok.Data
+    @lombok.NoArgsConstructor
+    @lombok.AllArgsConstructor
     public static class UpdateProfileImageRequest {
         private String email;
         private String profileImageLink;
-
-        // Getters and setters
-        public String getEmail() { return email; }
-        public void setEmail(String email) { this.email = email; }
-        public String getProfileImageLink() { return profileImageLink; }
-        public void setProfileImageLink(String profileImageLink) { this.profileImageLink = profileImageLink; }
     }
 }
