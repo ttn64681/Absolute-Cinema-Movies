@@ -7,11 +7,7 @@ import Checkbox from '@/components/common/forms/Checkbox';
 import AuthFormContainer from '@/components/common/auth/AuthFormContainer';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastContext';
-<<<<<<< HEAD
-import { validateEmail } from '@/clients/auth';
-=======
 import { validateEmail } from '@/clients/authClient';
->>>>>>> thai_d7_troubleshoot
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');

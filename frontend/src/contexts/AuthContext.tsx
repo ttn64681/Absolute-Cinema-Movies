@@ -1,11 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, useMemo, useCallback, useRef, ReactNode } from 'react';
-<<<<<<< HEAD
-import { authAPI, AuthResponse } from '@/clients/auth';
-=======
 import { authClient, AuthResponse } from '@/clients/authClient';
->>>>>>> thai_d7_troubleshoot
 import { getAuthToken } from '@/utils/auth';
 
 interface User {
