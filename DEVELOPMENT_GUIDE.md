@@ -240,7 +240,7 @@
 - `state`: String - User's state/province (optional)
 - `country`: String - User's country (optional)
 
-**Note**: `UserDto` is a pure data container with a single constructor. Creation is handled by `UserDtoFactory` (located in `mapper/` package) using Factory Method pattern:
+**Note**: `UserDto` is a pure data container with a single constructor. Creation is handled by `UserDtoFactory` (located in `mapper/` package) using Static Factory Method pattern:
 
 - `UserDtoFactory.fromUser(user)` - Creates UserDto from User entity (basic info, no address)
 - `UserDtoFactory.fromUserWithAddress(user, address)` - Creates UserDto with address information

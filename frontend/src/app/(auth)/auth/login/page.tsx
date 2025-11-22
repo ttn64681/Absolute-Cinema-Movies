@@ -7,7 +7,7 @@ import Checkbox from '@/components/common/forms/Checkbox';
 import AuthFormContainer from '@/components/common/auth/AuthFormContainer';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastContext';
-import { validateEmail } from '@/services/auth';
+import { validateEmail } from '@/clients/authClient';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');

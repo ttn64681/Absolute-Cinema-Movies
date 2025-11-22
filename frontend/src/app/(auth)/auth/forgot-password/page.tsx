@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import NavBar from '@/components/common/navBar/NavBar';
 import { useToast } from '@/contexts/ToastContext';
-import { validateEmail } from '@/services/auth';
+import { validateEmail } from '@/clients/authClient';
 import { buildUrl, endpoints } from '@/config/api';
 
 export default function ForgotPasswordPage() {

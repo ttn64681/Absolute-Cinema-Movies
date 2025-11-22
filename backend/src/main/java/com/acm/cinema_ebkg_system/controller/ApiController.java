@@ -11,10 +11,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * API Controller - Provides environment variable information for debugging
- * 
- * Note: This controller uses Environment to access properties, making it more resilient
- * if environment variables are not directly available to the Spring Boot process.
+ * API Controller - Purely for testing if endpoint connections work lol
  */
 @RestController 
 @RequestMapping("/api")
@@ -27,7 +24,7 @@ public class ApiController {
     private DataSourceProperties dataSourceProperties;
 
     /**
-     * GET /api/env - Returns environment variables (for debugging)
+     * GET /api/env - Returns environment variables
      * 
      * Uses Environment bean to access properties, which is more resilient than
      * direct @Value injection when environment variables might not be available.

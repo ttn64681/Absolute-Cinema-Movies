@@ -24,9 +24,9 @@ public class CacheConfig {
     public CacheManager cacheManager() {
         CaffeineCacheManager cacheManager = new CaffeineCacheManager("nowPlayingMovies", "upcomingMovies", "searchNowPlayingMovies", "searchUpcomingMovies");
         cacheManager.setCaffeine(Caffeine.newBuilder()
-                .expireAfterWrite(10, TimeUnit.MINUTES)  // TTL: 10min
-                .maximumSize(100)                        // Max 100 entries (LRU eviction)
-                .recordStats());                         // Cache stats
+                .expireAfterWrite(10, TimeUnit.MINUTES) // TTL: 10min
+                .maximumSize(100) // Max 100 entries (LRU eviction)
+                .recordStats()); // Cache stats
         return cacheManager;
     }
 }

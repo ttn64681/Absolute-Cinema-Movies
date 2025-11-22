@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useRegistration } from '@/contexts/RegistrationContext';
-import { validateEmail, validatePassword, authAPI } from '@/services/auth';
+import { validateEmail, validatePassword, authClient } from '@/clients/authClient';
 import AuthFormContainer from '@/components/common/auth/AuthFormContainer';
 import AuthInput from '@/components/common/auth/AuthInput';
 import AuthButton from '@/components/common/auth/AuthButton';
@@ -57,7 +57,7 @@ export default function RegisterPage() {
     if (data.email && validateEmail(data.email)) {
       setIsCheckingEmail(true);
       try {
-        const emailCheck = await authAPI.checkEmail(data.email);
+        const emailCheck = await authClient.checkEmail(data.email);
         if (!emailCheck.success) {
           setErrors(prev => ({ ...prev, email: emailCheck.message }));
           setIsCheckingEmail(false);

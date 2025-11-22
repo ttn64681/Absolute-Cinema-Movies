@@ -3,8 +3,6 @@ package com.acm.cinema_ebkg_system.dto.user;
 /**
  * Password Change Request DTO - For changing user passwords
  * 
- * Follows Single Responsibility Principle: Only handles password changes.
- * 
  * Used for both:
  * - Changing password (requires currentPassword)
  * - Resetting forgotten password (only requires newPassword)
