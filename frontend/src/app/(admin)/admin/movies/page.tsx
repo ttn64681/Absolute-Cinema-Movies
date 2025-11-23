@@ -30,21 +30,10 @@ function getAmpmFromTime(time: string): 'AM' | 'PM' {
   return 'PM';
 }
 
-export default function AdminMoviesPage() {
-  
-  const {
-    adminMovies,
-    isLoading: isLoadingMovies,
-    // pagination,
-    // goToNextPage,
-    // goToPreviousPage,
-    // goToThisPage,
-  } = useAdminMovies();
-
-    // hardcoded movies for now
-  const fallbackMoviesList: Movie[] = [
+// hardcoded movies for now
+  /*const fallbackMoviesList: Movie[] = [
     {
-      id: 1,
+      movie_id: 1,
       title: 'Oldboy',
       date: '12/15/2024',
       time: '6:30PM',
@@ -57,7 +46,7 @@ export default function AdminMoviesPage() {
       },
     },
     {
-      id: 2,
+      movie_id: 2,
       title: 'Him',
       date: '12/20/2024',
       time: '8:00PM',
@@ -69,7 +58,7 @@ export default function AdminMoviesPage() {
       },
     },
     {
-      id: 3,
+      movie_id: 3,
       title: 'Beauty and the Beast',
       date: '12/18/2024',
       time: '6:45PM',
@@ -82,7 +71,7 @@ export default function AdminMoviesPage() {
       },
     },
     {
-      id: 4,
+      movie_id: 4,
       title: 'Godzilla',
       date: '12/22/2024',
       time: '9:15PM',
@@ -94,7 +83,7 @@ export default function AdminMoviesPage() {
       },
     },
     {
-      id: 5,
+      movie_id: 5,
       title: 'Superman',
       date: '12/16/2024',
       time: '7:00PM',
@@ -107,7 +96,7 @@ export default function AdminMoviesPage() {
       },
     },
     {
-      id: 6,
+      movie_id: 6,
       title: 'Tron',
       date: '12/19/2024',
       time: '8:30PM',
@@ -119,7 +108,7 @@ export default function AdminMoviesPage() {
       },
     },
     {
-      id: 7,
+      movie_id: 7,
       title: 'The Conjuring',
       date: '12/21/2024',
       time: '10:00PM',
@@ -131,7 +120,7 @@ export default function AdminMoviesPage() {
       },
     },
     {
-      id: 8,
+      movie_id: 8,
       title: 'Demon Slayer',
       date: '12/17/2024',
       time: '6:30PM',
@@ -144,7 +133,7 @@ export default function AdminMoviesPage() {
       },
     },
     {
-      id: 9,
+      movie_id: 9,
       title: 'The Long Walk',
       date: '12/23/2024',
       time: '7:45PM',
@@ -157,7 +146,7 @@ export default function AdminMoviesPage() {
       },
     },
     {
-      id: 10,
+      movie_id: 10,
       title: 'Good Boy',
       date: '12/24/2024',
       time: '5:30PM',
@@ -170,7 +159,7 @@ export default function AdminMoviesPage() {
       },
     },
     {
-      id: 11,
+      movie_id: 11,
       title: 'Downton Abbey',
       date: '12/25/2024',
       time: '4:00PM',
@@ -182,11 +171,25 @@ export default function AdminMoviesPage() {
         ],
       },
     },
-  ];
+  ];*/
+
+export default function AdminMoviesPage() {
+
+  const {
+    adminMovies,
+    isLoading,
+    pagination,
+    goToNextPage,
+    goToPreviousPage,
+    goToThisPage,
+  } = useAdminMovies();
 
   // Use adminMovies if available; otherwise, fall back to fallbackMoviesList
-  const moviesList = adminMovies && adminMovies.length > 0 ? adminMovies : fallbackMoviesList;
+  const moviesList = adminMovies && adminMovies.length > 0 ? adminMovies : [];
   console.log(moviesList);
+  console.log(pagination.currentPage);
+  console.log("HasPreviousPage is " + pagination.hasNext );
+  console.log("HasNextPage is " + pagination.hasNext );
 
   const [movies, setMovies] = useState(moviesList); // movies list
   const [showModal, setShowModal] = useState(false); // add/edit movie popup visibility
@@ -201,37 +204,41 @@ export default function AdminMoviesPage() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
-    const savedMovies = sessionStorage.getItem('movies');
+    /*const savedMovies = sessionStorage.getItem('movies');
     if (savedMovies) {
       try {
         const parsedMovies = JSON.parse(savedMovies);
-        const baselineById = new Map(moviesList.map(m => [m.id, m]));
+        const baselineBymovie_id = new Map(moviesList.map(m => [m.movie_id, m]));
         parsedMovies.forEach((savedMovie: Movie) => {
-          baselineById.set(savedMovie.id, savedMovie as AdminMovie);
+          baselineBymovie_id.set(savedMovie.movie_id, savedMovie as AdminMovie);
         });
-        const merged = Array.from(baselineById.values());
-        const savedOnly = parsedMovies.filter((s: Movie) => !moviesList.some(b => b.id === s.id));
+        const merged = Array.from(baselineBymovie_id.values());
+        const savedOnly = parsedMovies.filter((s: Movie) => !moviesList.some(b => b.movie_id === s.movie_id));
         const result = [...merged, ...savedOnly];
         setMovies(result);
       } catch (error) {
         console.log('error parsing movies:', error);
       }
-    }
-  }, []);
+    } else {*/
+      // Use adminMovies if available; otherwise, fall back to fallbackMoviesList
+      setMovies(adminMovies && adminMovies.length > 0 ? adminMovies : []);
+      console.log(movies);
+    //}
+  }, [adminMovies]);
 
   // Delete movie function
-  const remove = (movieId: number) => {
-    const movieToDelete = movies.find((movie) => movie.id === movieId);
+  const remove = (movie_id: number) => {
+    const movieToDelete = movies.find((movie) => movie.movie_id === movie_id);
     const hasShowtimes = movieToDelete?._meta?.showtimes && movieToDelete._meta.showtimes.length > 0;
     
     if (hasShowtimes) {
       return;
     }
     
-    const updatedMovies = movies.filter((movie) => movie.id !== movieId);
+    const updatedMovies = movies.filter((movie) => movie.movie_id !== movie_id);
     setMovies(updatedMovies);
     const nonInitialMovies = updatedMovies.filter(
-      (movie) => !moviesList.some((initialMovie) => initialMovie.id === movie.id)
+      (movie) => !moviesList.some((initialMovie) => initialMovie.movie_id === movie.movie_id)
     );
     if (typeof window !== 'undefined') {
       sessionStorage.setItem('movies', JSON.stringify(nonInitialMovies));
@@ -246,21 +253,34 @@ export default function AdminMoviesPage() {
 
   // Function to open edit movie menu
   const openEditModal = (movie: Movie) => {
-    const existingShowtimes = movie._meta?.showtimes;
+    /*const existingShowtimes = movie._meta?.showtimes;
     const defaultShowtime = {
       date: movie.date || '',
       time: movie.time.replace(/\s?(AM|PM)$/i, '').trim() || '',
-      ampm: getAmpmFromTime(movie.time) || '',
-    };
+      ampm: /*getAmpmFromTime(movie.time) || 'AM',
+    };*/
     
     setEditingMovie({
-      id: movie.id,
+      movie_id: movie.movie_id,
       title: movie.title,
       date: movie.date || '',
       time: movie.time || '',
+      status: movie.status || 'upcoming',
+      genres: movie.genres || '',
+      rating: movie.rating || '',
+      release_date: movie.release_date || '',
+      synopsis: movie.synopsis || '',
+      trailer_link: movie.trailer_link || '',
+      poster_link: movie.poster_link || '',
+      cast_names: movie.cast_names || '',
+      directors: movie.directors || '',
+      producers: movie.producers || '',
+      reviews: movie.reviews || '',
+      duration: movie.duration || 0,
+      score: movie.score || 0,
       _meta: {
         ...movie._meta,
-        showtimes: existingShowtimes || [defaultShowtime],
+        showtimes: movie._meta?.showtimes || [{ date: '', time: '', ampm: 'AM', room: undefined }],
       },
     });
     setShowModal(true);
@@ -269,7 +289,7 @@ export default function AdminMoviesPage() {
   // Function to update movies list with a new or edited movie
   const onMovieSaved = (savedMovie: AdminMovie) => {
     setMovies((prevMovies) => {
-      const existingIndex = prevMovies.findIndex((m) => m.id === savedMovie.id);
+      const existingIndex = prevMovies.findIndex((m) => m.movie_id === savedMovie.movie_id);
       let updated: AdminMovie[];
       
       if (existingIndex >= 0) {
@@ -281,7 +301,7 @@ export default function AdminMoviesPage() {
       
       if (typeof window !== 'undefined') {
         const nonInitialMovies = updated.filter(
-          (movie) => !moviesList.some((initialMovie) => initialMovie.id === movie.id)
+          (movie) => !moviesList.some((initialMovie) => initialMovie.movie_id === movie.movie_id)
         );
         sessionStorage.setItem('movies', JSON.stringify(nonInitialMovies));
       }
@@ -314,7 +334,7 @@ export default function AdminMoviesPage() {
       room: roomName,
     };
     setMovies((prevMovies) => {
-      const movieIndex = prevMovies.findIndex((m) => m.id === schedulingMovie.id);
+      const movieIndex = prevMovies.findIndex((m) => m.movie_id === schedulingMovie.movie_id);
       if (movieIndex === -1) return prevMovies;
 
       const updatedMovies = [...prevMovies];
@@ -323,7 +343,7 @@ export default function AdminMoviesPage() {
         {
           date: movie.date || '',
           time: movie.time.replace(/\s?(AM|PM)$/i, '').trim() || '',
-          ampm: getAmpmFromTime(movie.time) || '',
+          ampm: /*getAmpmFromTime(movie.time) ||*/ 'AM',
         },
       ];
 
@@ -337,7 +357,7 @@ export default function AdminMoviesPage() {
       } as AdminMovie;
       if (typeof window !== 'undefined') {
         const nonInitialMovies = updatedMovies.filter(
-          (movie) => !moviesList.some((initialMovie) => initialMovie.id === movie.id)
+          (movie) => !moviesList.some((initialMovie) => initialMovie.movie_id === movie.movie_id)
         );
         sessionStorage.setItem('movies', JSON.stringify(nonInitialMovies));
       }
@@ -347,12 +367,13 @@ export default function AdminMoviesPage() {
   };
 
   const totalPages = Math.ceil(movies.length / moviesPerPage);
-  const startIndex = (currentPage - 1) * moviesPerPage;
-  const endIndex = startIndex + moviesPerPage;
+  const startIndex = 0;
+  const endIndex = moviesPerPage;
   const paginatedMovies = movies.slice(startIndex, endIndex);
+  console.log(startIndex, endIndex);
 
   const goToPage = (page: number) => {
-    if (page >= 1 && page <= totalPages) {
+    if (page >= 0 && page <= totalPages) {
       setCurrentPage(page);
     }
   };
@@ -417,7 +438,7 @@ export default function AdminMoviesPage() {
             ) : (
               paginatedMovies.map((movie) => {
               const allShowtimes = movie._meta?.showtimes || [
-                { date: movie.date, time: movie.time, ampm: getAmpmFromTime(movie.time) || '', room: undefined },
+                { date: movie.date, time: movie.time, ampm: /*getAmpmFromTime(movie.time) ||*/ 'AM', room: undefined },
               ];
               const hasShowtimes = movie._meta?.showtimes && movie._meta.showtimes.length > 0;
 
@@ -431,8 +452,8 @@ export default function AdminMoviesPage() {
                   return dateA.getTime() - dateB.getTime();
                 }
                 
-                const timeA = parseTime(a.time, a.ampm);
-                const timeB = parseTime(b.time, b.ampm);
+                const timeA = parseTime(a.time, a.ampm) || 50;
+                const timeB = parseTime(b.time, b.ampm) || 30;
                 return timeA - timeB;
               });
               
@@ -447,12 +468,12 @@ export default function AdminMoviesPage() {
                 : 'transition-colors hover:text-white cursor-pointer';
 
               return (
-                <li key={movie.id} className="flex items-center py-3 sm:py-4">
+                <li key={movie.movie_id} className="flex items-center py-3 sm:py-4">
                   <div className="flex-1 text-gray-200 font-afacad px-25 min-h-[1.5rem]">
                     {movie.title}
                   </div>
                   <div
-                    className="absolute left-1/2 transform -translate-x-1/2 text-gray-300 hidden sm:block font-afacad"
+                    className="absolute left-1/2 transform -translate-x-1/2 text-gray-300 hmovie_idden sm:block font-afacad"
                     style={{ textAlign: 'center' }}
                   >
                     {nextShowtime.date} {nextShowtime.time} {nextShowtime.ampm}
@@ -478,7 +499,7 @@ export default function AdminMoviesPage() {
                     <button
                       title={deleteButtonTitle}
                       className={deleteButtonClassName}
-                      onClick={() => remove(movie.id)}
+                      onClick={() => remove(movie.movie_id)}
                       disabled={hasShowtimes}
                       style={{ background: 'none', border: 'none' }}
                     >
@@ -493,13 +514,13 @@ export default function AdminMoviesPage() {
         </div>
       </div>
 
-      {totalPages > 1 && (
+      {(
         <div className="max-w-[65rem] mx-auto mt-4 px-4 flex items-center justify-center gap-4">
           <button
             type="button"
-            onClick={() => goToPage(currentPage - 1)}
-            disabled={currentPage === 1}
-            className={currentPage === 1 
+            onClick={() => goToPreviousPage()}
+            disabled={!pagination.hasPrevious}
+            className={!pagination.hasPrevious 
               ? 'px-4 py-2 rounded-md font-afacad transition-colors bg-white/5 text-white/30'
               : 'px-4 py-2 rounded-md font-afacad transition-colors bg-white/10 text-white hover:bg-white/20 cursor-pointer'
             }
@@ -508,13 +529,13 @@ export default function AdminMoviesPage() {
             <PiCaretLeft className="text-xl" />
           </button>
           <span className="text-white font-afacad">
-            Page {currentPage} of {totalPages}
+            Page {pagination.currentPage+1}
           </span>
           <button
             type="button"
-            onClick={() => goToPage(currentPage + 1)}
-            disabled={currentPage === totalPages}
-            className={currentPage === totalPages
+            onClick={() => goToNextPage()}
+            disabled={!pagination.hasNext}
+            className={!pagination.hasNext
               ? 'px-4 py-2 rounded-md font-afacad transition-colors bg-white/5 text-white/30'
               : 'px-4 py-2 rounded-md font-afacad transition-colors bg-white/10 text-white hover:bg-white/20 cursor-pointer'
             }
@@ -553,7 +574,7 @@ export default function AdminMoviesPage() {
             setSchedulingMovie(null);
           }}
           onSchedule={handleSchedule}
-          movieId={schedulingMovie.id}
+          movieId={schedulingMovie.movie_id}
           movieTitle={schedulingMovie.title}
           existingShowtimes={schedulingMovie._meta?.showtimes || []}
         />

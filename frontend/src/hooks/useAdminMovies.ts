@@ -72,11 +72,11 @@ export function useAdminMovies() {
         adminMovies,
         isLoading,
         error,
-        // pagination,
-        // goToNextPage,
-        // goToPreviousPage,
-        // goToThisPage,
-        // refreshMovies: () => fetchMovies(page),
+        pagination,
+        goToNextPage,
+        goToPreviousPage,
+        goToThisPage,
+        refreshMovies: () => fetchMovies(page),
       };
 
 }

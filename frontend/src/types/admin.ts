@@ -5,20 +5,23 @@
 
 // Movie interface for admin movie management (duplicate of inline type, keeping as is)
 export interface AdminMovie {
-  id: number;
+  movie_id: number;
   title: string;
-  date?: string;
-  time?: string;
-  status?: string;
-  genres?: string;
-  rating?: string;
-  release_date?: string;
-  synopsis?: string;
-  trailer_link?: string;
-  poster_link?: string;
-  cast_names?: string;
-  directors?: string;
-  producers?: string;
+  date: string;
+  time: string;
+  status: string;
+  genres: string;
+  rating: string;
+  release_date: string;
+  synopsis: string;
+  trailer_link: string;
+  poster_link: string;
+  cast_names: string;
+  directors: string;
+  producers: string;
+  reviews: string;
+  duration: number;
+  score: number;
   _meta?: {
     showtimes?: Array<{ date: string; time: string; ampm: string; room?: string }>;
   };

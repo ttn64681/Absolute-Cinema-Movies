@@ -11,25 +11,29 @@ type Showtime = {
 };
 
 export type AdminMovie = {
-  id: number;
+  movie_id: number;
   title: string;
   date: string;
   time: string;
+  status: string;
+  genres: string;
+  rating: string;
+  release_date: string;
+  synopsis: string;
+  trailer_link: string;
+  poster_link: string;
+  cast_names: string;
+  directors: string;
+  producers: string;
+  reviews?: string;
+  duration: number;
+  score?: number;
   _meta?: {
-    movieType?: string;
-    genre?: string;
-    posterName?: string | null;
-    trailerUrl?: string;
-    synopsis?: string;
-    director?: string;
-    producer?: string;
-    cast?: string;
-    reviews?: string;
-    rating?: string;
-    score?: number;
-    showtimes?: Showtime[];
+    showtimes?: Array<{ date: string; time: string; ampm: string; room?: string }>;
   };
 };
+
+
 
 interface MovieFormModalProps {
   isOpen: boolean;
@@ -42,16 +46,18 @@ interface MovieFormModalProps {
 export default function MovieFormModal({ isOpen, onClose, onSaved, initialMovie }: MovieFormModalProps) {
   const [title, setTitle] = useState("");
   const [movieType, setMovieType] = useState("New Movie");
-  const [genre, setGenre] = useState("");
-  const [posterFile, setPosterFile] = useState<File | null>(null);
-  const [trailerUrl, setTrailerUrl] = useState("");
+  const [genres, setGenres] = useState("");
+  const [poster_link, setPosterLink] = useState<File | null>(null);
+  const [trailer_link, setTrailerLink] = useState("");
   const [synopsis, setSynopsis] = useState("");
-  const [director, setDirector] = useState("");
-  const [producer, setProducer] = useState("");
-  const [cast, setCast] = useState("");
+  const [directors, setDirectors] = useState("");
+  const [producers, setProducers] = useState("");
+  const [cast_names, setCastNames] = useState("");
   const [reviews, setReviews] = useState("");
   const [rating, setRating] = useState("");
+  const [duration, setDuration] = useState(0);
   const [score, setScore] = useState<string>("");
+  const [release_date, setReleaseDate] = useState("");
   const [showtimes, setShowtimes] = useState<Showtime[]>([{ date: "", time: "", ampm: "AM" }]);
   const [saving, setSaving] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -60,20 +66,20 @@ export default function MovieFormModal({ isOpen, onClose, onSaved, initialMovie 
     if (!isOpen) return;
 
     if (initialMovie) {
-      setEditingId(initialMovie.id);
+      setEditingId(initialMovie.movie_id);
       setTitle(initialMovie.title || "");
-      setMovieType(initialMovie._meta?.movieType || "New Movie");
-      setGenre(initialMovie._meta?.genre || "");
-      setTrailerUrl(initialMovie._meta?.trailerUrl || "");
-      setSynopsis(initialMovie._meta?.synopsis || "");
-      setDirector(initialMovie._meta?.director || "");
-      setProducer(initialMovie._meta?.producer || "");
-      setCast(initialMovie._meta?.cast || "");
-      setReviews(initialMovie._meta?.reviews || "");
-      setRating(initialMovie._meta?.rating || "");
+      setMovieType(initialMovie.status || "upcoming");
+      setGenres(initialMovie.genres || "");
+      setTrailerLink(initialMovie.trailer_link || "");
+      setSynopsis(initialMovie.synopsis || "");
+      setDirectors(initialMovie.directors || "");
+      setProducers(initialMovie.producers || "");
+      setCastNames(initialMovie.cast_names || "");
+      setReviews(initialMovie.reviews || "");
+      setRating(initialMovie.rating || "");
       setScore(
-        typeof initialMovie._meta?.score === "number"
-          ? String(initialMovie._meta.score)
+        typeof initialMovie.score === "number"
+          ? String(initialMovie.score)
           : ""
       );
 
@@ -99,13 +105,13 @@ export default function MovieFormModal({ isOpen, onClose, onSaved, initialMovie 
       setEditingId(null);
       setTitle("");
       setMovieType("New Movie");
-      setGenre("");
-      setPosterFile(null);
-      setTrailerUrl("");
+      setGenres("");
+      setPosterLink(null);
+      setTrailerLink("");
       setSynopsis("");
-      setDirector("");
-      setProducer("");
-      setCast("");
+      setDirectors("");
+      setProducers("");
+      setCastNames("");
       setReviews("");
       setRating("");
       setScore("");
@@ -127,11 +133,11 @@ export default function MovieFormModal({ isOpen, onClose, onSaved, initialMovie 
     return "Add Movie";
   };
   const getPosterNameClass = () => {
-    if (posterFile) return "text-white";
+    if (poster_link) return "text-white";
     return "opacity-80";
   };
   const getPosterDisplayText = () => {
-    if (posterFile) return posterFile.name;
+    if (poster_link) return poster_link.name;
     return "Select File";
   };
   const isSaveDisabled = () => {
@@ -149,8 +155,8 @@ export default function MovieFormModal({ isOpen, onClose, onSaved, initialMovie 
   };
 
   const formValid = () => {
-    if (!title || !genre || !synopsis) return false;
-    if (!showtimes.length || !showtimes[0].date || !showtimes[0].time) return false;
+    if (!title || !genres || !synopsis) return false;
+    //if (!showtimes.length || !showtimes[0].date || !showtimes[0].time) return false;
     return true;
   };
 
@@ -163,32 +169,34 @@ export default function MovieFormModal({ isOpen, onClose, onSaved, initialMovie 
 
       const primary = showtimes[0];
       const movieData: AdminMovie = {
-        id: editingId || Date.now(),
+        movie_id: editingId || Date.now(),
         title,
         date: primary.date,
         time: `${primary.time} ${primary.ampm}`,
+        status,
+        genres,
+        rating,
+        release_date,
+        synopsis,
+        trailer_link,
+        poster_link,
+        cast_names,
+        directors,
+        producers,
+        reviews,
+        duration,
+        score: parseScore(score),
         _meta: {
-          movieType,
-          genre,
-          posterName: posterFile?.name ?? null,
-          trailerUrl,
-          synopsis,
-          director,
-          producer,
-          cast,
-          reviews,
-          rating,
-          score: parseScore(score),
           showtimes,
         },
       };
 
     let updated: AdminMovie[];
     if (editingId) {
-      const exists = parsed.some((m) => m.id === editingId);
+      const exists = parsed.some((m) => m.movie_id === editingId);
       if (exists) {
         updated = parsed.map((m) => {
-          if (m.id === editingId) return movieData;
+          if (m.movie_id === editingId) return movieData;
           return m;
         });
       } else {
@@ -258,8 +266,8 @@ export default function MovieFormModal({ isOpen, onClose, onSaved, initialMovie 
             <label className="block text-sm mb-2 font-afacad text-white">Genre</label>
             <div className="relative">
               <select
-                value={genre}
-                onChange={(e) => setGenre(e.target.value)}
+                value={genres}
+                onChange={(e) => setGenres(e.target.value)}
                 className="w-full pl-4 pr-4 py-3 rounded-md bg-white/10 border border-white/20 text-white focus:outline-none 
                 focus:ring-1 focus:ring-[#FF478B] focus:border-transparent appearance-none cursor-pointer"
               >
@@ -299,8 +307,8 @@ export default function MovieFormModal({ isOpen, onClose, onSaved, initialMovie 
           <label className="block text-sm mb-2 font-afacad text-white">Trailer URL</label>
           <input
             type="url"
-            value={trailerUrl}
-            onChange={(e) => setTrailerUrl(e.target.value)}
+            value={trailer_link}
+            onChange={(e) => setTrailerLink(e.target.value)}
             placeholder="https://example.com"
             className="w-full px-4 py-3 rounded-md bg-white/10 border border-white/20 text-white placeholder-white/60 focus:outline-none focus:ring-1 focus:ring-[#FF478B] focus:border-transparent"
           />
@@ -323,8 +331,8 @@ export default function MovieFormModal({ isOpen, onClose, onSaved, initialMovie 
             <label className="block text-sm mb-2 font-afacad text-white">Director(s)</label>
             <input
               type="text"
-              value={director}
-              onChange={(e) => setDirector(e.target.value)}
+              value={directors}
+              onChange={(e) => setDirectors(e.target.value)}
               placeholder="Enter director name"
               className="w-full px-4 py-3 rounded-md bg-white/10 border border-white/20 text-white placeholder-white/60 focus:outline-none focus:ring-1 focus:ring-[#FF478B] focus:border-transparent"
             />
@@ -333,8 +341,8 @@ export default function MovieFormModal({ isOpen, onClose, onSaved, initialMovie 
             <label className="block text-sm mb-2 font-afacad text-white">Producer(s)</label>
             <input
               type="text"
-              value={producer}
-              onChange={(e) => setProducer(e.target.value)}
+              value={producers}
+              onChange={(e) => setProducers(e.target.value)}
               placeholder="Enter producer name"
               className="w-full px-4 py-3 rounded-md bg-white/10 border border-white/20 text-white placeholder-white/60 focus:outline-none focus:ring-1 focus:ring-[#FF478B] focus:border-transparent"
             />
@@ -344,8 +352,8 @@ export default function MovieFormModal({ isOpen, onClose, onSaved, initialMovie 
         <div className="mb-6">
           <label className="block text-sm mb-2 font-afacad text-white">Cast</label>
           <textarea
-            value={cast}
-            onChange={(e) => setCast(e.target.value)}
+            value={cast_names}
+            onChange={(e) => setCastNames(e.target.value)}
             placeholder="Enter cast members"
             rows={4}
             className="w-full px-4 py-3 rounded-md bg-white/10 border border-white/20 text-white placeholder-white/60 focus:outline-none focus:ring-1 focus:ring-[#FF478B] focus:border-transparent resize-none"

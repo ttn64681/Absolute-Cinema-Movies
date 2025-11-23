@@ -8,7 +8,7 @@ async function fetchMoviesPaginated(pageNum: number) {
           // const token = localStorage.getItem('token') || sessionStorage.getItem('token');
 
           // Fetch paginated now playing movies (test))
-          const response = await fetch(buildUrl(`/api/movies/browse/now-playing?page=${pageNum}`), {
+          const response = await fetch(buildUrl(`/api/movies/browse/upcoming?page=${pageNum}`), {
             method: 'GET',
             headers: {
               'Content-Type': 'application/json',
