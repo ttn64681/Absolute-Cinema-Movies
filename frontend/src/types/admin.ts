@@ -4,7 +4,7 @@
  */
 
 // Movie interface for admin movie management (duplicate of inline type, keeping as is)
-export interface AdminMovie {
+/*export interface AdminMovie {
   movie_id: number;
   title: string;
   date: string;
@@ -25,6 +25,24 @@ export interface AdminMovie {
   _meta?: {
     showtimes?: Array<{ date: string; time: string; ampm: string; room?: string }>;
   };
+}*/
+
+// Movie interface for admin movie management (duplicate of inline type, keeping as is)
+export interface AdminMovie {
+  movie_id: number;
+  title: string;
+  status: string;
+  genres: string;
+  rating: string;
+  release_date: string;
+  synopsis: string;
+  trailer_link: string;
+  poster_link: string;
+  cast_names: string;
+  directors: string;
+  producers: string;
+  score: number;
+  duration: number;
 }
 
 // Alias for Movie type used in admin movies page

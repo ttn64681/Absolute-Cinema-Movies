@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { formatDateInput, formatTimeInput, parseScore } from "@/components/specific/admin/movieFormUtils";
+import { useAdminSelectedMovie } from '@/hooks/useAdminSelectedMovie';
 
 type Showtime = {
   date: string;
@@ -13,8 +14,6 @@ type Showtime = {
 export type AdminMovie = {
   movie_id: number;
   title: string;
-  date: string;
-  time: string;
   status: string;
   genres: string;
   rating: string;
@@ -25,29 +24,25 @@ export type AdminMovie = {
   cast_names: string;
   directors: string;
   producers: string;
-  reviews?: string;
+  score: number;
   duration: number;
-  score?: number;
-  _meta?: {
-    showtimes?: Array<{ date: string; time: string; ampm: string; room?: string }>;
-  };
-};
-
-
+}
 
 interface MovieFormModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSaved: (savedMovie: AdminMovie) => void;
-  initialMovie?: AdminMovie | null;
 }
 
 // Add/edit movie form
-export default function MovieFormModal({ isOpen, onClose, onSaved, initialMovie }: MovieFormModalProps) {
+export default function AddMovieFormModal({ isOpen, onClose }: MovieFormModalProps) {
+
+  //const [editingMovie, setEditingMovie] = useState(dummyMovie);
+  const [saving, setSaving] = useState(false);
+
   const [title, setTitle] = useState("");
-  const [movieType, setMovieType] = useState("New Movie");
+  const [status, setStatus] = useState("upcoming");
   const [genres, setGenres] = useState("");
-  const [poster_link, setPosterLink] = useState<File | null>(null);
+  const [poster_link, setPosterLink] = useState("");
   const [trailer_link, setTrailerLink] = useState("");
   const [synopsis, setSynopsis] = useState("");
   const [directors, setDirectors] = useState("");
@@ -56,88 +51,55 @@ export default function MovieFormModal({ isOpen, onClose, onSaved, initialMovie 
   const [reviews, setReviews] = useState("");
   const [rating, setRating] = useState("");
   const [duration, setDuration] = useState(0);
-  const [score, setScore] = useState<string>("");
+  const [score, setScore] = useState(0);
   const [release_date, setReleaseDate] = useState("");
-  const [showtimes, setShowtimes] = useState<Showtime[]>([{ date: "", time: "", ampm: "AM" }]);
-  const [saving, setSaving] = useState(false);
-  const [editingId, setEditingId] = useState<number | null>(null);
+  //const [showtimes, setShowtimes] = useState<Showtime[]>([{ date: "", time: "", ampm: "AM" }]);
+
 
   useEffect(() => {
     if (!isOpen) return;
-
-    if (initialMovie) {
-      setEditingId(initialMovie.movie_id);
-      setTitle(initialMovie.title || "");
-      setMovieType(initialMovie.status || "upcoming");
-      setGenres(initialMovie.genres || "");
-      setTrailerLink(initialMovie.trailer_link || "");
-      setSynopsis(initialMovie.synopsis || "");
-      setDirectors(initialMovie.directors || "");
-      setProducers(initialMovie.producers || "");
-      setCastNames(initialMovie.cast_names || "");
-      setReviews(initialMovie.reviews || "");
-      setRating(initialMovie.rating || "");
-      setScore(
-        typeof initialMovie.score === "number"
-          ? String(initialMovie.score)
-          : ""
-      );
-
-      if (initialMovie._meta?.showtimes && initialMovie._meta.showtimes.length > 0) {
-        setShowtimes(initialMovie._meta.showtimes);
-      } else {
-        let ampmValue: "AM" | "PM" = "AM";
-        if (initialMovie.time.includes("AM")) {
-          ampmValue = "AM";
-        } else {
-          ampmValue = "PM";
-        }
-        setShowtimes([
-          {
-            date: initialMovie.date,
-            time: initialMovie.time.split(":").slice(0, 2).join(":"),
-            ampm: ampmValue,
-          },
-        ]);
-      }
-    } else {
-      // reset for new
-      setEditingId(null);
       setTitle("");
-      setMovieType("New Movie");
+      setStatus("upcoming");
       setGenres("");
-      setPosterLink(null);
       setTrailerLink("");
       setSynopsis("");
       setDirectors("");
       setProducers("");
       setCastNames("");
-      setReviews("");
       setRating("");
-      setScore("");
-      setShowtimes([{ date: "", time: "", ampm: "AM" }]);
-    }
-  }, [isOpen, initialMovie]);
+      setScore(0);
+      setDuration(0);
+      console.log("Selected movie data was not set");
+  
+  }, [isOpen]);
 
-  const handleAddShowtime = () => setShowtimes((prev) => [...prev, { date: "", time: "", ampm: "AM" }]);
+  /*const handleAddShowtime = () => setShowtimes((prev) => [...prev, { date: "", time: "", ampm: "AM" }]);
   const handleRemoveShowtime = (index: number) => setShowtimes((prev) => prev.filter((_, i) => i !== index));
   const updateShowtime = (index: number, field: keyof Showtime, value: string) => {
     setShowtimes((previousShowtimes) =>
       previousShowtimes.map((showtime, i) => (i === index ? { ...showtime, [field]: value } : showtime))
     );
-  };
+  };*/
 
   // Display helpers 
   const getHeaderTitle = () => {
-    if (editingId) return "Edit Movie";
     return "Add Movie";
   };
+
+  const getStatusLabel = (status: String) => {
+    if (status == "now_playing") {
+      return "Now Playing";
+    } else {
+      return "Upcoming";
+    }
+  };
+
   const getPosterNameClass = () => {
     if (poster_link) return "text-white";
     return "opacity-80";
   };
   const getPosterDisplayText = () => {
-    if (poster_link) return poster_link.name;
+    if (poster_link) return poster_link;
     return "Select File";
   };
   const isSaveDisabled = () => {
@@ -164,15 +126,12 @@ export default function MovieFormModal({ isOpen, onClose, onSaved, initialMovie 
     if (!formValid()) return;
     setSaving(true);
 
-    const existing = typeof window !== "undefined" ? sessionStorage.getItem("movies") : null;
+    /*const existing = typeof window !== "undefined" ? sessionStorage.getItem("movies") : null;
     const parsed: AdminMovie[] = existing ? JSON.parse(existing) : [];
 
-      const primary = showtimes[0];
-      const movieData: AdminMovie = {
-        movie_id: editingId || Date.now(),
+      const primary = showtimes[0];*/
+      /*const movieData: AdminMovie = {
         title,
-        date: primary.date,
-        time: `${primary.time} ${primary.ampm}`,
         status,
         genres,
         rating,
@@ -183,15 +142,11 @@ export default function MovieFormModal({ isOpen, onClose, onSaved, initialMovie 
         cast_names,
         directors,
         producers,
-        reviews,
         duration,
-        score: parseScore(score),
-        _meta: {
-          showtimes,
-        },
+        score
       };
 
-    let updated: AdminMovie[];
+    /*let updated: AdminMovie[];
     if (editingId) {
       const exists = parsed.some((m) => m.movie_id === editingId);
       if (exists) {
@@ -206,8 +161,8 @@ export default function MovieFormModal({ isOpen, onClose, onSaved, initialMovie 
       updated = [...parsed, movieData];
     }
 
-    sessionStorage.setItem("movies", JSON.stringify(updated));
-    onSaved(movieData);
+    //sessionStorage.setItem("movies", JSON.stringify(updated));
+    onSaved(movieData);*/
     onClose();
     setSaving(false);
   };
@@ -230,6 +185,7 @@ export default function MovieFormModal({ isOpen, onClose, onSaved, initialMovie 
         <div className="mb-4 text-white font-red-rose text-2xl">{getHeaderTitle()}</div>
 
         <div className="grid grid-cols-1 sm:grid-cols-[2fr_1fr] gap-6 mb-6">
+          {/* Title */ }
           <div>
             <label className="block text-sm mb-2 font-afacad text-white">Movie Title</label>
             <input
@@ -241,16 +197,52 @@ export default function MovieFormModal({ isOpen, onClose, onSaved, initialMovie 
               style={{ fontSize: "16px" }}
             />
           </div>
+
+          {/* Status */ }
           <div>
-            <label className="block text-sm mb-2 font-afacad text-white">Type</label>
+            <label className="block text-sm mb-2 font-afacad text-white">Status</label>
+            <div className="relative cursor-not-allowed">
+              <p
+              className="w-full px-4 py-3 rounded-md bg-white/10 border border-white/20 text-white placeholder-white/60 focus:outline-none focus:ring-1 focus:ring-[#FF478B] focus:border-transparent"
+              style={{ fontSize: "16px" }}
+              >
+              {getStatusLabel(status)}
+            </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Genres */ }
+        <div className="grid grid-cols-1 sm:grid-cols-[2fr_1fr] gap-6 mb-6">
+          <div>
+            <label className="block text-sm mb-2 font-afacad text-white">Genres</label>
+            <div className="relative">
+              <input
+                type="text"
+                value={genres}
+                onChange={(e) => setGenres(e.target.value)}
+                placeholder="Enter genres"
+                className="w-full px-4 py-3 rounded-md bg-white/10 border border-white/20 text-white placeholder-white/60 focus:outline-none focus:ring-1 focus:ring-[#FF478B] focus:border-transparent"
+                style={{ fontSize: "16px" }}
+              />
+            </div>
+          </div>
+
+        {/* Rating */ }
+          <div>
+            <label className="block text-sm mb-2 font-afacad text-white">Rating</label>
             <div className="relative">
               <select
-                value={movieType}
-                onChange={(e) => setMovieType(e.target.value)}
-                className="w-full px-4 py-3 rounded-md bg-white/10 border border-white/20 text-white focus:outline-none focus:ring-1 focus:ring-[#FF478B] focus:border-transparent appearance-none cursor-pointer"
+                value={rating}
+                onChange={(e) => setRating(e.target.value)}
+                className="w-full pl-4 pr-4 py-3 rounded-md bg-white/10 border border-white/20 text-white focus:outline-none focus:ring-1 focus:ring-[#FF478B] focus:border-transparent appearance-none cursor-pointer"
               >
-                <option value="New Movie">New Movie</option>
-                <option value="Upcoming Movie">Upcoming Movie</option>
+                <option value="">-Select-</option>
+                <option value="G">G</option>
+                <option value="PG">PG</option>
+                <option value="PG-13">PG-13</option>
+                <option value="R">R</option>
+                <option value="NC-17">NC-17</option>
               </select>
               <div className="absolute right-2 top-1/2 transform -translate-y-1/2 pointer-events-none">
                 <svg className="w-3.5 h-3.5 text-white/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -259,68 +251,80 @@ export default function MovieFormModal({ isOpen, onClose, onSaved, initialMovie 
               </div>
             </div>
           </div>
+    
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
+
+          {/* Release Date */ }
           <div>
-            <label className="block text-sm mb-2 font-afacad text-white">Genre</label>
-            <div className="relative">
-              <select
-                value={genres}
-                onChange={(e) => setGenres(e.target.value)}
-                className="w-full pl-4 pr-4 py-3 rounded-md bg-white/10 border border-white/20 text-white focus:outline-none 
-                focus:ring-1 focus:ring-[#FF478B] focus:border-transparent appearance-none cursor-pointer"
-              >
-                <option value="">-Select-</option>
-                <option value="Action">Action</option>
-                <option value="Adventure">Adventure</option>
-                <option value="Comedy">Comedy</option>
-                <option value="Drama">Drama</option>
-                <option value="Horror">Horror</option>
-                <option value="Romance">Romance</option>
-                <option value="Sci-Fi">Sci-Fi</option>
-              </select>
-              <div className="absolute right-2 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                <svg className="w-3.5 h-3.5 text-white/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </div>
+            <label className="block text-sm mb-2 font-afacad text-white">Release Date</label>
+            <div className="flex items-center gap-2">
+              <input
+                type="number"
+                min={1}
+                max={100}
+                inputMode="numeric"
+                value={release_date}
+                onChange={(e) => setReleaseDate(e.target.value)}
+                placeholder="ex. 2025-03-18"
+                className="w-full px-4 py-3 rounded-md bg-white/10 border border-white/20 text-white placeholder-white/60 focus:outline-none focus:ring-1 focus:ring-[#FF478B] focus:border-transparent no-number-spinner"
+              />
             </div>
           </div>
+
+          {/* Score */ }
           <div>
-            <label className="block text-sm mb-2 font-afacad text-white">Poster</label>
-            <label className="w-full px-4 py-3 rounded-md bg-white/10 border border-white/20 text-white block cursor-pointer">
-              <span className={getPosterNameClass()}>
-                {getPosterDisplayText()}
-              </span>
+            <label className="block text-sm mb-2 font-afacad text-white">Score (1-100%)</label>
+            <div className="flex items-center gap-2">
               <input
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={(e) => setPosterFile(e.target.files?.[0] ?? null)}
+                type="number"
+                min={1}
+                max={100}
+                inputMode="numeric"
+                value={score}
+                onChange={(e) => setScore(e.target.value)}
+                placeholder="ex. 85%"
+                className="w-full px-4 py-3 rounded-md bg-white/10 border border-white/20 text-white placeholder-white/60 focus:outline-none focus:ring-1 focus:ring-[#FF478B] focus:border-transparent no-number-spinner"
               />
-            </label>
+              <span className="text-white/80">%</span>
+            </div>
           </div>
+
         </div>
 
+        {/* Poster link */ }
+          <div className="mb-6">
+            <label className="block text-sm mb-2 font-afacad text-white">Poster URL</label>
+              <input
+                type="url"
+                value={poster_link}
+                onChange={(e) => setPosterLink(e.target.value)}
+                placeholder="Enter poster link (embed)"
+                className="w-full px-4 py-3 rounded-md bg-white/10 border border-white/20 text-white placeholder-white/60 focus:outline-none focus:ring-1 focus:ring-[#FF478B] focus:border-transparent"
+              />
+          </div>
+
+        {/* Trailer link */ }
         <div className="mb-6">
           <label className="block text-sm mb-2 font-afacad text-white">Trailer URL</label>
           <input
             type="url"
             value={trailer_link}
             onChange={(e) => setTrailerLink(e.target.value)}
-            placeholder="https://example.com"
+            placeholder="Enter trailer link (embed)"
             className="w-full px-4 py-3 rounded-md bg-white/10 border border-white/20 text-white placeholder-white/60 focus:outline-none focus:ring-1 focus:ring-[#FF478B] focus:border-transparent"
           />
         </div>
 
+        {/* Synopsis */ }
         <div className="mb-6">
           <label className="block text-sm mb-2 font-afacad text-white">Synopsis</label>
           <textarea
             value={synopsis}
             onChange={(e) => setSynopsis(e.target.value)}
             placeholder="Enter movie synopsis"
-            rows={5}
+            rows={4}
             className="w-full px-4 py-3 rounded-md bg-white/10 border border-white/20 text-white placeholder-white/60 focus:outline-none focus:ring-1 focus:ring-[#FF478B] focus:border-transparent resize-none"
             style={{ scrollbarWidth: "thin", scrollbarColor: "#6B7280 #374151", lineHeight: "1.5" }}
           />
@@ -359,63 +363,6 @@ export default function MovieFormModal({ isOpen, onClose, onSaved, initialMovie 
             className="w-full px-4 py-3 rounded-md bg-white/10 border border-white/20 text-white placeholder-white/60 focus:outline-none focus:ring-1 focus:ring-[#FF478B] focus:border-transparent resize-none"
             style={{ scrollbarWidth: "thin", scrollbarColor: "#6B7280 #374151" }}
           />
-        </div>
-
-        <div className="mb-6">
-          <label className="block text-sm mb-2 font-afacad text-white">Reviews</label>
-          <textarea
-            value={reviews}
-            onChange={(e) => setReviews(e.target.value)}
-            placeholder="Enter reviews"
-            rows={4}
-            className="w-full px-4 py-3 rounded-md bg-white/10 border border-white/20 text-white placeholder-white/60 focus:outline-none focus:ring-1 focus:ring-[#FF478B] focus:border-transparent resize-none"
-            style={{ scrollbarWidth: "thin", scrollbarColor: "#6B7280 #374151" }}
-          />
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-[1fr_1fr] gap-6 mb-6">
-          <div>
-            <label className="block text-sm mb-2 font-afacad text-white">Rating</label>
-            <div className="relative">
-              <select
-                value={rating}
-                onChange={(e) => setRating(e.target.value)}
-                className="w-full pl-4 pr-4 py-3 rounded-md bg-white/10 border border-white/20 text-white focus:outline-none focus:ring-1 focus:ring-[#FF478B] focus:border-transparent appearance-none cursor-pointer"
-              >
-                <option value="">-Select-</option>
-                <option value="G">G</option>
-                <option value="PG">PG</option>
-                <option value="PG-13">PG-13</option>
-                <option value="R">R</option>
-                <option value="NC-17">NC-17</option>
-              </select>
-              <div className="absolute right-2 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                <svg className="w-3.5 h-3.5 text-white/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </div>
-            </div>
-          </div>
-          <div>
-            <label className="block text-sm mb-2 font-afacad text-white">Score (1-100%)</label>
-            <div className="flex items-center gap-2">
-              <input
-                type="number"
-                min={1}
-                max={100}
-                inputMode="numeric"
-                value={score}
-                onChange={(e) => {
-                  const raw = e.target.value;
-                  const parsed = parseScore(raw);
-                  setScore(parsed ? String(parsed) : "");
-                }}
-                placeholder="85%"
-                className="w-full px-4 py-3 rounded-md bg-white/10 border border-white/20 text-white placeholder-white/60 focus:outline-none focus:ring-1 focus:ring-[#FF478B] focus:border-transparent no-number-spinner"
-              />
-              <span className="text-white/80">%</span>
-            </div>
-          </div>
         </div>
 
         <div className="flex justify-end gap-3 mt-6">

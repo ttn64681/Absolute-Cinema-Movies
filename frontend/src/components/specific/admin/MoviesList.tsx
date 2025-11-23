@@ -5,7 +5,7 @@ import { PiPencilSimple, PiX, PiMagnifyingGlass, PiCaretLeft, PiCaretRight } fro
 import { useState, useEffect } from 'react';
 import AdminNavBar from '@/components/common/navBar/AdminNavBar';
 import { Movie } from '@/types/admin';
-import MovieFormModal, { AdminMovie } from '@/components/specific/admin/MovieFormModal';
+import MovieFormModal, { AdminMovie } from '@/components/specific/admin/EditMovieFormModal';
 import ScheduleModal from '@/components/specific/admin/ScheduleModal';
 
 import { useAdminMovies } from '@/hooks/useAdminMovies';

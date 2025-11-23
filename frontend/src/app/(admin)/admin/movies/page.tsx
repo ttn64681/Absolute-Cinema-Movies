@@ -5,10 +5,12 @@ import { PiPencilSimple, PiX, PiMagnifyingGlass, PiCaretLeft, PiCaretRight } fro
 import { useState, useEffect } from 'react';
 import AdminNavBar from '@/components/common/navBar/AdminNavBar';
 import { Movie } from '@/types/admin';
-import MovieFormModal, { AdminMovie } from '@/components/specific/admin/MovieFormModal';
+import EditMovieFormModal, { AdminMovie } from '@/components/specific/admin/EditMovieFormModal';
+import AddMovieFormModal from '@/components/specific/admin/AddMovieFormModal';
 import ScheduleModal from '@/components/specific/admin/ScheduleModal';
 
 import { useAdminMovies } from '@/hooks/useAdminMovies';
+import { useAdminSelectedMovie } from '@/hooks/useAdminSelectedMovie';
 
 
 // Note: Will need to make a backend endpoint to return a movieshow with 
@@ -175,6 +177,7 @@ function getAmpmFromTime(time: string): 'AM' | 'PM' {
 
 export default function AdminMoviesPage() {
 
+  // Paged movies and pagination controls from useAdminMovies hook
   const {
     adminMovies,
     isLoading,
@@ -192,8 +195,9 @@ export default function AdminMoviesPage() {
   console.log("HasNextPage is " + pagination.hasNext );
 
   const [movies, setMovies] = useState(moviesList); // movies list
-  const [showModal, setShowModal] = useState(false); // add/edit movie popup visibility
-  const [editingMovie, setEditingMovie] = useState<AdminMovie | null>(null); // movie currently being edited, if any
+  const [showAddModal, setShowAddModal] = useState(false); // add movie popup visibility
+  const [showEditModal, setShowEditModal] = useState(false); // edit movie popup visibility
+  const [editingMovieId, setEditingMovieId] = useState(0); // movie currently being edited, if any
   const [showScheduleModal, setShowScheduleModal] = useState(false); // schedule movie show popup visibility
   const [schedulingMovie, setSchedulingMovie] = useState<Movie | null>(null); // movie currently being scheduled
   const [searchQuery, setSearchQuery] = useState(''); // user input for searching movies
@@ -221,17 +225,19 @@ export default function AdminMoviesPage() {
       }
     } else {*/
       // Use adminMovies if available; otherwise, fall back to fallbackMoviesList
+      console.log("isLoading is " + isLoading );
       setMovies(adminMovies && adminMovies.length > 0 ? adminMovies : []);
       console.log(movies);
+      console.log("isLoading is " + isLoading );
     //}
   }, [adminMovies]);
 
   // Delete movie function
   const remove = (movie_id: number) => {
     const movieToDelete = movies.find((movie) => movie.movie_id === movie_id);
-    const hasShowtimes = movieToDelete?._meta?.showtimes && movieToDelete._meta.showtimes.length > 0;
+    const deleteMovieStatus = movieToDelete?.status;
     
-    if (hasShowtimes) {
+    if (deleteMovieStatus == 'now_playing') {
       return;
     }
     
@@ -247,12 +253,15 @@ export default function AdminMoviesPage() {
 
   // Function to open add movie menu
   const openAddModal = () => {
-    setEditingMovie(null);
-    setShowModal(true);
+    setShowAddModal(true);
   };
 
   // Function to open edit movie menu
-  const openEditModal = (movie: Movie) => {
+  const openEditModal = (movieId: number) => {
+
+    // Selected movie info from useSelectedMovie hook
+    //const {selectedMovie, isLoading, error} = useAdminSelectedMovie(movieId);
+
     /*const existingShowtimes = movie._meta?.showtimes;
     const defaultShowtime = {
       date: movie.date || '',
@@ -260,30 +269,25 @@ export default function AdminMoviesPage() {
       ampm: /*getAmpmFromTime(movie.time) || 'AM',
     };*/
     
-    setEditingMovie({
-      movie_id: movie.movie_id,
-      title: movie.title,
-      date: movie.date || '',
-      time: movie.time || '',
-      status: movie.status || 'upcoming',
-      genres: movie.genres || '',
-      rating: movie.rating || '',
-      release_date: movie.release_date || '',
-      synopsis: movie.synopsis || '',
-      trailer_link: movie.trailer_link || '',
-      poster_link: movie.poster_link || '',
-      cast_names: movie.cast_names || '',
-      directors: movie.directors || '',
-      producers: movie.producers || '',
-      reviews: movie.reviews || '',
-      duration: movie.duration || 0,
-      score: movie.score || 0,
-      _meta: {
-        ...movie._meta,
-        showtimes: movie._meta?.showtimes || [{ date: '', time: '', ampm: 'AM', room: undefined }],
-      },
-    });
-    setShowModal(true);
+    /*setEditingMovie({
+      movie_id: selectedMovie.movie_id || 0,
+      title: selectedMovie.title || '',
+      status: selectedMovie.status || 'upcoming',
+      genres: selectedMovie.genres || '',
+      rating: selectedMovie.rating || '',
+      release_date: selectedMovie.release_date || '',
+      synopsis: selectedMovie.synopsis || '',
+      trailer_link: selectedMovie.trailer_link || '',
+      poster_link: selectedMovie.poster_link || '',
+      cast_names: selectedMovie.cast_names || '',
+      directors: selectedMovie.directors || '',
+      producers: selectedMovie.producers || '',
+      duration: selectedMovie.duration || 0,
+      score: selectedMovie.score || 0
+    });*/
+    console.log("Movie ID passed in: " + movieId);
+    setEditingMovieId(movieId);
+    setShowEditModal(true);
   };
 
   // Function to update movies list with a new or edited movie
@@ -433,7 +437,7 @@ export default function AdminMoviesPage() {
           <ul>
             {paginatedMovies.length === 0 ? (
               <li className="text-center text-white/60 font-afacad py-8">
-                {searchQuery ? 'No movies found matching your search.' : 'No movies available.'}
+                {searchQuery ? 'No movies found matching your search.' : 'Loading movies...'}
               </li>
             ) : (
               paginatedMovies.map((movie) => {
@@ -491,7 +495,7 @@ export default function AdminMoviesPage() {
                     <button
                       title="Edit movie"
                       className="hover:text-white transition-colors"
-                      onClick={() => openEditModal(movie)}
+                      onClick={() => openEditModal(movie.movie_id)}
                       style={{ background: 'none', border: 'none', cursor: 'pointer' }}
                     >
                       <PiPencilSimple className="text-xl" />
@@ -559,11 +563,16 @@ export default function AdminMoviesPage() {
         </button>
       </div>
 
-      <MovieFormModal
-        isOpen={showModal}
-        onClose={() => setShowModal(false)}
+      <EditMovieFormModal
+        isOpen={showEditModal}
+        onClose={() => setShowEditModal(false)}
         onSaved={onMovieSaved}
-        initialMovie={editingMovie}
+        initialMovieId={editingMovieId}
+      />
+
+      <AddMovieFormModal
+        isOpen={showAddModal}
+        onClose={() => setShowAddModal(false)}
       />
 
       {schedulingMovie && (

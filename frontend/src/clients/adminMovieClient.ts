@@ -2,6 +2,8 @@
 import { buildUrl, endpoints } from '../config/api';
 import { AdminMovie, PaginatedMovieResponse } from '@/types/admin';
 
+// Fetches paginated movies for the Manage Movies page (10 at a time)
+// Calls the getAllMoviesPaginated endpoint in MovieController
 async function fetchMoviesPaginated(pageNum: number) {
     try {
           // Verify that login token is present (TODO: make a function to check if the ID matches the admin ID in the database)
@@ -27,8 +29,34 @@ async function fetchMoviesPaginated(pageNum: number) {
           return data;
 
         } catch (error) {
-            console.error('Error fetching movies on admin page:', error);
+            console.error('Error fetching movies on admin page: ', error);
     }
 }
 
-export { fetchMoviesPaginated };
+// Fetch ALL information about a single movie
+// Calls the getMovieDetails backend endpoint in MovieController
+async function getMovieDetails(movieId: number) {
+  try {
+    const response = await fetch(buildUrl(`/api/movies/${movieId}`), {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch movies: ${response.status}`);
+    }
+    const responseText = await response.text();
+    if (!responseText.trim()) {
+      throw new Error('Empty response from server');
+    }
+    const data: AdminMovie = JSON.parse(responseText);
+    return data;
+
+  } catch (error) {
+    console.error('Error fetching movie info: ', error);
+  }
+}
+
+export { fetchMoviesPaginated, getMovieDetails };
