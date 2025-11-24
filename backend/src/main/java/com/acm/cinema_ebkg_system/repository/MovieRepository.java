@@ -142,6 +142,22 @@ public interface MovieRepository extends JpaRepository<Movie, Long> {
     Page<Movie> findUpcoming(Pageable pageable);
 
     /**
+     * Paginated movies (regardless of status) ordered by release_date.
+     * Pattern: Repository Pattern. Cached at service layer.
+     */
+    @Query(value = """
+      SELECT m.* FROM movie m
+      GROUP BY m.movie_id
+      ORDER BY m.release_date ASC
+    """, 
+    countQuery = """
+      SELECT COUNT(DISTINCT m.movie_id) FROM movie m
+      WHERE m.status = 'upcoming'
+    """,
+    nativeQuery = true)
+    Page<Movie> findAllMovies(Pageable pageable);
+
+    /**
      * Search now_playing ordered by earliest show_time.
      * Filters: AND across title/genres/date; OR within multiple genres.
      * Return: List<Movie>

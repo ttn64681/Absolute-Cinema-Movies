@@ -142,6 +142,17 @@ public class MovieService {
         return toPaginatedResponse(moviePage);
     }
 
+    /**
+     * Get paginated movies regardless of status (10/page).
+     * Cached by page number. Eviction: 10min TTL, 100 entries max, or @CacheEvict on create/delete
+     */
+    
+    public PaginatedMovieResponse getAllMoviesForBrowsingPaginated(int page) {
+        Pageable pageable = PageRequest.of(page, MOVIES_PER_PAGE);
+        Page<Movie> moviePage = movieRepository.findAllMovies(pageable);
+        return toPaginatedResponse(moviePage);
+    }
+
     // ===== PAGINATED SEARCH METHODS ===== //
     /**
      * Paginated search NOW_PLAYING (10/page).

@@ -404,33 +404,32 @@ export default function AdminMoviesPage() {
         </div>
       </div>
 
-
-
       {/* List of Movies Container */}
-      <div className="relative max-w-[65rem] mx-auto h-[400px]">
-        
-        {/* Labels */}
+      <div className="relative max-w-[80rem] mx-auto min-h">
+          
+          {/* Labels */}
           <li className="flex items-center py-3 sm:py-4">
 
             <div className="flex-1 text-gray-200 font-afacad px-25 min-h-[1.5rem] text-xl"
-              style={{color: '#FF478B', }}
+              style={{textAlign: 'center', color: '#FF478B', }}
             >
               Movie
             </div>
             <div
-              className="absolute left-1/2 transform -translate-x-1/2 text-xl hmovie_idden sm:block font-afacad"
+              className="flex-1 text-gray-200 font-afacad px-25 min-h-[1.5rem] text-xl"
               style={{ textAlign: 'center', color: '#FF478B', }}
             >
               Movie Status
             </div>
             <div
-              className="font-afacad px-25 min-h-[1.5rem] text-xl"
-              style={{color: '#FF478B', }}
+              className="flex-1 text-gray-200 font-afacad px-25 min-h-[1.5rem] text-xl"
+              style={{textAlign: 'center', color: '#FF478B', }}
             >
               Controls
             </div>
 
           </li>
+          
         <div
           className="border rounded-md p-4 sm:p-6 relative overflow-y-auto h-full"
           style={{
@@ -441,9 +440,8 @@ export default function AdminMoviesPage() {
           }}
         >
 
-
           {/* Movies List */}
-          <ul>
+          <ul className="h-[400px]">
             {paginatedMovies.length === 0 ? (
               <li className="text-center text-white/60 font-afacad py-8">
                 {searchQuery ? 'No movies found matching your search.' : 'Loading movies...'}
@@ -536,7 +534,7 @@ export default function AdminMoviesPage() {
           <button
             type="button"
             onClick={() => goToPreviousPage()}
-            disabled={!pagination.hasPrevious}
+            //disabled={!pagination.hasPrevious}
             className={!pagination.hasPrevious 
               ? 'px-4 py-2 rounded-md font-afacad transition-colors bg-white/5 text-white/30'
               : 'px-4 py-2 rounded-md font-afacad transition-colors bg-white/10 text-white hover:bg-white/20 cursor-pointer'
@@ -586,6 +584,7 @@ export default function AdminMoviesPage() {
       <AddMovieFormModal
         isOpen={showAddModal}
         onClose={() => setShowAddModal(false)}
+        onSaved={onMovieSaved}
       />
 
       {schedulingMovie && (

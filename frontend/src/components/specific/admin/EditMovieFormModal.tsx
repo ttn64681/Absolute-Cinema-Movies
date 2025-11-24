@@ -164,7 +164,7 @@ export default function EditMovieFormModal({ isOpen, onClose, onSaved, initialMo
   };
 
   const formValid = () => {
-    if (!title || !genres || !synopsis || !cast_names || !directors || !producers || !score || !rating || !release_date || !trailer_link || !poster_link) 
+    if (!title || !genres || !synopsis || !cast_names || !directors || !producers || !score || !rating || !release_date || !trailer_link || !poster_link ) 
       return false;
     //if (!showtimes.length || !showtimes[0].date || !showtimes[0].time) return false;
     return true;

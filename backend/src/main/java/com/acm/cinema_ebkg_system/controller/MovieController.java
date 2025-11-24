@@ -90,6 +90,15 @@ public class MovieController {
         return movieService.getUpcomingForBrowsingPaginated(page);
     }
 
+     /**
+     * Paginated movies regardless of status (10/page). Validates page >= 0
+     */
+    @GetMapping("/browse/all")
+    public PaginatedMovieResponse getBrowsingPaginated(
+            @RequestParam(defaultValue = "0") @Min(value = 0, message = "Page number must be >= 0") int page) {
+        return movieService.getAllMoviesForBrowsingPaginated(page);
+    }
+
     // ===== PAGINATED SEARCH ENDPOINTS ===== //
     /**
      * Paginated search NOW_PLAYING (10/page). Validates page >= 0
