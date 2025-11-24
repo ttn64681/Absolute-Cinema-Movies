@@ -164,12 +164,13 @@ export default function EditMovieFormModal({ isOpen, onClose, onSaved, initialMo
   };
 
   const formValid = () => {
-    if (!title || !genres || !synopsis) return false;
+    if (!title || !genres || !synopsis || !cast_names || !directors || !producers || !score || !rating || !release_date || !trailer_link || !poster_link) 
+      return false;
     //if (!showtimes.length || !showtimes[0].date || !showtimes[0].time) return false;
     return true;
   };
 
-  const onSave = () => {
+  const onSave = async () => {
     if (!formValid()) return;
     setSaving(true);
 
@@ -177,7 +178,27 @@ export default function EditMovieFormModal({ isOpen, onClose, onSaved, initialMo
     const parsed: AdminMovie[] = existing ? JSON.parse(existing) : [];
 
       const primary = showtimes[0];*/
-      const movieData: Partial<AdminMovie> = {
+
+      // Partial movie object to send to backend
+      const backendMovieRequest: Partial<AdminMovie> = {
+        title,
+        genres,
+        rating,
+        release_date,
+        synopsis,
+        trailer_link,
+        poster_link,
+        cast_names,
+        directors,
+        producers,
+        duration,
+        score
+      };
+
+      // Full movie object to return to the movies list
+      const updatedMovie: AdminMovie = {
+        movie_id: editingId,
+        status,
         title,
         genres,
         rating,
@@ -208,7 +229,13 @@ export default function EditMovieFormModal({ isOpen, onClose, onSaved, initialMo
     }*/
 
     //sessionStorage.setItem("movies", JSON.stringify(updated));
-    editMovie(movieData, editingId)
+    const editingStatus = await editMovie(backendMovieRequest, editingId);
+    if (editingStatus) {
+      onSaved(updatedMovie);
+      alert("Movie data successfully saved.");
+    } else {
+      alert("Error saving movie data.");
+    }
     onClose();
     setSaving(false);
   };

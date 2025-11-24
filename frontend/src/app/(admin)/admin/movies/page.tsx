@@ -355,6 +355,14 @@ export default function AdminMoviesPage() {
     }
   };
 
+  const getStatusLabel = (status: String) => {
+    if (status == "now_playing") {
+      return "Now Playing";
+    } else {
+      return "Upcoming";
+    }
+  };
+
   return (
     <div className="text-white pb-16" style={{ backgroundColor: '#1C1C1C', minHeight: '100vh' }}>
       <AdminNavBar />
@@ -396,8 +404,33 @@ export default function AdminMoviesPage() {
         </div>
       </div>
 
-      {/* List */}
+
+
+      {/* List of Movies Container */}
       <div className="relative max-w-[65rem] mx-auto h-[400px]">
+        
+        {/* Labels */}
+          <li className="flex items-center py-3 sm:py-4">
+
+            <div className="flex-1 text-gray-200 font-afacad px-25 min-h-[1.5rem] text-xl"
+              style={{color: '#FF478B', }}
+            >
+              Movie
+            </div>
+            <div
+              className="absolute left-1/2 transform -translate-x-1/2 text-xl hmovie_idden sm:block font-afacad"
+              style={{ textAlign: 'center', color: '#FF478B', }}
+            >
+              Movie Status
+            </div>
+            <div
+              className="font-afacad px-25 min-h-[1.5rem] text-xl"
+              style={{color: '#FF478B', }}
+            >
+              Controls
+            </div>
+
+          </li>
         <div
           className="border rounded-md p-4 sm:p-6 relative overflow-y-auto h-full"
           style={{
@@ -407,6 +440,9 @@ export default function AdminMoviesPage() {
             scrollbarColor: '#9CA3AF #E5E7EB',
           }}
         >
+
+
+          {/* Movies List */}
           <ul>
             {paginatedMovies.length === 0 ? (
               <li className="text-center text-white/60 font-afacad py-8">
@@ -414,8 +450,9 @@ export default function AdminMoviesPage() {
               </li>
             ) : (
               paginatedMovies.map((movie) => {
+              /*
               const allShowtimes = movie._meta?.showtimes || [
-                { date: movie.date, time: movie.time, ampm: /*getAmpmFromTime(movie.time) ||*/ 'AM', room: undefined },
+                { date: movie.date, time: movie.time, ampm: /*getAmpmFromTime(movie.time) || 'AM', room: undefined },
               ];
               const hasShowtimes = movie._meta?.showtimes && movie._meta.showtimes.length > 0;
 
@@ -435,12 +472,14 @@ export default function AdminMoviesPage() {
               });
               
               const nextShowtime = sorted[0];
-              if (!nextShowtime) return null;
+              if (!nextShowtime) return null;*/
+              
+              const hasShowtimes = movie.status == "now_playing";
 
-              const deleteButtonTitle = hasShowtimes 
+              const deleteButtonTitle = (hasShowtimes)
                 ? 'Cannot delete movie with scheduled showtimes.' 
                 : 'Remove';
-              const deleteButtonClassName = hasShowtimes 
+              const deleteButtonClassName = (hasShowtimes) 
                 ? 'transition-colors opacity-50' 
                 : 'transition-colors hover:text-white cursor-pointer';
 
@@ -453,8 +492,9 @@ export default function AdminMoviesPage() {
                     className="absolute left-1/2 transform -translate-x-1/2 text-gray-300 hmovie_idden sm:block font-afacad"
                     style={{ textAlign: 'center' }}
                   >
-                    {nextShowtime.date} {nextShowtime.time} {nextShowtime.ampm}
-                    {nextShowtime.room && ` - Room ${nextShowtime.room}`}
+                    {/*{nextShowtime.date} {nextShowtime.time} {nextShowtime.ampm}
+                    {nextShowtime.room && ` - Room ${nextShowtime.room}`}*/}
+                    {getStatusLabel(movie.status)}
                   </div>
                   <div className="flex items-center gap-3 text-gray-300 px-25 ml-auto min-w-[4rem]">
                     <button

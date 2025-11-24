@@ -31,10 +31,11 @@ export type AdminMovie = {
 interface MovieFormModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onSaved: (savedMovie: AdminMovie) => void;
 }
 
 // Add/edit movie form
-export default function AddMovieFormModal({ isOpen, onClose }: MovieFormModalProps) {
+export default function AddMovieFormModal({ isOpen, onClose, onSaved }: MovieFormModalProps) {
 
   const {selectedMovie, isLoading, error, addMovie} = useAdminMovie(0);
 
@@ -127,51 +128,75 @@ export default function AddMovieFormModal({ isOpen, onClose }: MovieFormModalPro
     return true;
   };
 
-  const onSave = () => {
-    if (!formValid()) return;
-    setSaving(true);
-
-    /*const existing = typeof window !== "undefined" ? sessionStorage.getItem("movies") : null;
-    const parsed: AdminMovie[] = existing ? JSON.parse(existing) : [];
-
-      const primary = showtimes[0];*/
-      const movieData: Partial<AdminMovie> = {
-        title,
-        genres,
-        rating,
-        release_date,
-        synopsis,
-        trailer_link,
-        poster_link,
-        cast_names,
-        directors,
-        producers,
-        duration,
-        score
-      };
-
-    /*let updated: AdminMovie[];
-    if (editingId) {
-      const exists = parsed.some((m) => m.movie_id === editingId);
-      if (exists) {
-        updated = parsed.map((m) => {
-          if (m.movie_id === editingId) return movieData;
-          return m;
-        });
+    const onSave = async () => {
+      if (!formValid()) return;
+      setSaving(true);
+  
+      /*const existing = typeof window !== "undefined" ? sessionStorage.getItem("movies") : null;
+      const parsed: AdminMovie[] = existing ? JSON.parse(existing) : [];
+  
+        const primary = showtimes[0];*/
+  
+        // Partial movie object to send to backend
+        const backendMovieRequest: Partial<AdminMovie> = {
+          title,
+          genres,
+          rating,
+          release_date,
+          synopsis,
+          trailer_link,
+          poster_link,
+          cast_names,
+          directors,
+          producers,
+          duration,
+          score
+        };
+  
+        // Full movie object to return to the movies list
+        const updatedMovie: AdminMovie = {
+          movie_id: 0,
+          status,
+          title,
+          genres,
+          rating,
+          release_date,
+          synopsis,
+          trailer_link,
+          poster_link,
+          cast_names,
+          directors,
+          producers,
+          duration,
+          score
+        };
+  
+      /*let updated: AdminMovie[];
+      if (editingId) {
+        const exists = parsed.some((m) => m.movie_id === editingId);
+        if (exists) {
+          updated = parsed.map((m) => {
+            if (m.movie_id === editingId) return movieData;
+            return m;
+          });
+        } else {
+          updated = [...parsed, movieData];
+        }
       } else {
         updated = [...parsed, movieData];
+      }*/
+  
+      //sessionStorage.setItem("movies", JSON.stringify(updated));
+      const editingStatus = await addMovie(backendMovieRequest);
+      if (editingStatus) {
+        onSaved(updatedMovie);
+        alert("New movie successfully created.");
+      } else {
+        alert("Error creating movie.");
       }
-    } else {
-      updated = [...parsed, movieData];
-    }
-
-    //sessionStorage.setItem("movies", JSON.stringify(updated));
-    onSaved(movieData);*/
-    // Send the new movie to backend 
-    addMovie(movieData);
-    onClose();
-    setSaving(false);
-  };
+      onClose();
+      setSaving(false);
+    };
 
   if (!isOpen) return null;
 

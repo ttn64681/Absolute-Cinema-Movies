@@ -18,7 +18,7 @@ import java.util.stream.Collectors; // For converting List<Movie> to List<MovieS
 public class MovieService {
 
     // ===== CONSTANTS ===== //
-    private static final int MOVIES_PER_PAGE = 3; // 10 movies/page
+    private static final int MOVIES_PER_PAGE = 10; // 10 movies/page
 
     private final MovieRepository movieRepository;
 
