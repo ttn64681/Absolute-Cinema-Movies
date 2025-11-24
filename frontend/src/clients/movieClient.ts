@@ -187,4 +187,47 @@ export const movieClient = {
 
     return request<string[]>(url.toString());
   },
+
+  /**
+   * Get movie_show.id from movieId, date, and time
+   * Used by booking flow to identify which show to book
+   *
+   * @param movieId - Movie ID
+   * @param date - Date string (YYYY-MM-DD format)
+   * @param time - Time string (HH:MM:SS format - 24-hour format)
+   * @returns Movie show ID (number) or null if not found
+   */
+  async getShowId(movieId: number, date: string, time: string): Promise<number | null> {
+    const url = new URL(buildUrl(endpoints.movies.showId(movieId)));
+    url.searchParams.set('date', date);
+    url.searchParams.set('time', time);
+
+    try {
+      const response = await fetch(url.toString(), {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.status === 404) {
+        return null; // Show not found
+      }
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      // Handle both formats: {showId: number, success: boolean} or just number
+      if (typeof data === 'object' && data.showId !== undefined) {
+        return data.showId as number;
+      } else if (typeof data === 'number') {
+        return data;
+      }
+      return null;
+    } catch (error) {
+      console.error('Error fetching showId:', error);
+      return null;
+    }
+  },
 };
