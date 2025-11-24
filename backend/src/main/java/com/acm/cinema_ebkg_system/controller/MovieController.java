@@ -8,6 +8,7 @@ import com.acm.cinema_ebkg_system.model.Movie;
 import com.acm.cinema_ebkg_system.service.MovieService;
 import com.acm.cinema_ebkg_system.service.ShowTimeService;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,7 +21,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController // Bean that creates a RESTful controller class that handles HTTP requests
 @RequestMapping("/api/movies")
@@ -140,6 +144,46 @@ public class MovieController {
     @GetMapping("/{movieId}/times/combined")
     public List<LocalDateTime> getAvailableTimes(@PathVariable Long movieId) {
         return showTimeService.getAvailableTimesForMovie(movieId);
+    }
+
+    /**
+     * Get movie_show.id from movieId, date, and time
+     * Used by booking flow to identify which show to book
+     * 
+     * Endpoint: GET /api/movies/{movieId}/show-id?date=YYYY-MM-DD&time=HH:MM:SS
+     * 
+     * @param movieId The movie.movie_id
+     * @param date The show date (YYYY-MM-DD format)
+     * @param time The show start_time (HH:MM:SS format)
+     * @return movie_show.id (Long) or null if not found
+     */
+    @GetMapping("/{movieId}/show-id")
+    public ResponseEntity<Map<String, Object>> getMovieShowId(
+            @PathVariable Long movieId,
+            @RequestParam String date,
+            @RequestParam String time) {
+        try {
+            LocalDate showDate = LocalDate.parse(date);
+            LocalTime startTime = LocalTime.parse(time);
+            
+            Long showId = showTimeService.getMovieShowIdByMovieDateAndTime(movieId, showDate, startTime);
+            
+            Map<String, Object> response = new HashMap<>();
+            if (showId != null) {
+                response.put("showId", showId);
+                response.put("success", true);
+                return ResponseEntity.ok(response);
+            } else {
+                response.put("success", false);
+                response.put("error", "No movie show found for the given movie, date, and time");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+            }
+        } catch (Exception e) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("error", "Error getting show ID: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
     }
 
     // @GetMapping("/{movieId}/schedule")

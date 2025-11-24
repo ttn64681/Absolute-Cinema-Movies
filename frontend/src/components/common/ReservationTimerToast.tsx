@@ -4,8 +4,10 @@ import { useReservation } from '@/contexts/ReservationContext';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
+const RESERVATION_DURATION = 10 * 60 * 1000; // 10 minutes in milliseconds
+
 export default function ReservationTimerToast() {
-  const { timeRemaining, isExpired, formatTime, selectedSeats, showId, cancelReservation } = useReservation();
+  const { timeRemaining, isExpired, formatTime, selectedSeats, showId, reservationStartTime, cancelReservation } = useReservation();
   const [isVisible, setIsVisible] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
   const router = useRouter();
@@ -15,12 +17,35 @@ export default function ReservationTimerToast() {
     // Check if reservation was cancelled
     const isCancelled = sessionStorage.getItem('reservationCancelled') === 'true';
     
-    if (!isCancelled && showId !== null && selectedSeats.length > 0 && !isExpired && timeRemaining > 0) {
-      setIsVisible(true);
-    } else {
-      setIsVisible(false);
+    // Show timer if:
+    // 1. Not cancelled
+    // 2. Has showId and seats
+    // 3. Has a start time (reservation actually started)
+    // 4. Not expired
+    // 5. Has time remaining (greater than 0)
+    const hasActiveReservation = !isCancelled 
+      && showId !== null 
+      && selectedSeats.length > 0 
+      && reservationStartTime !== null // CRITICAL: Ensure reservation actually started
+      && !isExpired 
+      && timeRemaining > 0;
+    
+    // Debug logging
+    if (hasActiveReservation !== isVisible) {
+      console.log('Timer visibility changed:', {
+        isVisible: hasActiveReservation,
+        isCancelled,
+        showId,
+        selectedSeatsCount: selectedSeats.length,
+        reservationStartTime,
+        isExpired,
+        timeRemaining,
+        timeRemainingMinutes: Math.floor(timeRemaining / 60000)
+      });
     }
-  }, [showId, selectedSeats, isExpired, timeRemaining]);
+    
+    setIsVisible(hasActiveReservation);
+  }, [showId, selectedSeats, reservationStartTime, isExpired, timeRemaining, isVisible]);
 
   if (!isVisible) {
     return null;

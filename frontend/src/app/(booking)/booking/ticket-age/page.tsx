@@ -20,7 +20,7 @@ function TicketAgePageContent() {
     const time = searchParams.get('time') || '';
     
     // Reservation context
-    const { isExpired: timerExpired, showId: reservationShowId, startReservation } = useReservation();
+    const { isExpired: timerExpired, showId: reservationShowId, selectedSeats: reservationSeats, startReservation } = useReservation();
 
     useEffect(() => {
         const reservedSeats = searchParams.get('seats');
@@ -32,14 +32,21 @@ function TicketAgePageContent() {
         if (showIdParam) {
             const parsedShowId = parseInt(showIdParam);
             setShowId(parsedShowId);
-            // If we have seats and showId but no active reservation, start one
+            // Fallback: If we have seats and showId but no active reservation, start one
+            // This is a fallback in case reservation wasn't started in seats page
             // BUT: Don't start if reservation was cancelled (check sessionStorage)
             const isCancelled = sessionStorage.getItem('reservationCancelled') === 'true';
-            if (seatIds && parsedShowId && !reservationShowId && !isCancelled) {
-                startReservation(parsedShowId, seatIds.split(','));
+            const seatIdsArray = seatIds ? seatIds.split(',') : [];
+            const reservationMatches = reservationShowId === parsedShowId 
+                && reservationSeats.length === seatIdsArray.length
+                && seatIdsArray.every(id => reservationSeats.includes(id));
+            
+            if (seatIds && parsedShowId && !reservationMatches && !isCancelled) {
+                console.log('Starting reservation from ticket-age page (fallback)');
+                startReservation(parsedShowId, seatIdsArray);
             }
         }
-    }, [searchParams, reservationShowId, startReservation]);
+    }, [searchParams, reservationShowId, reservationSeats, startReservation]);
 
     const goBack = () => {
         router.back();

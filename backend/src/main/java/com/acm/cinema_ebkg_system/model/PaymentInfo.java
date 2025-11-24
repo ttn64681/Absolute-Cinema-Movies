@@ -33,7 +33,7 @@ public class PaymentInfo {
     private String billing_address;
 
     @NotNull
-    @Column(nullable = false)
+    @Column(name = "expiration_date", nullable = false, columnDefinition = "date")
     private LocalDate expiration_date;
 
     @NotNull
