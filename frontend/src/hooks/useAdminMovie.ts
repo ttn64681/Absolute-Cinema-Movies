@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
 import { AdminMovie, PaginatedMovieResponse} from '@/types/admin';
-import { getMovieDetails } from '@/clients/adminMovieClient';
+import { getMovieDetails, createNewMovie } from '@/clients/adminMovieClient';
 
 
 const dummyMovie: AdminMovie = {
@@ -22,13 +22,19 @@ const dummyMovie: AdminMovie = {
 }
 
 // AdminSelectedMovie hook: Used to get ALL movie information when the admin selects a movie to edit.
-export function useAdminSelectedMovie(movieId: number) {
+export function useAdminMovie(movieId: number) {
   const [selectedMovie, setMovie] = useState<AdminMovie>(dummyMovie);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
     
-      // Fetch movies for current page
+      // get ALL movie information when the admin selects a movie to edit
       const fetchMovieInfo = async (movieId: number) => {
+
+        // If the ID is 0, there is no selected movie. Don't bother calling the API.
+          if (movieId == 0) {
+            setMovie(dummyMovie);
+            return;
+          }
             setIsLoading(true);
             console.log("isLoading is " + isLoading );
             try {
@@ -46,16 +52,27 @@ export function useAdminSelectedMovie(movieId: number) {
                 console.log("isLoading is " + isLoading );
             }
         }
+
+      // Add a new movie
+      const addMovie = async (movie: Partial<AdminMovie>) => {
+        
+        const createdMovie = await createNewMovie(movie);
+
+        if (createdMovie) {
+          console.log("Movie created successfully.");
+          return true;
+        } else {
+          console.log("Failed to create new movie.");
+          return false;
+        }
+      }
+      
     
       // Fetch a movie when movieId changes
       useEffect(() => {
         fetchMovieInfo(movieId);
       }, [movieId]);
     
-      return {
-        selectedMovie,
-        isLoading,
-        error
-      };
+      return { selectedMovie, isLoading, error, addMovie };
 
 }

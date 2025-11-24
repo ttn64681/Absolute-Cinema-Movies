@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { formatDateInput, formatTimeInput, parseScore } from "@/components/specific/admin/movieFormUtils";
-import { useAdminSelectedMovie } from '@/hooks/useAdminSelectedMovie';
+import { useAdminMovie } from '@/hooks/useAdminMovie';
 
 type Showtime = {
   date: string;
@@ -38,14 +38,14 @@ interface MovieFormModalProps {
 // Add/edit movie form
 export default function EditMovieFormModal({ isOpen, onClose, onSaved, initialMovieId }: MovieFormModalProps) {
   console.log("Movie ID retrieved: " + initialMovieId);
-  const {selectedMovie, isLoading, error} = useAdminSelectedMovie(initialMovieId);
+  const {selectedMovie, isLoading, error, addMovie} = useAdminMovie(initialMovieId);
   console.log(selectedMovie);
 
   //const [editingMovie, setEditingMovie] = useState(dummyMovie);
   const [saving, setSaving] = useState(false);
 
   const [title, setTitle] = useState("");
-  const [movieType, setMovieType] = useState("upcoming");
+  const [status, setStatus] = useState("upcoming");
   const [genres, setGenres] = useState("");
   const [poster_link, setPosterLink] = useState("");
   const [trailer_link, setTrailerLink] = useState("");
@@ -69,8 +69,10 @@ export default function EditMovieFormModal({ isOpen, onClose, onSaved, initialMo
       //setEditingMovie(selectedMovie);
       setEditingId(selectedMovie.movie_id);
       setTitle(selectedMovie.title || "");
-      setMovieType(selectedMovie.status || "upcoming");
+      setStatus(selectedMovie.status || "upcoming");
       setGenres(selectedMovie.genres || "");
+      setReleaseDate(selectedMovie.release_date || "");
+      setPosterLink(selectedMovie.poster_link || "");
       setTrailerLink(selectedMovie.trailer_link || "");
       setSynopsis(selectedMovie.synopsis || "");
       setDirectors(selectedMovie.directors || "");
@@ -103,8 +105,10 @@ export default function EditMovieFormModal({ isOpen, onClose, onSaved, initialMo
       //setEditingMovie(dummyMovie);
       setEditingId(0);
       setTitle("");
-      setMovieType("upcoming");
+      setStatus("upcoming");
       setGenres("");
+      setReleaseDate("");
+      setPosterLink("");
       setTrailerLink("");
       setSynopsis("");
       setDirectors("");
@@ -305,10 +309,7 @@ export default function EditMovieFormModal({ isOpen, onClose, onSaved, initialMo
             <label className="block text-sm mb-2 font-afacad text-white">Release Date</label>
             <div className="flex items-center gap-2">
               <input
-                type="number"
-                min={1}
-                max={100}
-                inputMode="numeric"
+                type="text"
                 value={release_date}
                 onChange={(e) => setReleaseDate(e.target.value)}
                 placeholder="ex. 2025-03-18"

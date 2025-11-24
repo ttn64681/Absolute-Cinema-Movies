@@ -59,4 +59,32 @@ async function getMovieDetails(movieId: number) {
   }
 }
 
-export { fetchMoviesPaginated, getMovieDetails };
+async function createNewMovie(movie: Partial<AdminMovie>) {
+  try {
+    console.log("Movie being created: " + JSON.stringify(movie));
+    const response = await fetch(buildUrl(`/api/movies/create`), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(movie)
+    });
+
+    /*if (!response.ok) {
+      throw new Error(`Failed to create movie: ${response.status}`);
+    }
+    const responseText = await response.text();
+    if (!responseText.trim()) {
+      throw new Error('Empty response from server');
+    } 
+
+    const data: AdminMovie = JSON.parse(responseText);*/
+
+    return response;
+
+  } catch (error) {
+    console.error('Error creating movie: ', error);
+  }
+}
+
+export { fetchMoviesPaginated, getMovieDetails, createNewMovie };

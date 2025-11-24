@@ -9,8 +9,8 @@ import EditMovieFormModal, { AdminMovie } from '@/components/specific/admin/Edit
 import AddMovieFormModal from '@/components/specific/admin/AddMovieFormModal';
 import ScheduleModal from '@/components/specific/admin/ScheduleModal';
 
-import { useAdminMovies } from '@/hooks/useAdminMovies';
-import { useAdminSelectedMovie } from '@/hooks/useAdminSelectedMovie';
+import { useAdminMoviesList } from '@/hooks/useAdminMoviesList';
+import { useAdminMovie } from '@/hooks/useAdminMovie';
 
 
 // Note: Will need to make a backend endpoint to return a movieshow with 
@@ -185,7 +185,7 @@ export default function AdminMoviesPage() {
     goToNextPage,
     goToPreviousPage,
     goToThisPage,
-  } = useAdminMovies();
+  } = useAdminMoviesList();
 
   // Use adminMovies if available; otherwise, fall back to fallbackMoviesList
   const moviesList = adminMovies && adminMovies.length > 0 ? adminMovies : [];

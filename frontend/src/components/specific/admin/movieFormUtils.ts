@@ -14,11 +14,14 @@ export const formatTimeInput = (value: string) => {
 
 const range = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
 
-export const parseScore = (value: string): number | undefined => {
-  if (value.trim() === "") return undefined;
-  const numeric = Number(value.replace(/[^\d]/g, ""));
-  if (Number.isNaN(numeric)) return undefined;
-  return range(numeric, 1, 100);
+export const parseScore = (value: string | undefined): number | undefined => {
+  if (value) {
+    const numeric = Number(value.replace(/[^\d]/g, ""));
+    if (Number.isNaN(numeric)) return 0;
+    return range(numeric, 1, 100);
+  } else {
+    return 0;
+  }
 };
 
 

@@ -4,7 +4,7 @@ import { AdminMovie, PaginatedMovieResponse } from '@/types/admin';
 import { fetchMoviesPaginated } from '@/clients/adminMovieClient';
 
 
-export function useAdminMovies() {
+export function useAdminMoviesList() {
     const [page, setPage] = useState(0);
       const [adminMovies, setMovies] = useState<AdminMovie[]>([]);
       const [pagination, setPagination] = useState({

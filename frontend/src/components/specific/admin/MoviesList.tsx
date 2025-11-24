@@ -8,7 +8,7 @@ import { Movie } from '@/types/admin';
 import MovieFormModal, { AdminMovie } from '@/components/specific/admin/EditMovieFormModal';
 import ScheduleModal from '@/components/specific/admin/ScheduleModal';
 
-import { useAdminMovies } from '@/hooks/useAdminMovies';
+import { useAdminMovies } from '@/hooks/useAdminMoviesList';
 
 
 interface MoviesListProps {

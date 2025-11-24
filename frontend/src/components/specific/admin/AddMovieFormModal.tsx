@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { formatDateInput, formatTimeInput, parseScore } from "@/components/specific/admin/movieFormUtils";
-import { useAdminSelectedMovie } from '@/hooks/useAdminSelectedMovie';
+import { useAdminMovie } from '@/hooks/useAdminMovie';
 
 type Showtime = {
   date: string;
@@ -36,6 +36,8 @@ interface MovieFormModalProps {
 // Add/edit movie form
 export default function AddMovieFormModal({ isOpen, onClose }: MovieFormModalProps) {
 
+  const {selectedMovie, isLoading, error, addMovie} = useAdminMovie(0);
+
   //const [editingMovie, setEditingMovie] = useState(dummyMovie);
   const [saving, setSaving] = useState(false);
 
@@ -48,7 +50,7 @@ export default function AddMovieFormModal({ isOpen, onClose }: MovieFormModalPro
   const [directors, setDirectors] = useState("");
   const [producers, setProducers] = useState("");
   const [cast_names, setCastNames] = useState("");
-  const [reviews, setReviews] = useState("");
+  //const [reviews, setReviews] = useState("");
   const [rating, setRating] = useState("");
   const [duration, setDuration] = useState(0);
   const [score, setScore] = useState(0);
@@ -58,9 +60,11 @@ export default function AddMovieFormModal({ isOpen, onClose }: MovieFormModalPro
 
   useEffect(() => {
     if (!isOpen) return;
+
       setTitle("");
       setStatus("upcoming");
       setGenres("");
+      setPosterLink("");
       setTrailerLink("");
       setSynopsis("");
       setDirectors("");
@@ -69,6 +73,7 @@ export default function AddMovieFormModal({ isOpen, onClose }: MovieFormModalPro
       setRating("");
       setScore(0);
       setDuration(0);
+      setReleaseDate("");
       console.log("Selected movie data was not set");
   
   }, [isOpen]);
@@ -130,9 +135,8 @@ export default function AddMovieFormModal({ isOpen, onClose }: MovieFormModalPro
     const parsed: AdminMovie[] = existing ? JSON.parse(existing) : [];
 
       const primary = showtimes[0];*/
-      /*const movieData: AdminMovie = {
+      const movieData: Partial<AdminMovie> = {
         title,
-        status,
         genres,
         rating,
         release_date,
@@ -163,6 +167,8 @@ export default function AddMovieFormModal({ isOpen, onClose }: MovieFormModalPro
 
     //sessionStorage.setItem("movies", JSON.stringify(updated));
     onSaved(movieData);*/
+    // Send the new movie to backend 
+    addMovie(movieData);
     onClose();
     setSaving(false);
   };
@@ -261,10 +267,7 @@ export default function AddMovieFormModal({ isOpen, onClose }: MovieFormModalPro
             <label className="block text-sm mb-2 font-afacad text-white">Release Date</label>
             <div className="flex items-center gap-2">
               <input
-                type="number"
-                min={1}
-                max={100}
-                inputMode="numeric"
+                type="text"
                 value={release_date}
                 onChange={(e) => setReleaseDate(e.target.value)}
                 placeholder="ex. 2025-03-18"
