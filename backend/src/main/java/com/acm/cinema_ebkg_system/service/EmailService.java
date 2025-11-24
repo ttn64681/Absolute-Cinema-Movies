@@ -96,6 +96,7 @@ public class EmailService {
             
             System.out.println("Verification email sent successfully to: " + toEmail);
             System.out.println("Verification URL: " + verificationUrl); // For development/testing
+            System.out.println("Note: account_status will be updated to 'active' upon email verification");
             
         } catch (Exception e) {
             System.err.println("=== EMAIL SENDING ERROR ===");

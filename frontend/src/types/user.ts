@@ -21,4 +21,5 @@ export interface BackendUser {
   homeCountry?: string;
   enrolledForPromotions?: boolean;
   profileImageLink?: string;
+  accountStatus?: 'active' | 'inactive' | 'suspended';
 }

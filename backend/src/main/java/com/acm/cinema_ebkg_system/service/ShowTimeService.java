@@ -92,6 +92,37 @@ public class ShowTimeService {
         return showTimeRepository.save(showTime);
     }
 
+    /**
+     * Get movie_show.id from movieId, date, and time
+     * Used by booking flow to identify which show to book
+     * 
+     * Based on current DB schema:
+     * - movie_show.show_time_id → show_time.id (foreign key)
+     * - show_time.show_time → timestamp column
+     * 
+     * @param movieId The movie ID
+     * @param date The show date (LocalDate)
+     * @param startTime The show start time (LocalTime)
+     * @return The movie_show.id (Long) or null if not found
+     */
+    public Long getMovieShowIdByMovieDateAndTime(Long movieId, LocalDate date, LocalTime startTime) {
+        try {
+            // Combine date and time into LocalDateTime
+            LocalDateTime showDateTime = LocalDateTime.of(date, startTime);
+            Timestamp timestamp = Timestamp.valueOf(showDateTime);
+            
+            // Query to find movie_show.id using the current schema
+            // movie_show.show_time_id → show_time.id
+            Long movieShowId = showTimeRepository.findMovieShowIdByMovieIdAndDateTime(movieId, timestamp);
+            
+            return movieShowId;
+        } catch (Exception e) {
+            System.err.println("Error getting movie show ID: " + e.getMessage());
+            e.printStackTrace();
+            return null;
+        }
+    }
+
     /*public ShowTime addShowTime(Long movieShowId) {
 
     }*/

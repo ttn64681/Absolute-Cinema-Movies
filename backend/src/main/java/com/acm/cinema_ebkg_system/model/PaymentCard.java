@@ -1,13 +1,9 @@
 package com.acm.cinema_ebkg_system.model;
 
 import jakarta.persistence.*;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.time.LocalDateTime;
-
 import com.acm.cinema_ebkg_system.enums.PaymentCardType;
 
 /**
@@ -23,9 +19,6 @@ import com.acm.cinema_ebkg_system.enums.PaymentCardType;
  * - Automatic timestamp management for created_at and updated_at
  * - Default card designation support
  */
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
 @Entity
 @Table(name = "payment_card")
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
@@ -185,5 +178,115 @@ public class PaymentCard {
         if (address != null) {
             address.setCountry(country);
         }
+    }
+
+    // Default constructor
+    public PaymentCard() {}
+
+    // Constructor
+    public PaymentCard(Long id, User user, Address address, Long addressId, String cardNumber, String cardholderName, PaymentCardType paymentCardType, Boolean isDefault, String expirationDate, LocalDateTime createdAt, LocalDateTime updatedAt) {
+        this.id = id;
+        this.user = user;
+        this.address = address;
+        this.addressId = addressId;
+        this.cardNumber = cardNumber;
+        this.cardholderName = cardholderName;
+        this.paymentCardType = paymentCardType;
+        this.isDefault = isDefault;
+        this.expirationDate = expirationDate;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+    }
+
+    // ========== STANDARD GETTERS AND SETTERS ==========
+
+    // Getters
+    public Long getId() {
+        return id;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public Address getAddress() {
+        return address;
+    }
+
+    public Long getAddressId() {
+        return addressId;
+    }
+
+    public String getCardNumber() {
+        return cardNumber;
+    }
+
+    public String getCardholderName() {
+        return cardholderName;
+    }
+
+    public PaymentCardType getPaymentCardType() {
+        return paymentCardType;
+    }
+
+    public Boolean getIsDefault() {
+        return isDefault;
+    }
+
+    public String getExpirationDate() {
+        return expirationDate;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    // Setters
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
+
+    public void setAddress(Address address) {
+        this.address = address;
+    }
+
+    public void setAddressId(Long addressId) {
+        this.addressId = addressId;
+    }
+
+    public void setCardNumber(String cardNumber) {
+        this.cardNumber = cardNumber;
+    }
+
+    public void setCardholderName(String cardholderName) {
+        this.cardholderName = cardholderName;
+    }
+
+    public void setPaymentCardType(PaymentCardType paymentCardType) {
+        this.paymentCardType = paymentCardType;
+    }
+
+    public void setIsDefault(Boolean isDefault) {
+        this.isDefault = isDefault;
+    }
+
+    public void setExpirationDate(String expirationDate) {
+        this.expirationDate = expirationDate;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
     }
 }

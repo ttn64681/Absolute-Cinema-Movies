@@ -60,16 +60,41 @@ public interface ShowTimeRepository extends JpaRepository<ShowTime, Long> {
     List<java.sql.Time> findTimesByMovieIdAndDate(@Param("movieId") Long movieId, @Param("showDate") LocalDate showDate);
 
     /**
-     * Returns all ShowDate rows for a movie, ordered by date ascending.
-     * Uses movie_show relationship only.
+     * Returns all ShowTime rows for a movie, ordered by date ascending.
+     * Uses movie_show relationship.
+     * Based on schema: movie_show.show_time_id → show_time.id
      */
     @Query(value = """
         SELECT st.* FROM show_time st 
-        INNER JOIN movie_show ms ON st.movie_show_id = ms.id
+        INNER JOIN movie_show ms ON ms.show_time_id = st.id
         WHERE ms.movie_id = :movieId
         ORDER BY st.show_time
     """, nativeQuery = true)
     List<ShowTime> findByMovieId(@Param("movieId") Long movieId);
+
+    /**
+     * Get movie_show.id from movieId, date, and time
+     * Used by booking flow to identify which show to book
+     * 
+     * Based on actual DB schema:
+     * - movie_show.show_time_id → show_time.id (foreign key)
+     * - show_time.show_time → timestamp column
+     * 
+     * @param movieId The movie ID
+     * @param showDateTime The show date and time (LocalDateTime)
+     * @return The movie_show.id (Long) or null if not found
+     */
+    @Query(value = """
+        SELECT ms.id
+        FROM movie_show ms
+        INNER JOIN show_time st ON ms.show_time_id = st.id
+        WHERE ms.movie_id = :movieId 
+        AND DATE(st.show_time) = DATE(CAST(:showDateTime AS TIMESTAMP))
+        AND EXTRACT(HOUR FROM st.show_time) = EXTRACT(HOUR FROM CAST(:showDateTime AS TIMESTAMP))
+        AND EXTRACT(MINUTE FROM st.show_time) = EXTRACT(MINUTE FROM CAST(:showDateTime AS TIMESTAMP))
+        LIMIT 1
+    """, nativeQuery = true)
+    Long findMovieShowIdByMovieIdAndDateTime(@Param("movieId") Long movieId, @Param("showDateTime") java.sql.Timestamp showDateTime);
 }
 
 

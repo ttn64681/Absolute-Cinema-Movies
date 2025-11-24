@@ -1,7 +1,7 @@
 'use client';
 import React, { useState } from 'react';
 import TicketCounter from '@/components/specific/booking/ticketAge/TicketCounter';
-import CheckoutButton from '@/components/specific/booking/ticketAge/CheckoutButton';
+import CheckoutButtonWrapper from '@/components/specific/booking/ticketAge/CheckoutButtonWrapper';
 
 interface props {
   reservedSeats: number;
@@ -119,7 +119,7 @@ export default function TicketTable({ reservedSeats }: props) {
               <span>{formatPriceString(calculatePrice())}</span>
             </div>
             <div className="flex justify-end items-center">
-              <CheckoutButton tickets={totalTickets} seats={reservedSeats} />
+              <CheckoutButtonWrapper tickets={totalTickets} seats={reservedSeats} ticketsByCategory={ticketsByCategory} />
             </div>
           </div>
         </div>

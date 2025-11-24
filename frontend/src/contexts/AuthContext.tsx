@@ -227,6 +227,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = useCallback(async (): Promise<void> => {
     console.log('Logout initiated - INSTANT LOGOUT');
 
+    // Clear reservation when user logs out (stop timer and release seats)
+    // Dispatch event to clear reservation - ReservationContext will listen for this
+    window.dispatchEvent(new CustomEvent('userLogout'));
+
     // Clear everything immediately - no delays, no complex logic
     setUser(null);
     localStorage.clear();

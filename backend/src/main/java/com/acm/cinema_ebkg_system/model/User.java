@@ -5,13 +5,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.ArrayList;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
-import com.acm.cinema_ebkg_system.enums.PaymentCardType;
-import com.acm.cinema_ebkg_system.enums.UserStatus;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.acm.cinema_ebkg_system.enums.AddressType;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
+import com.acm.cinema_ebkg_system.enums.UserStatus;
 
 /**
  * User Entity - Represents a user in the cinema booking system
@@ -28,9 +24,6 @@ import lombok.AllArgsConstructor;
 
 @Entity
 @Table(name = "users")
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class User {
     // Primary key - auto-generated unique identifier
     @Id
@@ -73,12 +66,9 @@ public class User {
 
     // ========== EMAIL VERIFICATION FIELDS ==========
     
-    @Column(name = "is_active")
-    private boolean isActive = false;
-
-  /*@Enumerated(EnumType.STRING)
-    @Column(name = "user_status", nullable = false)
-    private UserStatus userStatus; */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "account_status", nullable = false)
+    private UserStatus accountStatus = UserStatus.inactive;
     
     @Column(name = "verification_token")
     private String verificationToken;
@@ -195,5 +185,159 @@ public class User {
                 .orElse(null);
         }
         return null;
+    }
+
+    // ========== STANDARD GETTERS AND SETTERS ==========
+
+    // Getters
+    public Long getId() {
+        return id;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public String getFirstName() {
+        return firstName;
+    }
+
+    public String getLastName() {
+        return lastName;
+    }
+
+    public String getPhoneNumber() {
+        return phoneNumber;
+    }
+
+    public boolean isEnrolledForPromotions() {
+        return enrolledForPromotions;
+    }
+
+    public Boolean getEnrolledForPromotions() {
+        return enrolledForPromotions;
+    }
+
+    public String getProfileImageLink() {
+        return profileImageLink;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public UserStatus getAccountStatus() {
+        return accountStatus != null ? accountStatus : UserStatus.inactive;
+    }
+    
+    // Convenience method for backward compatibility - checks if account is active
+    public boolean isActive() {
+        return accountStatus == UserStatus.active;
+    }
+
+    public String getVerificationToken() {
+        return verificationToken;
+    }
+
+    public LocalDateTime getVerificationTokenExpiresAt() {
+        return verificationTokenExpiresAt;
+    }
+
+    public String getPasswordResetToken() {
+        return passwordResetToken;
+    }
+
+    public LocalDateTime getPasswordResetTokenExpiresAt() {
+        return passwordResetTokenExpiresAt;
+    }
+
+    public List<PaymentInfo> getPaymentInfos() {
+        return paymentInfos;
+    }
+
+    public List<Address> getAddresses() {
+        return addresses;
+    }
+
+    // Setters
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
+
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
+    }
+
+    public void setPhoneNumber(String phoneNumber) {
+        this.phoneNumber = phoneNumber;
+    }
+
+    public void setEnrolledForPromotions(boolean enrolledForPromotions) {
+        this.enrolledForPromotions = enrolledForPromotions;
+    }
+
+    public void setProfileImageLink(String profileImageLink) {
+        this.profileImageLink = profileImageLink;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+
+    public void setAccountStatus(UserStatus accountStatus) {
+        this.accountStatus = accountStatus != null ? accountStatus : UserStatus.inactive;
+    }
+    
+    // Convenience method for backward compatibility - sets account status based on boolean
+    public void setActive(boolean active) {
+        this.accountStatus = active ? UserStatus.active : UserStatus.inactive;
+    }
+
+    public void setVerificationToken(String verificationToken) {
+        this.verificationToken = verificationToken;
+    }
+
+    public void setVerificationTokenExpiresAt(LocalDateTime verificationTokenExpiresAt) {
+        this.verificationTokenExpiresAt = verificationTokenExpiresAt;
+    }
+
+    public void setPasswordResetToken(String passwordResetToken) {
+        this.passwordResetToken = passwordResetToken;
+    }
+
+    public void setPasswordResetTokenExpiresAt(LocalDateTime passwordResetTokenExpiresAt) {
+        this.passwordResetTokenExpiresAt = passwordResetTokenExpiresAt;
+    }
+
+    public void setPaymentInfos(List<PaymentInfo> paymentInfos) {
+        this.paymentInfos = paymentInfos;
+    }
+
+    public void setAddresses(List<Address> addresses) {
+        this.addresses = addresses;
     }
 }

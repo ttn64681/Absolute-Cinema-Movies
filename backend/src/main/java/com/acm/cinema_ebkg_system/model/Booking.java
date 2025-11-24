@@ -1,9 +1,6 @@
 package com.acm.cinema_ebkg_system.model;
 
 import jakarta.persistence.*;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -23,9 +20,6 @@ import com.acm.cinema_ebkg_system.model.Promotion;
  * - Has many tickets (one booking can have multiple tickets)
  * - Tracks total amount and booking status
  */
-@Data
-//@NoArgsConstructor
-//@AllArgsConstructor
 @Entity
 @Table(name = "booking")
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
@@ -45,12 +39,24 @@ public class Booking {
     @JsonIgnoreProperties({"bookings", "createdAt", "updatedAt"})
     private User user;
     
+    // Movie ID - links to movie table (obtained from movie_show)
+    @Column(name = "movie_id", nullable = false)
+    private Long movieId;
+    
     // Many-to-one relationship with Promotion (optional)
     // Many bookings can use one promotion
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "promotion_id", nullable = true)
     @JsonIgnoreProperties({"bookings"})
     private Promotion promotion;
+    
+    // Payment ID - nullable for now (can be set later when payment is processed)
+    @Column(name = "payment_id", nullable = true)
+    private Long paymentId;
+    
+    // Number of tickets in this booking
+    @Column(name = "num_tickets", nullable = false)
+    private Integer numTickets;
     
     // Total amount for this booking
     @Column(name = "total_amount", nullable = false, precision = 10, scale = 2)
@@ -73,6 +79,9 @@ public class Booking {
     // Timestamp when record was last updated
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    // Default constructor
+    public Booking() {}
     
     @PrePersist
     protected void onCreate() {
@@ -83,5 +92,95 @@ public class Booking {
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
+    }
+
+    // Getters
+    public Long getBookingId() {
+        return bookingId;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public Long getMovieId() {
+        return movieId;
+    }
+
+    public Promotion getPromotion() {
+        return promotion;
+    }
+
+    public Long getPaymentId() {
+        return paymentId;
+    }
+
+    public Integer getNumTickets() {
+        return numTickets;
+    }
+
+    public java.math.BigDecimal getTotalAmount() {
+        return totalAmount;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public List<Ticket> getTickets() {
+        return tickets;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    // Setters
+    public void setBookingId(Long bookingId) {
+        this.bookingId = bookingId;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
+
+    public void setMovieId(Long movieId) {
+        this.movieId = movieId;
+    }
+
+    public void setPromotion(Promotion promotion) {
+        this.promotion = promotion;
+    }
+
+    public void setPaymentId(Long paymentId) {
+        this.paymentId = paymentId;
+    }
+
+    public void setNumTickets(Integer numTickets) {
+        this.numTickets = numTickets;
+    }
+
+    public void setTotalAmount(java.math.BigDecimal totalAmount) {
+        this.totalAmount = totalAmount;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public void setTickets(List<Ticket> tickets) {
+        this.tickets = tickets;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
     }
 }
