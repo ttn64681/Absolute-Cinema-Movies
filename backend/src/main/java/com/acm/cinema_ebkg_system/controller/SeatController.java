@@ -62,8 +62,9 @@ public class SeatController {
     }
     
     /**
-     * Reserve seats for a user (temporary hold)
-     * Requires authentication - only logged-in users can reserve seats
+     * Reserve seats (temporary hold)
+     * Public endpoint - anyone can reserve seats, but only logged-in users can complete booking
+     * userId is optional - if user is logged in, it will be tracked; if not, reservation is anonymous
      */
     @PostMapping("/reserve")
     public ResponseEntity<Map<String, Object>> reserveSeats(
@@ -71,15 +72,11 @@ public class SeatController {
             HttpServletRequest httpRequest) {
         
         try {
-            // Extract user ID from JWT token
+            // Extract user ID from JWT token (optional - anonymous users can also reserve)
             Long userId = getUserIdFromRequest(httpRequest);
-            if (userId == null) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(createErrorResponse("You need to be a logged in user to reserve seats"));
-            }
             
             // Log the request details
-            System.out.println("POST /api/seats/reserve - showId: " + request.getShowId() + ", userId: " + userId);
+            System.out.println("POST /api/seats/reserve - showId: " + request.getShowId() + ", userId: " + (userId != null ? userId : "anonymous"));
             System.out.println("POST /api/seats/reserve - seats: " + (request.getSeats() != null ? request.getSeats().size() : 0) + " seats");
             if (request.getSeats() != null && !request.getSeats().isEmpty()) {
                 request.getSeats().forEach(seat -> 
@@ -87,7 +84,7 @@ public class SeatController {
                 );
             }
             
-            // Reserve the seats and get the seat IDs
+            // Reserve the seats and get the seat IDs (userId can be null for anonymous users)
             List<Long> reservedSeatIds = showSeatService.reserveSeats(userId, request);
             
             Map<String, Object> response = new HashMap<>();
