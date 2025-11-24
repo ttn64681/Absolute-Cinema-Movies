@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -185,6 +186,23 @@ public class MovieController {
             return ResponseEntity.badRequest().body("Error creating movie: " + e.getMessage());
         }
     }
+
+    /**
+     * PUT api/movies/create
+     * Called when editing a movie (when logged in as Admin).
+     * 
+     * Takes MovieDTO, delegates to service for entity creation and persistence.
+     */
+    @PutMapping("/{movieId}")
+    public ResponseEntity<?> editMovie(@PathVariable Long movieId, @RequestBody MovieDTO dto) {
+        try {
+            Movie created = movieService.updateMovie(movieId, dto);
+            return ResponseEntity.ok(created);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Error updating movie: " + e.getMessage());
+        }
+    }
+
 
     /**
      * DELETE /api/movies/{movieId}

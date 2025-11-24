@@ -247,6 +247,39 @@ public class MovieService {
     }
 
     /**
+     * Updates a movie's information.
+     * Handles DTO to Entity conversion 
+     * Evicts all pagination caches (pagination changes when movie count changes)
+     * 
+     * @param movieDTO MovieDTO from controller
+     * @return Persisted Movie entity
+     */
+    @CacheEvict(value = {"nowPlayingMovies", "upcomingMovies", "searchNowPlayingMovies", "searchUpcomingMovies"}, allEntries = true)
+    public Movie updateMovie(Long movieId, com.acm.cinema_ebkg_system.dto.movie.MovieDTO movieDTO) {
+        // Business logic: DTO to Entity conversion
+
+        // Retrieve the movie associated with the movie ID
+        Movie updateMovie = getMovieById(movieId);
+
+        // Update all attributes using the DTO
+        updateMovie.setTitle(movieDTO.getTitle());
+        updateMovie.setGenres(movieDTO.getGenres());
+        updateMovie.setRating(movieDTO.getRating());
+        updateMovie.setRelease_date(movieDTO.getRelease_date());
+        updateMovie.setSynopsis(movieDTO.getSynopsis());
+        updateMovie.setTrailer_link(movieDTO.getTrailer_link());
+        updateMovie.setPoster_link(movieDTO.getPoster_link());
+        updateMovie.setCast_names(movieDTO.getCast_names());
+        updateMovie.setDirectors(movieDTO.getDirectors());
+        updateMovie.setProducers(movieDTO.getProducers());
+        updateMovie.setScore(movieDTO.getScore());
+        updateMovie.setDuration(movieDTO.getDuration());
+        
+        // Save updated movie in database
+        return movieRepository.save(updateMovie);
+    }
+
+    /**
      * Deletes a movie.
      * Evicts all pagination caches (pagination changes when movie count changes)
      */

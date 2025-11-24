@@ -37,9 +37,9 @@ interface MovieFormModalProps {
 
 // Add/edit movie form
 export default function EditMovieFormModal({ isOpen, onClose, onSaved, initialMovieId }: MovieFormModalProps) {
-  console.log("Movie ID retrieved: " + initialMovieId);
-  const {selectedMovie, isLoading, error, addMovie} = useAdminMovie(initialMovieId);
-  console.log(selectedMovie);
+  //console.log("Movie ID retrieved: " + initialMovieId);
+  const {selectedMovie, isLoading, error, addMovie, editMovie} = useAdminMovie(initialMovieId);
+  //console.log(selectedMovie);
 
   //const [editingMovie, setEditingMovie] = useState(dummyMovie);
   const [saving, setSaving] = useState(false);
@@ -53,7 +53,7 @@ export default function EditMovieFormModal({ isOpen, onClose, onSaved, initialMo
   const [directors, setDirectors] = useState("");
   const [producers, setProducers] = useState("");
   const [cast_names, setCastNames] = useState("");
-  const [reviews, setReviews] = useState("");
+  //const [reviews, setReviews] = useState("");
   const [rating, setRating] = useState("");
   const [duration, setDuration] = useState(0);
   const [score, setScore] = useState(0);
@@ -81,7 +81,7 @@ export default function EditMovieFormModal({ isOpen, onClose, onSaved, initialMo
       setRating(selectedMovie.rating || "");
       setScore(selectedMovie.score || 0);
       setDuration(selectedMovie.duration || 0);
-      console.log("Selected movie data was set");
+      //console.log("Selected movie data was set");
 
       /*if (initialMovie._meta?.showtimes && initialMovie._meta.showtimes.length > 0) {
         setShowtimes(initialMovie._meta.showtimes);
@@ -177,10 +177,8 @@ export default function EditMovieFormModal({ isOpen, onClose, onSaved, initialMo
     const parsed: AdminMovie[] = existing ? JSON.parse(existing) : [];
 
       const primary = showtimes[0];*/
-      const movieData: AdminMovie = {
-        movie_id: editingId || Date.now(),
+      const movieData: Partial<AdminMovie> = {
         title,
-        status,
         genres,
         rating,
         release_date,
@@ -210,7 +208,7 @@ export default function EditMovieFormModal({ isOpen, onClose, onSaved, initialMo
     }*/
 
     //sessionStorage.setItem("movies", JSON.stringify(updated));
-    onSaved(movieData);
+    editMovie(movieData, editingId)
     onClose();
     setSaving(false);
   };
@@ -375,6 +373,7 @@ export default function EditMovieFormModal({ isOpen, onClose, onSaved, initialMo
           />
         </div>
 
+        {/* Directors */ }
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
           <div>
             <label className="block text-sm mb-2 font-afacad text-white">Director(s)</label>
@@ -386,6 +385,7 @@ export default function EditMovieFormModal({ isOpen, onClose, onSaved, initialMo
               className="w-full px-4 py-3 rounded-md bg-white/10 border border-white/20 text-white placeholder-white/60 focus:outline-none focus:ring-1 focus:ring-[#FF478B] focus:border-transparent"
             />
           </div>
+          {/* Producers */ }
           <div>
             <label className="block text-sm mb-2 font-afacad text-white">Producer(s)</label>
             <input
@@ -398,6 +398,7 @@ export default function EditMovieFormModal({ isOpen, onClose, onSaved, initialMo
           </div>
         </div>
 
+        {/* Cast Names */ }
         <div className="mb-6">
           <label className="block text-sm mb-2 font-afacad text-white">Cast</label>
           <textarea

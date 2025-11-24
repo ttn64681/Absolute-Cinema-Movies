@@ -59,6 +59,8 @@ async function getMovieDetails(movieId: number) {
   }
 }
 
+// Create a NEW movie
+// Calls the createMovie backend endpoint in MovieController
 async function createNewMovie(movie: Partial<AdminMovie>) {
   try {
     console.log("Movie being created: " + JSON.stringify(movie));
@@ -70,7 +72,7 @@ async function createNewMovie(movie: Partial<AdminMovie>) {
       body: JSON.stringify(movie)
     });
 
-    /*if (!response.ok) {
+    if (!response.ok) {
       throw new Error(`Failed to create movie: ${response.status}`);
     }
     const responseText = await response.text();
@@ -78,13 +80,43 @@ async function createNewMovie(movie: Partial<AdminMovie>) {
       throw new Error('Empty response from server');
     } 
 
-    const data: AdminMovie = JSON.parse(responseText);*/
+    const data: AdminMovie = JSON.parse(responseText);
 
-    return response;
+    return data;
 
   } catch (error) {
     console.error('Error creating movie: ', error);
   }
 }
 
-export { fetchMoviesPaginated, getMovieDetails, createNewMovie };
+// UPDATES an existing movie
+// Calls the editMovie backend endpoint in MovieController
+async function editExistingMovie(movie: Partial<AdminMovie>, movieId: number) {
+  try {
+    console.log("Movie being edited " + JSON.stringify(movie));
+    const response = await fetch(buildUrl(`/api/movies/${movieId}`), {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(movie)
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to update movie: ${response.status}`);
+    }
+    const responseText = await response.text();
+    if (!responseText.trim()) {
+      throw new Error('Empty response from server');
+    } 
+
+    const data: AdminMovie = JSON.parse(responseText);
+
+    return data;
+
+  } catch (error) {
+    console.error('Error creating movie: ', error);
+  }
+}
+
+export { fetchMoviesPaginated, getMovieDetails, createNewMovie, editExistingMovie };

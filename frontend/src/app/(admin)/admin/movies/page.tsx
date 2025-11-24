@@ -258,34 +258,7 @@ export default function AdminMoviesPage() {
 
   // Function to open edit movie menu
   const openEditModal = (movieId: number) => {
-
-    // Selected movie info from useSelectedMovie hook
-    //const {selectedMovie, isLoading, error} = useAdminSelectedMovie(movieId);
-
-    /*const existingShowtimes = movie._meta?.showtimes;
-    const defaultShowtime = {
-      date: movie.date || '',
-      time: movie.time.replace(/\s?(AM|PM)$/i, '').trim() || '',
-      ampm: /*getAmpmFromTime(movie.time) || 'AM',
-    };*/
-    
-    /*setEditingMovie({
-      movie_id: selectedMovie.movie_id || 0,
-      title: selectedMovie.title || '',
-      status: selectedMovie.status || 'upcoming',
-      genres: selectedMovie.genres || '',
-      rating: selectedMovie.rating || '',
-      release_date: selectedMovie.release_date || '',
-      synopsis: selectedMovie.synopsis || '',
-      trailer_link: selectedMovie.trailer_link || '',
-      poster_link: selectedMovie.poster_link || '',
-      cast_names: selectedMovie.cast_names || '',
-      directors: selectedMovie.directors || '',
-      producers: selectedMovie.producers || '',
-      duration: selectedMovie.duration || 0,
-      score: selectedMovie.score || 0
-    });*/
-    console.log("Movie ID passed in: " + movieId);
+    // console.log("Movie ID passed in: " + movieId);
     setEditingMovieId(movieId);
     setShowEditModal(true);
   };
@@ -374,7 +347,7 @@ export default function AdminMoviesPage() {
   const startIndex = 0;
   const endIndex = moviesPerPage;
   const paginatedMovies = movies.slice(startIndex, endIndex);
-  console.log(startIndex, endIndex);
+  // console.log(startIndex, endIndex);
 
   const goToPage = (page: number) => {
     if (page >= 0 && page <= totalPages) {

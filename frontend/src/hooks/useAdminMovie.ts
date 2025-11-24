@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
 import { AdminMovie, PaginatedMovieResponse} from '@/types/admin';
-import { getMovieDetails, createNewMovie } from '@/clients/adminMovieClient';
+import { getMovieDetails, createNewMovie, editExistingMovie } from '@/clients/adminMovieClient';
 
 
 const dummyMovie: AdminMovie = {
@@ -67,12 +67,27 @@ export function useAdminMovie(movieId: number) {
         }
       }
       
+
+       // Edit an existing movie
+      const editMovie = async (movie: Partial<AdminMovie>, movieId: number) => {
+        
+        const updatedMovie = await editExistingMovie(movie, movieId);
+
+        if (updatedMovie) {
+          console.log("Movie created successfully.");
+          return true;
+        } else {
+          console.log("Failed to create new movie.");
+          return false;
+        }
+      }
+      
     
       // Fetch a movie when movieId changes
       useEffect(() => {
         fetchMovieInfo(movieId);
       }, [movieId]);
     
-      return { selectedMovie, isLoading, error, addMovie };
+      return { selectedMovie, isLoading, error, addMovie, editMovie };
 
 }
