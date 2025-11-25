@@ -34,7 +34,10 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     throw new Error(`HTTP ${response.status}: ${response.statusText}`);
   }
 
-  return response.json();
+  const text = await response.text();
+  if (!text) return null as T;
+
+  return JSON.parse(text);
 }
 
 export const paymentClient = {
@@ -100,6 +103,10 @@ export const paymentClient = {
   async deleteCard(cardId: number): Promise<void> {
     await request(endpoints.paymentCards.deletePaymentCard(cardId), {
       method: 'DELETE',
+      headers: {
+          'Content-Type': 'application/json',
+          ...(getAuthToken() && { Authorization: `Bearer ${getAuthToken()}` }),
+        },
     });
   },
 };

@@ -14,7 +14,7 @@ type Showtime = {
 interface ScheduleModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSchedule: (date: string, time: string, showRoomId: number) => void;
+  //onSchedule: (date: string, time: string, showRoomId: number) => void;
   movieId: number;
   movieTitle: string;
   //existingShowtimes?: Showtime[];
@@ -31,7 +31,7 @@ const SHOW_ROOMS = [
 export default function ScheduleModal({
   isOpen,
   onClose,
-  onSchedule,
+  //nSchedule,
   movieId,
   movieTitle,
 }: ScheduleModalProps) {

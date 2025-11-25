@@ -294,7 +294,7 @@ export default function AdminMoviesPage() {
   };
 
   // Add and save a new movie show
-  const handleSchedule = (date: string, time: string, showRoomId: number) => {
+  /*const handleSchedule = (date: string, time: string, showRoomId: number) => {
     if (!schedulingMovie) return;
 
     const timeParts = time.trim().split(/\s+/);
@@ -320,7 +320,7 @@ export default function AdminMoviesPage() {
         {
           date: movie.date || '',
           time: movie.time.replace(/\s?(AM|PM)$/i, '').trim() || '',
-          ampm: /*getAmpmFromTime(movie.time) ||*/ 'AM',
+          ampm: /*getAmpmFromTime(movie.time) || 'AM',
         },
       ];
 
@@ -341,7 +341,7 @@ export default function AdminMoviesPage() {
 
       return updatedMovies;
     });
-  };
+  };*/
 
   const totalPages = Math.ceil(movies.length / moviesPerPage);
   const startIndex = 0;
@@ -594,7 +594,7 @@ export default function AdminMoviesPage() {
             setShowScheduleModal(false);
             setSchedulingMovie(null);
           }}
-          onSchedule={handleSchedule}
+          //onSchedule={handleSchedule}
           movieId={schedulingMovie.movie_id}
           movieTitle={schedulingMovie.title}
           //existingShowtimes={schedulingMovie._meta?.showtimes || []}
