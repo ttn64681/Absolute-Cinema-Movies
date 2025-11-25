@@ -18,7 +18,7 @@ import java.time.LocalDateTime;
 public interface MovieShowRepository extends JpaRepository<MovieShow, Long> {
     
     // Find movie shows by movie (using native query because Movie uses 'movie_id' field)
-    @Query("SELECT ms FROM MovieShow ms WHERE ms.movie.movie_id = :movieId")
+    @Query(value = "SELECT ms.* FROM movie_show ms WHERE ms.movie_id = :movieId", nativeQuery = true)
     List<MovieShow> findByMovieId(@Param("movieId") Long movieId);
     
     // Find movie shows by show room

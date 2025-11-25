@@ -6,6 +6,7 @@ import com.acm.cinema_ebkg_system.model.Movie;
 import com.acm.cinema_ebkg_system.model.ShowRoom;
 import com.acm.cinema_ebkg_system.model.ShowTime;
 import com.acm.cinema_ebkg_system.dto.movie.MovieShowDTO;
+import com.acm.cinema_ebkg_system.dto.movie.MovieShowResponseDTO;
 import com.acm.cinema_ebkg_system.service.MovieShowService;
 import com.acm.cinema_ebkg_system.service.MovieService;
 import com.acm.cinema_ebkg_system.service.ShowRoomService;
@@ -51,10 +52,11 @@ public class MovieShowController {
     /**
      * GET /api/movie-shows/movie/{movieId}
      * Input: movieId (Long) in URL path
-     * Returns: List<MovieShow> - All shows for this movie
+     * Returns: List<MovieShowResponseDTO> - Contains a list of objects containing movie show ID, room ID, and showtime
+     * Used for retrieving all movie shows associated with a movie.
      */
     @GetMapping("/movie/{movieId}")
-    public List<MovieShow> getMovieShowsByMovie(@PathVariable Long movieId) {
+    public List<MovieShowResponseDTO> getMovieShowsByMovie(@PathVariable Long movieId) {
         return movieShowService.getMovieShowsByMovieId(movieId);
     }
     

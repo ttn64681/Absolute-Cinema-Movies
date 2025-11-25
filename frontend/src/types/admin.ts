@@ -59,6 +59,20 @@ export interface PaginatedMovieResponse {
   pageSize: number;
 }
 
+// MovieShow interface for scheduling movie shows
+export interface ShowTime {
+  date: string;
+  time: string;
+  ampm: string;
+  room: string;
+}
+
+export interface BackendMovieShow {
+  movieId: number;
+  showRoomId: number;
+  startTime: string;
+}
+
 // User interface for admin user management
 export interface StoredUser {
   id: number;

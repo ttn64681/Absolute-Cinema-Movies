@@ -1,5 +1,8 @@
 package com.acm.cinema_ebkg_system.service;
 
+import com.acm.cinema_ebkg_system.dto.movie.MovieSummary;
+import com.acm.cinema_ebkg_system.enums.MovieStatus;
+import com.acm.cinema_ebkg_system.dto.movie.MovieShowResponseDTO;
 import com.acm.cinema_ebkg_system.model.Movie;
 import com.acm.cinema_ebkg_system.model.MovieShow;
 import com.acm.cinema_ebkg_system.model.ShowRoom;
@@ -9,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import java.util.List;
+import java.util.stream.Collectors;
 import java.time.LocalDateTime;
 
 /**
@@ -38,8 +42,11 @@ public class MovieShowService {
      * @param movieId - Long: Movie ID
      * @return List<MovieShow> - All shows for this movie
      */
-    public List<MovieShow> getMovieShowsByMovieId(Long movieId) {
-        return movieShowRepository.findByMovieId(movieId);
+    public List<MovieShowResponseDTO> getMovieShowsByMovieId(Long movieId) {
+        List<MovieShow> movieShows = movieShowRepository.findByMovieId(movieId);
+        return movieShows.stream()
+                .map(MovieShowResponseDTO::fromMovieShow)
+                .collect(Collectors.toList());
     }
     
     /**
@@ -93,6 +100,11 @@ public class MovieShowService {
 
                 // Link the MovieShow to the ShowTime
                 createdShow.setShowTime(createdTime);
+
+                // Ensure that the movie status changes to now playing
+                movie.setStatus(MovieStatus.now_playing);
+
+                // Return the created movie show
                 return movieShowRepository.save(createdShow);
             }
         } catch (Exception e) {

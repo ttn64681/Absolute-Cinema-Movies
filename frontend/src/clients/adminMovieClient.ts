@@ -119,4 +119,32 @@ async function editExistingMovie(movie: Partial<AdminMovie>, movieId: number) {
   }
 }
 
-export { fetchMoviesPaginated, getMovieDetails, createNewMovie, editExistingMovie };
+// Gets all showtimes (date and time combined) for a single movie
+// Calls the getAvailableTimes backend endpoint in MovieController
+async function getShowtimes(movieId: number) {
+  try {
+    const response = await fetch(buildUrl(`/api/movies/${movieId}/times/combined`), {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to retrieve showtimes: ${response.status}`);
+    }
+    const responseText = await response.text();
+    if (!responseText.trim()) {
+      throw new Error('Empty response from server');
+    } 
+
+    const data: AdminMovie = JSON.parse(responseText);
+
+    return data;
+
+  } catch (error) {
+    console.error('Error retrieving showtimes: ', error);
+  }
+}
+
+export { fetchMoviesPaginated, getMovieDetails, createNewMovie, editExistingMovie, getShowtimes };

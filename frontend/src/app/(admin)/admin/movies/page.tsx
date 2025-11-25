@@ -597,7 +597,7 @@ export default function AdminMoviesPage() {
           onSchedule={handleSchedule}
           movieId={schedulingMovie.movie_id}
           movieTitle={schedulingMovie.title}
-          existingShowtimes={schedulingMovie._meta?.showtimes || []}
+          //existingShowtimes={schedulingMovie._meta?.showtimes || []}
         />
       )}
     </div>
