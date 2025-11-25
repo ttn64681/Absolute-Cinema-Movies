@@ -36,6 +36,15 @@ public class MovieService {
                 .map(MovieSummary::fromMovie)
                 .collect(Collectors.toList());
         
+        // int currentPage = moviePage.getNumber();
+        // int totalPages = moviePage.getTotalPages();
+        // long totalElements = moviePage.getTotalElements();
+        
+        // // Manually calculate hasNext/hasPrevious to ensure correctness
+        // // Spring's hasNext() can be incorrect in some edge cases
+        // boolean hasNext = currentPage < totalPages - 1;
+        // boolean hasPrevious = currentPage > 0;
+        
         return new PaginatedMovieResponse(
             summaries,
             moviePage.getNumber(),
@@ -45,6 +54,16 @@ public class MovieService {
             moviePage.hasPrevious(),
             MOVIES_PER_PAGE
         );
+
+        // return new PaginatedMovieResponse(
+        //     summaries,
+        //     currentPage,
+        //     totalPages,
+        //     totalElements,
+        //     hasNext,
+        //     hasPrevious,
+        //     MOVIES_PER_PAGE
+        // );
     }
 
     /**

@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -88,4 +89,12 @@ public interface UserRepository extends JpaRepository<User, Long> {
      */
     @Query("SELECT u FROM User u LEFT JOIN FETCH u.addresses WHERE u.id = :id")
     Optional<User> findByIdWithAddresses(@Param("id") Long id);
+
+    /**
+     * Get a user by if "enrolled_for_promotion" is TRUE
+     * 
+     * @return
+     */
+    @Query("SELECT u FROM User u WHERE u.enrolledForPromotions = TRUE")
+    List<User> findAllByEnrolledForPromotionsTrue();
 }

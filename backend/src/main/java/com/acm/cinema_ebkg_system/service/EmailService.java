@@ -6,6 +6,8 @@ import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
+import com.acm.cinema_ebkg_system.model.Promotion;
+
 /**
  * Email Service - Handles sending emails for various system operations
  * 
@@ -227,6 +229,24 @@ public class EmailService {
         } catch (Exception e) {
             System.err.println("Failed to send promotion enrollment email to: " + toEmail);
             // Don't throw exception - promotion enrollment failure shouldn't block user registration/profile update
+            System.err.println("Error: " + e.getMessage());
+        }
+    }
+
+    public void sendPromotionToEnrolledUsers(String toEmail, Promotion promotion) {
+        try {
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setFrom(fromEmail);
+            message.setTo(toEmail);
+            message.setSubject(promotion.getTitle());
+            message.setText(promotion.getDescription());
+
+            mailSender.send(message);
+
+            System.out.println("Promotion enrollment email sent successfully to: " + toEmail);
+            
+        } catch (Exception e) {
+            System.err.println("Failed to send promotion enrollment email to: " + toEmail);            
             System.err.println("Error: " + e.getMessage());
         }
     }

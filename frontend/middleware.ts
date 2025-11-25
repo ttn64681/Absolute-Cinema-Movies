@@ -9,7 +9,12 @@ import type { NextRequest } from 'next/server';
  * - Validates user role
  * - Redirects unauthorized users
  *
- * Benefits over RouteProtection:
+ * Access Rules:
+ * - Non-logged in: Can access all public pages (home, movies, auth)
+ * - Logged in users: Can access user pages, checkout, and public pages
+ * - Admins: Can ONLY access admin pages and logout (isolated)
+ *
+ * Benefits:
  * - Runs server-side (no race conditions)
  * - Blocks before render (better UX)
  * - Can access cookies (no localStorage issues)
@@ -19,47 +24,84 @@ import type { NextRequest } from 'next/server';
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Get token from cookie (set by login)
+  // Get tokens from cookies
   const token = request.cookies.get('token')?.value;
   const adminToken = request.cookies.get('adminToken')?.value;
 
-  // Public routes - allow all
-  const publicRoutes = ['/auth/login', '/auth/register', '/auth/forgot-password', '/'];
-  if (publicRoutes.some((route) => pathname.startsWith(route))) {
-    return NextResponse.next();
-  }
+  const isAdmin = !!(token && adminToken);
+  const isLoggedInUser = !!(token && !adminToken);
 
-  // Admin routes - require admin token
+  // ============================================
+  // ADMIN ROUTES - Only admins can access
+  // ============================================
   if (pathname.startsWith('/admin')) {
-    if (!token || !adminToken) {
-      return NextResponse.redirect(new URL('/auth/login', request.url));
+    if (!isAdmin) {
+      // Not admin - redirect to login
+      return NextResponse.redirect(new URL('/auth/admin-login', request.url));
     }
-    // TODO: Validate token and role (decode JWT)
+    // Admin has access
     return NextResponse.next();
   }
 
-  // User routes - require user token (but NOT admin token)
+  // ============================================
+  // ADMIN ISOLATION - Block admins from non-admin pages
+  // ============================================
+  if (isAdmin) {
+    // Allow admins to access auth pages (for logout)
+    if (pathname.startsWith('/auth')) {
+      return NextResponse.next();
+    }
+
+    // Allow admins to access static assets and API
+    if (pathname.startsWith('/_next') || pathname.startsWith('/api')) {
+      return NextResponse.next();
+    }
+
+    // Block admins from all other pages - redirect to admin dashboard
+    return NextResponse.redirect(new URL('/admin/users', request.url));
+  }
+
+  // ============================================
+  // USER PROFILE ROUTES - Only logged in users (not admins)
+  // ============================================
   if (pathname.startsWith('/user')) {
-    if (!token) {
-      return NextResponse.redirect(new URL('/auth/login', request.url));
+    if (!isLoggedInUser) {
+      // Not logged in - redirect to login
+      const loginUrl = new URL('/auth/login', request.url);
+      loginUrl.searchParams.set('redirect', pathname);
+      return NextResponse.redirect(loginUrl);
     }
-    if (adminToken) {
-      // Admin trying to access user route - redirect to admin
-      return NextResponse.redirect(new URL('/admin/users', request.url));
-    }
-    // TODO: Validate token (decode JWT)
+    // Logged in user has access
     return NextResponse.next();
   }
 
-  // Booking routes - require user token
-  if (pathname.startsWith('/booking')) {
-    if (!token) {
-      return NextResponse.redirect(new URL('/auth/login', request.url));
+  // ============================================
+  // CHECKOUT ROUTE - Only logged in users (not admins)
+  // ============================================
+  if (pathname.startsWith('/booking/checkout')) {
+    if (!isLoggedInUser) {
+      // Not logged in - redirect to login with return path (preserve query params)
+      const loginUrl = new URL('/auth/login', request.url);
+      const fullPath = request.nextUrl.pathname + request.nextUrl.search;
+      loginUrl.searchParams.set('redirect', fullPath);
+      return NextResponse.redirect(loginUrl);
     }
+    // Logged in user has access
     return NextResponse.next();
   }
 
-  // Allow all other routes
+  // ============================================
+  // AUTH ROUTES - Accessible to all
+  // ============================================
+  if (pathname.startsWith('/auth')) {
+    return NextResponse.next();
+  }
+
+  // ============================================
+  // PUBLIC ROUTES - Accessible to all non-admins
+  // ============================================
+  // Home, movies, booking (except checkout), promos, etc.
+  // Already handled: admins are blocked above, users have access
   return NextResponse.next();
 }
 
@@ -72,7 +114,8 @@ export const config = {
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
+     * - public assets (images, fonts, etc.)
      */
-    '/((?!api|_next/static|_next/image|favicon.ico).*)',
+    '/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|woff|woff2)).*)',
   ],
 };

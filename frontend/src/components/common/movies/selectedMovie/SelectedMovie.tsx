@@ -9,16 +9,16 @@ import SelectedMovieShowtimes from './SelectedMovieShowtimes';
 import SelectedMovieCredits from './SelectedMovieCredits';
 import SelectedMovieTrailer from './SelectedMovieTrailer';
 
-import { BackendMovie } from '@/types/movie';
+import { MovieSummary, BackendMovie } from '@/types/movie';
 import { movieClient } from '@/clients/movieClient';
 
 interface MovieDetailProps {
-  movie: BackendMovie;
+  movie: MovieSummary; // Receives MovieSummary from MovieCard, fetches BackendMovie via Virtual Proxy
   onClose: () => void;
 }
 
 /**
- * Selected Movie Modal - Displays full movie details
+ * Displays full movie details
  *
  * Implements Virtual Proxy pattern:
  * - Receives MovieSummary (lightweight) from parent
@@ -34,14 +34,17 @@ export default function SelectedMovie({ movie, onClose }: MovieDetailProps) {
   const [selectedShowtime, setSelectedShowtime] = useState<string | null>(null);
 
   // Virtual Proxy: Fetch full movie details (cast, directors, producers)
-  const { data: fullMovie } = useQuery({
+  const { data: fullMovie } = useQuery<BackendMovie>({
     queryKey: ['movie-details', movie.movie_id],
     queryFn: async () => {
       return await movieClient.getMovieById(movie.movie_id);
     },
     staleTime: 10 * 60 * 1000, // Cache for 10 minutes
-    placeholderData: movie, // Use MovieSummary as placeholder while loading
+    placeholderData: movie as BackendMovie, // Use MovieSummary as placeholder while loading (type assertion for compatibility)
   });
+
+  // Use full movie if available, otherwise fall back to summary (Virtual Proxy pattern)
+  const displayMovie: BackendMovie = (fullMovie || movie) as BackendMovie;
 
   // Fetch available showtime dates
   const {
@@ -81,16 +84,16 @@ export default function SelectedMovie({ movie, onClose }: MovieDetailProps) {
         </button>
 
         {/* Left Side - Movie Poster + Details */}
-        <SelectedMovieInfo movie={fullMovie || movie} />
+        <SelectedMovieInfo movie={displayMovie} />
 
         {/* Right Side - trailer, showtimes, cast */}
         <div className="w-1/2 h-full p-6 flex flex-col overflow-y-auto bg-gradient-to-br from-black/90 to-gray-900/90 backdrop-blur-sm">
           {/* Trailer Section */}
-          <SelectedMovieTrailer movie={fullMovie || movie} />
+          <SelectedMovieTrailer movie={displayMovie} />
 
           {/* Showtimes Section */}
           <SelectedMovieShowtimes
-            movie={fullMovie || movie}
+            movie={displayMovie}
             availableDates={availableDates}
             datesLoading={datesLoading}
             datesError={datesError}
@@ -100,12 +103,12 @@ export default function SelectedMovie({ movie, onClose }: MovieDetailProps) {
             selectedShowtime={selectedShowtime}
           />
 
-          {/* Movie Credits Section - Now has real cast/directors/producers! */}
-          <SelectedMovieCredits movie={fullMovie || movie} />
+          {/* Movie Credits Section - Shows loading state if MovieSummary, full credits if BackendMovie */}
+          <SelectedMovieCredits movie={displayMovie} />
 
           <SelectedMovieBookButton
             selectedShowtime={selectedShowtime ?? ''}
-            movie={fullMovie || movie}
+            movie={displayMovie}
             currentDate={currentDate}
           />
         </div>

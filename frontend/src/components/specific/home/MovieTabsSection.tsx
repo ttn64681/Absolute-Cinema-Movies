@@ -1,10 +1,10 @@
 import MovieCardsGrid from '@/components/common/movies/MovieCardsGrid';
-import { BackendMovie } from '@/types/movie';
+import { MovieSummary } from '@/types/movie';
 import { IoChevronBack, IoChevronForward } from 'react-icons/io5';
 
 interface MovieTabsSectionProps {
-  movies: BackendMovie[];
-  sampleMovies: BackendMovie[];
+  movies: MovieSummary[];
+  sampleMovies: MovieSummary[];
   activeTab: 'nowplaying' | 'upcoming';
   setActiveTab: (tab: 'nowplaying' | 'upcoming') => void;
   pagination: {

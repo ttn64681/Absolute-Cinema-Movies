@@ -352,8 +352,36 @@ return movies.stream()
 1. **AuthContext** manages global auth state (user, isAuthenticated, login, logout)
 2. **`/utils/auth.ts`** provides pure utility functions (getAuthToken, getUserIdFromToken, getRefreshToken)
 3. **`/clients/authClient.ts`** handles API calls (authClient.login, authClient.register)
-4. **Middleware** protects routes at Next.js level (edge runtime)
+4. **Middleware** (Protected Proxy) protects routes at Next.js level (edge runtime)
 5. **Token storage**: localStorage (remember me) or sessionStorage (session only)
+
+### Frontend Middleware (Protected Proxy Pattern)
+**Location**: `frontend/middleware.ts`
+
+**Access Control Rules**:
+1. **Non-logged in users**:
+   - ✅ Can access: Home, movies, booking (except checkout), promotions, auth pages
+   - ❌ Cannot access: Admin pages, user profile pages, checkout
+
+2. **Logged in users (regular users)**:
+   - ✅ Can access: All public pages + user profile pages + checkout
+   - ❌ Cannot access: Admin pages
+
+3. **Admins (isolated)**:
+   - ✅ Can access: ONLY admin pages (`/admin/users`, `/admin/pricing`, `/admin/movies`) and logout
+   - ❌ Cannot access: All public pages, user pages, checkout
+   - Automatically redirected to `/admin/users` if trying to access non-admin pages
+
+**Token Detection**:
+- `token` cookie = user is logged in
+- `token` + `adminToken` cookies = user is admin
+- No tokens = not logged in
+
+**Redirect Behavior**:
+- User tries `/user/*` without login → `/auth/login?redirect=/user/*`
+- User tries `/booking/checkout` without login → `/auth/login?redirect=/booking/checkout`
+- Non-admin tries `/admin/*` → `/auth/admin-login`
+- Admin tries public pages → `/admin/users`
 
 ### Backend Auth Flow
 1. **JwtAuthenticationFilter** validates tokens on every request

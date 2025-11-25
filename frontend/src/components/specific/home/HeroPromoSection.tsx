@@ -7,24 +7,37 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { RxDoubleArrowRight } from 'react-icons/rx';
 import { IoChevronBack, IoChevronForward } from 'react-icons/io5';
 import WhiteSeparator from '@/components/common/WhiteSeparator';
+import { useHomePromotions } from '@/hooks/useHomePromotions';
 import { heroPromotions } from '@/constants/movieData';
 
+/**
+ * Hero Promotion Section Component
+ * Displays featured promotions in a carousel format
+ *
+ * Responsibilities:
+ * - Carousel navigation and animations
+ * - Display hero promotions from hook / fallback to placeholders
+ *
+ * Delegates to:
+ * - useHomePromotions hook: Data fetching and transformation
+ */
 export default function HeroPromoSection() {
+  const { heroPromos, isLoading } = useHomePromotions();
+  // Use backend promotions if available, otherwise use placeholder promotions
+  const displayPromos = heroPromos.length > 0 ? heroPromos : heroPromotions;
   const [currentPromoIndex, setCurrentPromoIndex] = useState(0);
-  const [promos, setPromos] = useState(heroPromotions);
-  const [isLoading, setIsLoading] = useState(false);
-  const currentPromo = promos[currentPromoIndex];
+  const currentPromo = displayPromos[currentPromoIndex];
   const [direction, setDirection] = useState<1 | -1>(1);
 
   const goToPrevious = useCallback(() => {
     setDirection(-1);
-    setCurrentPromoIndex((prev) => (prev === 0 ? promos.length - 1 : prev - 1));
-  }, [promos.length]);
+    setCurrentPromoIndex((prev) => (prev === 0 ? displayPromos.length - 1 : prev - 1));
+  }, [displayPromos.length]);
 
   const goToNext = useCallback(() => {
     setDirection(1);
-    setCurrentPromoIndex((prev) => (prev === promos.length - 1 ? 0 : prev + 1));
-  }, [promos.length]);
+    setCurrentPromoIndex((prev) => (prev === displayPromos.length - 1 ? 0 : prev + 1));
+  }, [displayPromos.length]);
 
   // Handle indicator clicks - set direction based on click
   const goToIndex = useCallback(
@@ -47,7 +60,8 @@ export default function HeroPromoSection() {
     return () => clearInterval(interval);
   }, [goToNext]);
 
-  if (isLoading) {
+  // Show loading skeleton while fetching (only if no placeholders to show)
+  if (isLoading && displayPromos.length === 0) {
     return (
       <section className="relative -mt-40 z-20 px-4">
         <div className="mx-auto flex flex-row w-[100%] max-w-5xl grid-cols-1 gap-10 rounded-xl p-5 md:grid-cols-2">
@@ -60,6 +74,11 @@ export default function HeroPromoSection() {
         </div>
       </section>
     );
+  }
+
+  // Always render - use placeholders if no backend promotions
+  if (displayPromos.length === 0) {
+    return null; // Should never happen due to fallback, but safety check
   }
 
   // Variants for slide animations
@@ -97,8 +116,11 @@ export default function HeroPromoSection() {
 
       {/* Main Content Container - Slightly smaller to avoid touching arrows */}
       <div className="mx-auto flex flex-col lg:flex-row w-[95%] max-w-[95%] gap-8 lg:gap-12 rounded-xl p-6 lg:p-8">
-        {/* Image Section - Remove overflow-hidden to allow animations */}
+        {/* Image Section - overflow-visible to allow border animations */}
         <div className="relative aspect-[16/10] w-full lg:w-1/2 overflow-visible">
+          {isLoading ? (
+            <div className="w-full h-full bg-gray-800 animate-pulse rounded-lg"></div>
+          ) : (
           <AnimatePresence initial={false} mode="wait" custom={direction}>
             <motion.div
               key={currentPromo.id}
@@ -120,10 +142,11 @@ export default function HeroPromoSection() {
               />
             </motion.div>
           </AnimatePresence>
+          )}
 
           {/* Carousel Indicators */}
           <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2 z-10">
-            {promos.map((_, index) => (
+            {displayPromos.map((_, index) => (
               <button
                 title={`Go to promotion ${index + 1}`}
                 type="button"

@@ -29,11 +29,13 @@ public class MovieSummary {
     private String synopsis; // Will be truncated to ~150 chars
     private String trailer_link;
     private String poster_link;
+    private int score;
+    private int duration; // Duration in minutes
     
     // Private constructor - use fromMovie() static factory method 
     private MovieSummary(Long movie_id, String title, MovieStatus status, String genres, 
                        String rating, LocalDate release_date, String synopsis, 
-                       String trailer_link, String poster_link) {
+                       String trailer_link, String poster_link, int score, int duration) {
         this.movie_id = movie_id;
         this.title = title;
         this.status = status;
@@ -43,6 +45,8 @@ public class MovieSummary {
         this.synopsis = synopsis;
         this.trailer_link = trailer_link;
         this.poster_link = poster_link;
+        this.score = score;
+        this.duration = duration;
     }
     
     /**
@@ -64,7 +68,9 @@ public class MovieSummary {
             movie.getRelease_date(),
             truncatedSynopsis,
             movie.getTrailer_link(),
-            movie.getPoster_link()
+            movie.getPoster_link(),
+            movie.getScore(),
+            movie.getDuration()
         );
     }
 }

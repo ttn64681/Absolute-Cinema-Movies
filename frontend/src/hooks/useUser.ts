@@ -51,13 +51,19 @@ export function useUser(userId: number) {
   // Updates a user's password
   const updatePassword = async (passwordInfo: Partial<BackendUser>) => {
     console.log('Updating password info...');
-    const updatedUser = await changePassword(userId, passwordInfo);
+    try {
+      const updatedUser = await changePassword(userId, passwordInfo);
 
-    if (updatedUser) {
-      setUser(updatedUser);
-      return true;
-    } else {
-      console.log('Failed to update password data.');
+      if (updatedUser) {
+        setUser(updatedUser);
+        return true;
+      } else {
+        console.log('Failed to update password data.');
+        return false;
+      }
+    } catch (error) {
+      console.error('Error updating password:', error);
+      // Return false to indicate failure - caller can check error message
       return false;
     }
   };

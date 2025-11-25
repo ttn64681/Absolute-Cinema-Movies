@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.acm.cinema_ebkg_system.dto.promotion.PromotionDTO;
 import com.acm.cinema_ebkg_system.model.Promotion;
 import com.acm.cinema_ebkg_system.service.PromotionService;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/promotion")
@@ -29,7 +30,21 @@ public class PromotionController {
     public ResponseEntity<?> getAllPromotions() {
         try {
             List<Promotion> promotions = promotionService.getAllPromotions();
-            return ResponseEntity.ok(promotions);
+            // Convert entities to DTOs for consistent JSON serialization
+            List<PromotionDTO> promotionDTOs = promotions.stream().map(p -> {
+                PromotionDTO dto = new PromotionDTO();
+                dto.setId(p.getId());
+                dto.setPromoCode(p.getPromoCode());
+                dto.setTitle(p.getTitle());
+                dto.setDescription(p.getDescription());
+                dto.setImageLink(p.getImageLink());
+                dto.setDiscountValue(p.getDiscountValue());
+                dto.setDiscountType(p.getDiscountType());
+                dto.setStatus(p.getStatus());
+                dto.setExpirationDate(p.getExpirationDate());
+                return dto;
+            }).collect(java.util.stream.Collectors.toList());
+            return ResponseEntity.ok(promotionDTOs);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Error fetching promotions: " + e.getMessage());
         }

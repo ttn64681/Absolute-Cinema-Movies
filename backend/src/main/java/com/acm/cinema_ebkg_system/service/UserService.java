@@ -2,6 +2,7 @@ package com.acm.cinema_ebkg_system.service;
 
 import com.acm.cinema_ebkg_system.model.User;
 import com.acm.cinema_ebkg_system.model.Address;
+import com.acm.cinema_ebkg_system.dto.user.UserUpdateRequest;
 import com.acm.cinema_ebkg_system.enums.AddressType;
 import com.acm.cinema_ebkg_system.enums.UserStatus;
 import com.acm.cinema_ebkg_system.repository.UserRepository;
@@ -238,7 +239,7 @@ public class UserService {
      * @throws RuntimeException if user not found
      */
     @Transactional // Ensures all profile updates (user + address) succeed or fail together
-    public User updatePersonalInfo(Long userId, com.acm.cinema_ebkg_system.dto.user.UserUpdateRequest userUpdateRequest) {
+    public User updatePersonalInfo(Long userId, UserUpdateRequest userUpdateRequest) {
         User user = getUserById(userId);
         
         // Update fields if provided
@@ -375,34 +376,37 @@ public class UserService {
         String currentPassword = passwordChangeRequest.getCurrentPassword();
         String newPassword = passwordChangeRequest.getNewPassword();
 
+        // Validate that current password is provided
+        if (currentPassword == null || currentPassword.trim().isEmpty()) {
+            throw new RuntimeException("Current password is required");
+        }
+
         // Validate that the current password is correct
         if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
             System.out.println("Incorrect password!");
             throw new RuntimeException("Incorrect password!");
+        }
 
         // If correct, encrypt the new password and save it in the database
-        } else {
+        // Hash the new password using BCrypt
+        String hashedPassword = passwordEncoder.encode(newPassword);
 
-            // Hash the new password using BCrypt
-            String hashedPassword = passwordEncoder.encode(newPassword);
+        // Update the password
+        user.setPassword(hashedPassword);
 
-            // Update the password
-            user.setPassword(hashedPassword);
+        System.out.println("New password: " + newPassword);
+        System.out.println("New hashed password: " + hashedPassword);
 
-            System.out.println("New password: " + newPassword);
-            System.out.println("New hashed password: " + hashedPassword);
+        // Save the user to database
+        User savedUser = userRepository.save(user);
 
-            // Save the user to database
-            User savedUser = userRepository.save(user);
+        System.out.println("Saved hashed password: " + savedUser.getPassword());
+        System.out.println("Passwords match: " + passwordEncoder.matches(newPassword, savedUser.getPassword()));
 
-            System.out.println("Saved hashed password: " + savedUser.getPassword());
-            System.out.println("Passwords match: " + passwordEncoder.matches(newPassword, savedUser.getPassword()));
+        // Send confirmation email
+        emailService.sendChangePasswordConfirmationEmail(user.getEmail(), user.getFirstName());
 
-            // Send confirmation email
-            emailService.sendChangePasswordConfirmationEmail(user.getEmail(), user.getFirstName());
-
-            return savedUser;
-        }
+        return savedUser;
     }
 
     // ========== PASSWORD RESET ==========
@@ -600,6 +604,10 @@ public class UserService {
         }
         
         return new com.acm.cinema_ebkg_system.dto.user.UserProfileDTO(userDto, addressDto, null, null);
+    }
+
+    public List<User> getAllUsersEnrolledForPromotions() {
+        return userRepository.findAllByEnrolledForPromotionsTrue();
     }
 
 }

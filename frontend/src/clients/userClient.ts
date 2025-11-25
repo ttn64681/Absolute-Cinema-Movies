@@ -157,11 +157,26 @@ async function changePassword(userId: number, passwordInfo: Partial<BackendUser>
       },
       body: JSON.stringify(passwordInfo),
     });
+
+    // Check if response is ok
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Password change failed:', response.status, errorText);
+      // Try to parse as JSON for structured error messages
+      try {
+        const errorData = JSON.parse(errorText);
+        throw new Error(errorData.message || errorData.error || 'Failed to change password');
+      } catch {
+        throw new Error(errorText || `HTTP ${response.status}: ${response.statusText}`);
+      }
+    }
+
     const data = await response.json();
     return data;
   } catch (error) {
     console.error('Error updating password:', error);
-    return null;
+    // Re-throw error so caller can handle it
+    throw error;
   }
 }
 

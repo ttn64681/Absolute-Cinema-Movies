@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { movieClient } from '@/clients/movieClient';
-import { BackendMovie, PaginatedMovieResponse } from '@/types/movie';
+import { MovieSummary, PaginatedMovieResponse } from '@/types/movie';
 import { CACHE_DURATION, initialPaginationState, createPaginationState } from '@/utils/pagination';
 
 /**
@@ -35,8 +35,8 @@ export function useMovieSearch() {
   const searchParams = useSearchParams();
 
   // Separate state for Now Playing and Upcoming movies
-  const [nowPlayingMovies, setNowPlayingMovies] = useState<BackendMovie[]>([]);
-  const [upcomingMovies, setUpcomingMovies] = useState<BackendMovie[]>([]);
+  const [nowPlayingMovies, setNowPlayingMovies] = useState<MovieSummary[]>([]);
+  const [upcomingMovies, setUpcomingMovies] = useState<MovieSummary[]>([]);
 
   // Pagination state for each section
   const [nowPlayingPagination, setNowPlayingPagination] = useState(initialPaginationState);
