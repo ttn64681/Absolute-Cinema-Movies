@@ -80,10 +80,11 @@ export function middleware(request: NextRequest) {
   // ============================================
   if (pathname.startsWith('/booking/checkout')) {
     if (!isLoggedInUser) {
-      // Not logged in - redirect to login with return path (preserve query params)
+      // Not logged in - redirect to login with return path and friendly message
       const loginUrl = new URL('/auth/login', request.url);
       const fullPath = request.nextUrl.pathname + request.nextUrl.search;
       loginUrl.searchParams.set('redirect', fullPath);
+      loginUrl.searchParams.set('message', 'Please log in to complete your booking');
       return NextResponse.redirect(loginUrl);
     }
     // Logged in user has access

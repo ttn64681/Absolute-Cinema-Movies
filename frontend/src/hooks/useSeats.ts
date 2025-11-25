@@ -28,22 +28,47 @@ export function useSeats(showId?: number) {
 
   // Sync selectedSeats with reservation context when user returns to page with active reservation
   useEffect(() => {
-    if (reservationShowId === showId && reservationSeats.length > 0) {
-      // User has an active reservation for this show - restore their selection
-      setSelectedSeats(reservationSeats);
-      // Also restore seat details for reservation
-      const seatDetails = reservationSeats.map(displayId => {
-        const match = displayId.match(/^(\d+)([A-Z]+)$/);
-        if (match) {
-          return {
-            seatRow: match[1],
-            seatNumber: match[2]
-          };
-        }
-        return null;
-      }).filter((detail): detail is {seatRow: string, seatNumber: string} => detail !== null);
-      setSelectedSeatDetails(seatDetails);
+    // Only sync if there's an active reservation for this specific show
+    // AND we don't already have the same selection (to avoid unnecessary updates)
+    if (reservationShowId !== null && reservationShowId === showId && reservationSeats.length > 0) {
+      const currentSelection = selectedSeats.sort().join(',');
+      const reservationSelection = [...reservationSeats].sort().join(',');
+      
+      // Only update if the selection is different
+      if (currentSelection !== reservationSelection) {
+        console.log('Syncing selectedSeats with reservation context:', {
+          reservationShowId,
+          showId,
+          reservationSeats,
+          currentSelectedSeats: selectedSeats
+        });
+        
+        // User has an active reservation for this show - restore their selection
+        setSelectedSeats([...reservationSeats]);
+        // Also restore seat details for reservation
+        const seatDetails = reservationSeats.map(displayId => {
+          const match = displayId.match(/^(\d+)([A-Z]+)$/);
+          if (match) {
+            return {
+              seatRow: match[1],
+              seatNumber: match[2]
+            };
+          }
+          return null;
+        }).filter((detail): detail is {seatRow: string, seatNumber: string} => detail !== null);
+        setSelectedSeatDetails(seatDetails);
+      }
+    } else if (reservationShowId !== null && reservationShowId !== showId && selectedSeats.length > 0) {
+      // If reservation is for a different show (and there IS a reservation), clear selection
+      console.log('Clearing selection - reservation is for different show:', {
+        reservationShowId,
+        showId,
+        selectedSeats
+      });
+      setSelectedSeats([]);
+      setSelectedSeatDetails([]);
     }
+    // If reservationShowId is null (no active reservation), don't interfere with local selections
   }, [reservationShowId, showId, reservationSeats]);
 
   // Fetch seats from backend if showId is provided
@@ -71,6 +96,17 @@ export function useSeats(showId?: number) {
             console.warn('No seats returned from backend for showId:', showId);
             console.warn('Seats will be auto-initialized when first reserved');
           }
+          // Log seat availability for debugging
+          const availableCount = seatData.filter(s => s.isAvailable === true).length;
+          const unavailableCount = seatData.filter(s => s.isAvailable === false).length;
+          const undefinedCount = seatData.filter(s => s.isAvailable === undefined).length;
+          console.log('Seat availability summary:', {
+            total: seatData.length,
+            available: availableCount,
+            unavailable: unavailableCount,
+            undefined: undefinedCount
+          });
+          
           setSeats(seatData);
           setLoading(false);
         })
@@ -144,23 +180,28 @@ export function useSeats(showId?: number) {
         
         // A seat is occupied/taken if:
         // 1. It's linked to a ticket (permanently booked) - isTaken from backend
-        // 2. OR it's not available AND it's NOT in the user's active reservation
+        // 2. OR it's explicitly not available (isAvailable === false) AND it's NOT in the user's active reservation
         // If it's in the user's active reservation, it should be selectable (not occupied)
+        // Default to available if isAvailable is undefined
         const isInUserReservation = reservationShowId === showId && reservationSeats.includes(displayId);
-        const isTaken = seat.isTaken !== undefined ? seat.isTaken : (!seat.isAvailable && !isInUserReservation);
+        const isExplicitlyUnavailable = seat.isAvailable === false;
+        const isTaken = seat.isTaken === true ? true : (isExplicitlyUnavailable && !isInUserReservation);
+        
+        // Determine seatId - handle null case properly
+        const finalSeatId: number | undefined = dbSeatId !== null && !isNaN(dbSeatId) && dbSeatId > 0 ? dbSeatId : undefined;
         
         return {
           id: displayId, // Display ID for UI
-          seatId: isNaN(dbSeatId) || dbSeatId <= 0 ? undefined : dbSeatId, // Database ID (may be undefined for new seats)
+          seatId: finalSeatId, // Database ID (may be undefined for new seats)
           seatRow: seat.seatRow, // REQUIRED for reservation
           seatNumber: seat.seatNumber, // REQUIRED for reservation
           occupied: isTaken, // Use isTaken from backend (checks ticket_seat table), but allow user's reserved seats
-          isAvailable: seat.isAvailable || isInUserReservation, // Consider user's reserved seats as available for selection
+          isAvailable: seat.isAvailable !== false || isInUserReservation, // Consider user's reserved seats as available, default to true if undefined
           isReserved: seat.isReserved || isTaken,
         };
-      }).filter((seat): seat is Seat => seat !== null); // Remove null entries
+      }).filter((seat) => seat !== null) as Seat[]; // Remove null entries
     });
-  }, [seats, seatLetters, showId]);
+  }, [seats, seatLetters, showId, reservationShowId, reservationSeats]);
 
   const backRows = useMemo(() => {
     if (!showId) {
@@ -224,28 +265,71 @@ export function useSeats(showId?: number) {
         
         // A seat is occupied/taken if:
         // 1. It's linked to a ticket (permanently booked) - isTaken from backend
-        // 2. OR it's not available
-        const isTaken = seat.isTaken !== undefined ? seat.isTaken : (!seat.isAvailable || seat.isReserved);
+        // 2. OR it's explicitly not available (isAvailable === false) AND it's NOT in the user's active reservation
+        // If it's in the user's active reservation, it should be selectable (not occupied)
+        // Default to available if isAvailable is undefined or null
+        const isInUserReservation = reservationShowId === showId && reservationSeats.includes(displayId);
+        const isExplicitlyUnavailable = seat.isAvailable === false;
+        // Only mark as taken if explicitly unavailable AND not in user's reservation
+        // If isTaken is true from backend, always mark as taken (permanently booked)
+        const isTaken = seat.isTaken === true ? true : (isExplicitlyUnavailable && !isInUserReservation);
+        
+        // Debug log for first few seats to understand the data
+        if (displayId === '1A' || displayId === '4A') {
+          console.log('Seat occupation check:', {
+            displayId,
+            isAvailable: seat.isAvailable,
+            isTaken: seat.isTaken,
+            isReserved: seat.isReserved,
+            isExplicitlyUnavailable,
+            isInUserReservation,
+            reservationShowId,
+            showId,
+            reservationSeats,
+            finalIsTaken: isTaken
+          });
+        }
+        
+        // Determine seatId - handle null case properly
+        const finalSeatId: number | undefined = dbSeatId !== null && !isNaN(dbSeatId) && dbSeatId > 0 ? dbSeatId : undefined;
         
         return {
           id: displayId, // Display ID for UI
-          seatId: dbSeatId !== null && !isNaN(dbSeatId) && dbSeatId > 0 ? dbSeatId : undefined, // Database ID (may be undefined for new seats)
+          seatId: finalSeatId, // Database ID (may be undefined for new seats)
           seatRow: seat.seatRow, // REQUIRED for reservation
           seatNumber: seat.seatNumber, // REQUIRED for reservation
-          occupied: isTaken, // Use isTaken from backend (checks if seat is booked)
-          isAvailable: seat.isAvailable,
+          occupied: isTaken, // Use isTaken from backend (checks ticket_seat table), but allow user's reserved seats
+          isAvailable: seat.isAvailable !== false || isInUserReservation, // Consider user's reserved seats as available, default to true if undefined
           isReserved: seat.isReserved || isTaken,
         };
-      }).filter((seat): seat is Seat => seat !== null); // Remove null entries
+      }).filter((seat) => seat !== null) as Seat[]; // Remove null entries
     });
-  }, [seats, seatLetters, showId]);
+  }, [seats, seatLetters, showId, reservationShowId, reservationSeats]);
 
   const toggleSeat = async (seat: Seat) => {
     // Prevent selecting occupied seats
     if (seat.occupied) {
       console.log('Seat is occupied, cannot select:', seat);
+      console.log('Seat details:', {
+        id: seat.id,
+        seatRow: seat.seatRow,
+        seatNumber: seat.seatNumber,
+        occupied: seat.occupied,
+        isAvailable: seat.isAvailable,
+        isReserved: seat.isReserved
+      });
       return;
     }
+    
+    console.log('Seat is NOT occupied, proceeding with toggle:', {
+      id: seat.id,
+      seatRow: seat.seatRow,
+      seatNumber: seat.seatNumber,
+      occupied: seat.occupied,
+      isAvailable: seat.isAvailable,
+      isReserved: seat.isReserved,
+      currentlySelected: selectedSeats.includes(seat.id)
+    });
 
     // Get seat row and number from the seat object
     let seatRow = seat.seatRow;

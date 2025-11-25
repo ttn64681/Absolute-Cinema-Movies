@@ -83,11 +83,11 @@ public class SecurityConfig {
                 // Movie browsing endpoints - PUBLIC (anyone can browse movies)
                 .requestMatchers("/api/movies/**").permitAll()
                 
-                // Seat endpoints - GET and reserve are public, release requires authentication
+                // Seat endpoints - GET, reserve, and release are public (anonymous users can reserve/release)
                 .requestMatchers("/api/seats/show/**").permitAll() // Public: view seat availability
                 .requestMatchers("/api/seats/check-availability").permitAll() // Public: check availability
                 .requestMatchers("/api/seats/reserve").permitAll() // Public: anyone can reserve seats (temporary hold)
-                .requestMatchers("/api/seats/release", "/api/seats/release-by-selection").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN") // Auth required: release reserved seats
+                .requestMatchers("/api/seats/release", "/api/seats/release-by-selection").permitAll() // Public: anyone can release seats (cancel reservation)
                 
                 // Admin endpoints - require ADMIN role
                 .requestMatchers("/api/admin/**").hasAuthority("ROLE_ADMIN")

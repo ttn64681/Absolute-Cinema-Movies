@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, Suspense } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Checkbox from '@/components/common/forms/Checkbox';
@@ -20,8 +20,17 @@ function LoginPageContent() {
   const { login } = useAuth();
   const { showToast } = useToast();
 
-  // Get redirect path from query params
+  // Get redirect path and message from query params
   const redirectPath = searchParams.get('redirect') || '/';
+  const message = searchParams.get('message');
+
+  // Show message if provided (e.g., "Please log in to checkout")
+  useEffect(() => {
+    if (message) {
+      showToast(message, 'info');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [message]); // showToast is stable, don't need it in deps
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

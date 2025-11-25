@@ -31,6 +31,17 @@ function CheckoutPageContent() {
     seats: 0,
   });
 
+  // Separate effect for authentication check (runs once when auth status is determined)
+  useEffect(() => {
+    // Check authentication status - if not authenticated, redirect to login
+    if (!isLoading && !isAuthenticated) {
+      const currentPath = window.location.pathname + window.location.search;
+      showToast('Please log in to checkout', 'info');
+      router.push(`/auth/login?redirect=${encodeURIComponent(currentPath)}&message=${encodeURIComponent('Please log in to complete your booking')}`);
+    }
+  }, [isAuthenticated, isLoading, router]);
+
+  // Separate effect for loading booking details from URL params
   useEffect(() => {
     // Get booking details from URL params
     const showId = searchParams.get('showId') || '';
@@ -121,9 +132,20 @@ function CheckoutPageContent() {
     } catch (error: any) {
       console.error('Error creating booking:', error);
 
+      // Check if it's an authentication error (401 or 403)
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        const currentPath = window.location.pathname + window.location.search;
+        showToast('Please log in to checkout', 'info');
+        router.push(`/auth/login?redirect=${encodeURIComponent(currentPath)}&message=${encodeURIComponent('Please log in to complete your booking')}`);
+        setIsProcessing(false);
+        return;
+      }
+
       let errorMessage = 'Failed to create booking';
       if (error.response?.data?.error) {
         errorMessage = error.response.data.error;
+      } else if (error.userMessage) {
+        errorMessage = error.userMessage;
       } else if (error.message) {
         errorMessage = error.message;
       }

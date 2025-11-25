@@ -122,14 +122,8 @@ public class SeatController {
             HttpServletRequest httpRequest) {
         
         try {
-            // Extract user ID from JWT token
-            Long userId = getUserIdFromRequest(httpRequest);
-            if (userId == null) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(createErrorResponse("You need to be a logged in user to release seats"));
-            }
-            
             // Release the seats by showId and seat row/number
+            // Note: Anonymous users can release seats they reserved (no authentication required)
             showSeatService.releaseSeatsByRowAndNumber(request.getShowId(), request.getSeats());
             
             Map<String, Object> response = new HashMap<>();

@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 const RESERVATION_DURATION = 10 * 60 * 1000; // 10 minutes in milliseconds
 
 export default function ReservationTimerToast() {
-  const { timeRemaining, isExpired, formatTime, selectedSeats, showId, reservationStartTime, cancelReservation } = useReservation();
+  const { timeRemaining, isExpired, formatTime, selectedSeats, showId, reservationStartTime, cancelReservation, getSeatSelectionUrl } = useReservation();
   const [isVisible, setIsVisible] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
   const router = useRouter();
@@ -90,21 +90,27 @@ export default function ReservationTimerToast() {
           onClick={async () => {
             if (isCancelling) return;
             setIsCancelling(true);
+            
+            // Get seat selection URL BEFORE canceling (since canceling clears state)
+            const seatSelectionUrl = getSeatSelectionUrl();
+            
             try {
               // Cancel the reservation (releases seats and clears state)
               await cancelReservation();
               
               // Small delay to ensure state updates and timer stops completely
               await new Promise(resolve => setTimeout(resolve, 200));
-              
-              // Navigate back to seat selection page
-              // Use router.back() to go to the previous page (seat selection)
-              router.back();
             } catch (error) {
               console.error('Error cancelling reservation:', error);
-              // Still navigate back even if there's an error
-              router.back();
+              // Continue to navigation even if cancellation had an error
             } finally {
+              // Navigate to seat selection page (not just back)
+              if (seatSelectionUrl) {
+                router.push(seatSelectionUrl);
+              } else {
+                // Fallback: navigate to booking page
+                router.push('/booking');
+              }
               setIsCancelling(false);
             }
           }}

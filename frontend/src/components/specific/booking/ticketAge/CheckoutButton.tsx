@@ -2,6 +2,8 @@
 
 import { useRouter, useSearchParams } from 'next/navigation';
 import { RxDoubleArrowRight } from 'react-icons/rx';
+import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/contexts/ToastContext';
 import styles from '../../../../app/(booking)/booking/ticket-age/ticket-age.module.css';
 
 interface props {
@@ -10,10 +12,12 @@ interface props {
   ticketsByCategory: number[]; // [adult, child, senior]
 }
 
-// Continue to Checkout Button: Navigates to checkout page (requires login via middleware)
+// Continue to Checkout Button: Checks authentication before navigating to checkout
 export default function CheckoutButton({ tickets, seats, ticketsByCategory }: props) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { isAuthenticated, isLoading } = useAuth();
+  const { showToast } = useToast();
 
   const handleContinueToCheckout = () => {
     if (tickets < seats) {
@@ -36,7 +40,15 @@ export default function CheckoutButton({ tickets, seats, ticketsByCategory }: pr
     // Build checkout URL with all necessary params
     const checkoutUrl = `/booking/checkout?showId=${showId}&seatIds=${seatIds}&title=${encodeURIComponent(title)}&date=${encodeURIComponent(date)}&time=${encodeURIComponent(time)}&adult=${ticketsByCategory[0]}&child=${ticketsByCategory[1]}&senior=${ticketsByCategory[2]}&seats=${seats}`;
 
-    // Navigate to checkout (middleware will enforce login)
+    // Check authentication before navigating
+    if (!isLoading && !isAuthenticated) {
+      // Not authenticated - redirect to login with checkout URL as redirect parameter
+      showToast('Please log in to checkout', 'info');
+      router.push(`/auth/login?redirect=${encodeURIComponent(checkoutUrl)}&message=${encodeURIComponent('Please log in to complete your booking')}`);
+      return;
+    }
+
+    // Authenticated - navigate to checkout
     router.push(checkoutUrl);
   };
 

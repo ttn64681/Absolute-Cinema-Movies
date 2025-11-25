@@ -10,10 +10,11 @@ interface ReservationContextType {
   reservationStartTime: number | null;
   timeRemaining: number;
   isExpired: boolean;
-  startReservation: (showId: number, selectedSeats: string[]) => void;
+  startReservation: (showId: number, selectedSeats: string[], navigationParams?: { movieId?: string | null; title?: string | null; date?: string | null; time?: string | null }) => void;
   clearReservation: () => void;
   cancelReservation: () => Promise<void>;
   formatTime: (ms: number) => string;
+  getSeatSelectionUrl: () => string | null;
 }
 
 const ReservationContext = createContext<ReservationContextType | undefined>(undefined);
@@ -318,7 +319,7 @@ export function ReservationProvider({ children }: { children: React.ReactNode })
     };
   }, [reservationStartTime, showId, selectedSeats, handleExpiredReservation]);
 
-  const startReservation = useCallback((newShowId: number, newSelectedSeats: string[]) => {
+  const startReservation = useCallback((newShowId: number, newSelectedSeats: string[], navigationParams?: { movieId?: string | null; title?: string | null; date?: string | null; time?: string | null }) => {
     // Reset cancelled flag when starting a new reservation
     isCancelledRef.current = false;
     
@@ -332,11 +333,12 @@ export function ReservationProvider({ children }: { children: React.ReactNode })
     setIsExpired(false);
     setTimeRemaining(RESERVATION_DURATION);
 
-    // Save to sessionStorage
+    // Save to sessionStorage with navigation params for returning to seat selection
     sessionStorage.setItem('activeReservation', JSON.stringify({
       showId: newShowId,
       selectedSeats: newSelectedSeats,
-      startTime
+      startTime,
+      navigationParams: navigationParams || null
     }));
   }, []);
 
@@ -386,17 +388,31 @@ export function ReservationProvider({ children }: { children: React.ReactNode })
         }).filter(seat => seat !== null);
 
         if (seatSelections.length > 0) {
+          console.log('Releasing seats:', {
+            showId: currentShowId,
+            seats: seatSelections,
+            seatCount: seatSelections.length
+          });
+          
           // Release seats from reservation
-          await api.post(endpoints.seats.releaseBySelection, {
+          const response = await api.post(endpoints.seats.releaseBySelection, {
             showId: currentShowId,
             seats: seatSelections
           });
 
-          console.log('Seats released - reservation cancelled by user');
+          console.log('Seats released successfully - reservation cancelled by user', response.data);
+        } else {
+          console.warn('No valid seats to release (seat format conversion failed)');
         }
       } catch (error: any) {
-        console.error('Error cancelling reservation:', error);
-        // State is already cleared, so we can continue
+        console.error('Error releasing seats when cancelling reservation:', error);
+        console.error('Error details:', {
+          message: error.message,
+          response: error.response?.data,
+          status: error.response?.status
+        });
+        // State is already cleared, but seats may still be reserved
+        // User will see them as unavailable until they refresh or the timer expires
       }
     }
   }, [showId, selectedSeats]);
@@ -407,6 +423,36 @@ export function ReservationProvider({ children }: { children: React.ReactNode })
     const seconds = totalSeconds % 60;
     return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
   }, []);
+
+  // Get URL for seat selection page using stored navigation params
+  const getSeatSelectionUrl = useCallback((): string | null => {
+    if (!showId) return null;
+    
+    // Try to get navigation params from sessionStorage
+    const stored = sessionStorage.getItem('activeReservation');
+    if (stored) {
+      try {
+        const reservation = JSON.parse(stored);
+        const navParams = reservation.navigationParams;
+        
+        if (navParams && (navParams.movieId || navParams.title || navParams.date || navParams.time)) {
+          // Build URL with navigation params
+          const params = new URLSearchParams();
+          if (navParams.movieId) params.set('movieId', navParams.movieId);
+          if (navParams.title) params.set('title', navParams.title);
+          if (navParams.date) params.set('date', navParams.date);
+          if (navParams.time) params.set('time', navParams.time);
+          params.set('showId', showId.toString());
+          return `/booking?${params.toString()}`;
+        }
+      } catch (e) {
+        console.error('Error parsing navigation params:', e);
+      }
+    }
+    
+    // Fallback: just use showId
+    return `/booking?showId=${showId}`;
+  }, [showId]);
 
   return (
     <ReservationContext.Provider
@@ -420,6 +466,7 @@ export function ReservationProvider({ children }: { children: React.ReactNode })
         clearReservation,
         cancelReservation,
         formatTime,
+        getSeatSelectionUrl,
       }}
     >
       {children}

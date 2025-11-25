@@ -192,7 +192,13 @@ api.interceptors.response.use(
       // Set default user-friendly messages for common status codes
       if (!error.userMessage) {
         if (error.response.status === 401 || error.response.status === 403) {
-          error.userMessage = 'You need to be a logged in user to reserve seats';
+          // Check if it's a booking-related endpoint
+          const requestUrl = error.config?.url || '';
+          if (requestUrl.includes('/bookings/')) {
+            error.userMessage = 'Please log in to complete your booking';
+          } else {
+            error.userMessage = 'You need to be a logged in user to perform this action';
+          }
         } else if (error.response.status === 409) {
           error.userMessage = 'Seats have already been booked. Please select different seats.';
         }

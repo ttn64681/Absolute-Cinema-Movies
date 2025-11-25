@@ -35,7 +35,7 @@ function SeatingPageContent() {
     router.back();
   };
 
-  // Check if reservation expired
+  // Check if reservation expired or was cancelled
   useEffect(() => {
     if (reservationExpired) {
       alert('Your reservation has expired. Please select your seats again.');
@@ -43,6 +43,8 @@ function SeatingPageContent() {
       // Clear local selection
       resetSeats();
     }
+    // Don't clear selections just because there's no active reservation
+    // Users should be able to select seats even without an active reservation
   }, [reservationExpired, clearReservation, resetSeats]);
   
   // Look up showId (movie_show.id) if not provided but we have movieId, date, and time
@@ -125,7 +127,13 @@ function SeatingPageContent() {
         const success = await reserveSelectedSeats(showId);
         if (success) {
           // Start reservation timer immediately after successfully reserving seats
-          startReservation(showId, selectedSeats);
+          // Pass navigation params so we can navigate back to seat selection when canceling
+          startReservation(showId, selectedSeats, {
+            movieId: movieIdParam || null,
+            title: movieTitle || null,
+            date: date || null,
+            time: time || null
+          });
           console.log('Reservation started - timer should now be visible');
           
           // Navigate to ticket-age page with showId
