@@ -9,6 +9,7 @@ import BookingFeeModal from '@/components/specific/admin/BookingFeeModal';
 import TicketPriceEditor from '@/components/specific/admin/TicketPriceEditor';
 import { usePromotions } from '@/hooks/usePromotions';
 import { BackendPromotion, DiscountType, PromotionStatus } from '@/types/promotion';
+import Spinner from '@/components/common/Spinner';
 
 interface Promotion {
   id: number;
@@ -54,8 +55,9 @@ export default function AdminPricingPage() {
   const [editingPromotion, setEditingPromotion] = useState<Promotion | null>(null);
   const [editingBookingFee, setEditingBookingFee] = useState<BookingFee | null>(null);
 
-  const {promotions, getPromotions, addPromotion, updatePromotion, deletePromotion} = usePromotions();
-  
+  const {promotions, loading, getPromotions, addPromotion, updatePromotion, deletePromotion} = usePromotions();
+  const [isAdding, setIsAdding] = useState(false);
+  const [loadingPromoId, setLoadingPromoId] = useState<number | null>(null);
   
 
   const [ticketPrices, setTicketPrices] = useState<TicketPrices>({
@@ -74,9 +76,10 @@ export default function AdminPricingPage() {
     getPromotions();
   }, []);
 
-  const handlePromotionSave = (promoData: Omit<Promotion, 'id' | 'sent' | 'active'>) => {
+  const handlePromotionSave = async (promoData: Omit<Promotion, 'id' | 'sent' | 'active'>) => {
     console.log("HandlePromotionSave called");
     if (editingPromotion) {
+      setLoadingPromoId(editingPromotion.id);
       const updatedPromotion: Partial<BackendPromotion> = {
           promoCode: promoData.promoCode,
           title: promoData.name,
@@ -86,10 +89,11 @@ export default function AdminPricingPage() {
           discountType: (promoData.discountType == '% off') ? DiscountType.percentage: DiscountType.fixed,
           expirationDate: promoData.expirationDate
       }
-      updatePromotion(editingPromotion.id, updatedPromotion);
-
+      await updatePromotion(editingPromotion.id, updatedPromotion);
+      setLoadingPromoId(null);
     } else {
-      addPromotion(
+      setIsAdding(true);
+      await addPromotion(
         {
           promoCode: promoData.promoCode,
           title: promoData.name,
@@ -101,8 +105,10 @@ export default function AdminPricingPage() {
           expirationDate: promoData.expirationDate
         }
       );
+      setIsAdding(false);
     }
     setEditingPromotion(null);
+    
   };
 
   const editPromotion = (promo: BackendPromotion) => {
@@ -124,14 +130,26 @@ export default function AdminPricingPage() {
     setShowPromotionModal(true);
   };
 
-  const handleDeletePromotion = (promoId: number) => {
+  const handleDeletePromotion = async (promoId: number) => {
     console.log("Trying to delete promotion with ID " + promoId);
-    deletePromotion(promoId);
+    setLoadingPromoId(promoId);
+    await deletePromotion(promoId);
+    setLoadingPromoId(null);
   };
 
   // Sets promotion to active when sent
-  const sendPromotion = (promoId: number) => {
-    updatePromotion(promoId, { status: PromotionStatus.active })    
+  const sendPromotion = (promo: BackendPromotion) => {
+    console.log("Sending promotion");
+    updatePromotion(promo.id, {
+      promoCode: promo.promoCode,
+      title: promo.title,
+      description: promo.description,
+      imageLink: promo.imageLink,
+      discountValue: promo.discountValue,
+      discountType: promo.discountType,
+      status: PromotionStatus.active,
+      expirationDate: promo.expirationDate,
+    })
   };
 
   const handleBookingFeeSave = (feeData: { name: string; amount: number }) => {
@@ -249,7 +267,7 @@ export default function AdminPricingPage() {
         <div className="mb-16">
           <div className="text-xl font-afacad mb-3">Promotions</div>
           <div className="rounded-md overflow-hidden shadow-lg h-48 overflow-y-auto bg-[#242424]">
-            {promotions.map((promo) => (
+            {(loading && !isAdding && loadingPromoId == null) ? <div className="flex justify-center items-center h-48"><Spinner size="md" color="pink" /></div> : promotions.map((promo) => (
                 <div key={promo.id} className="flex items-center justify-between px-5 py-4 border-b border-white/10">
                   <div className="flex-1 font-afacad flex items-center gap-4">
                     <span className="w-32">{promo.title}:</span>
@@ -257,53 +275,60 @@ export default function AdminPricingPage() {
                     <span className="w-40 text-white/60 text-sm">{`Expires: ${promo.expirationDate.substring(5, 7)}/${promo.expirationDate.substring(8, 10)}/${promo.expirationDate.substring(0, 4) || 'N/A'}`}</span>
                   </div>
                   <div className="w-24 text-center"></div>
-                  <div className="flex items-center gap-4 text-gray-300">
-                    {promo.status == PromotionStatus.active ? (
-                      <span className="text-gray-400 text-sm">{promo.status == PromotionStatus.active ? 'Active' : 'Inactive'}</span>
-                    ) : (
+                  {loadingPromoId === promo.id ?
+                    <Spinner size="md" color="pink" /> : 
+                    <div className="flex items-center gap-4 text-gray-300">
+                      {promo.status == PromotionStatus.active ? (
+                        <span className="text-gray-400 text-sm">{promo.status == PromotionStatus.active ? 'Active' : 'Inactive'}</span>
+                      ) : (
+                        <button
+                          title="Send"
+                          type="button"
+                          onClick={() => sendPromotion(promo)}
+                          className="text-black px-4 py-1 rounded-full transition-colors hover:opacity-90 font-afacad font-bold text-sm 
+                          bg-gradient-to-r from-[#FF478B] to-[#FF5C33]"
+                        >
+                          Send
+                        </button>
+                      )}
                       <button
-                        title="Send"
+                        title={promo.status == PromotionStatus.active ? "Cannot edit active promotion" : "Edit"}
                         type="button"
-                        onClick={() => sendPromotion(promo.id)}
-                        className="text-black px-4 py-1 rounded-full transition-colors hover:opacity-90 font-afacad font-bold text-sm 
-                        bg-gradient-to-r from-[#FF478B] to-[#FF5C33]"
+                        className={promo.status == PromotionStatus.active ? "transition-colors text-gray-500 opacity-50" : "transition-colors hover:text-white"}
+                        onClick={() => promo.status == PromotionStatus.inactive && editPromotion(promo)}
+                        disabled={promo.status == PromotionStatus.active}
                       >
-                        Send
+                          <PiPencilSimple className="text-lg" />                                            
+                      </button>                 
+                      <button
+                        title={promo.status == PromotionStatus.active ? "Cannot delete active promotion" : "Delete"}
+                        type="button"
+                        className={promo.status == PromotionStatus.active ? "transition-colors text-gray-500 opacity-50" : "transition-colors hover:text-white"}
+                        onClick={() => promo.status == PromotionStatus.inactive && handleDeletePromotion(promo.id)}
+                        disabled={promo.status == PromotionStatus.active}
+                      >
+                        <PiX className="text-lg" />
                       </button>
-                    )}
-                    <button
-                      title={promo.status == PromotionStatus.active ? "Cannot edit active promotion" : "Edit"}
-                      type="button"
-                      className={promo.status == PromotionStatus.active ? "transition-colors text-gray-500 opacity-50" : "transition-colors hover:text-white"}
-                      onClick={() => promo.status == PromotionStatus.inactive && editPromotion(promo)}
-                      disabled={promo.status == PromotionStatus.active}
-                    >
-                      <PiPencilSimple className="text-lg" />
-                    </button>
-                    <button
-                      title={promo.status == PromotionStatus.active ? "Cannot delete active promotion" : "Delete"}
-                      type="button"
-                      className={promo.status == PromotionStatus.active ? "transition-colors text-gray-500 opacity-50" : "transition-colors hover:text-white"}
-                      onClick={() => promo.status == PromotionStatus.inactive && handleDeletePromotion(promo.id)}
-                      disabled={promo.status == PromotionStatus.active}
-                    >
-                      <PiX className="text-lg" />
-                    </button>
-                  </div>
+                      
+                    </div>
+                  }
                 </div>
             ))}
             <div className="flex items-center justify-end py-5 pr-5">
-              <button
-                type="button"
-                title="Add promotion"
-                className="text-gray-300 hover:text-white transition-colors"
-                onClick={() => {
-                  setEditingPromotion(null);
-                  setShowPromotionModal(true);
-                }}
-              >
-                <PiPlus className="text-lg" />
-              </button>
+              {(loading && isAdding) ?
+                <Spinner size="md" color="pink" /> : 
+                <button
+                  type="button"
+                  title="Add promotion"
+                  className="text-gray-300 hover:text-white transition-colors"
+                  onClick={() => {
+                    setEditingPromotion(null);
+                    setShowPromotionModal(true);
+                  }}
+                >
+                  {!(loading && !isAdding && loadingPromoId == null) && <PiPlus className="text-lg" />}
+                </button>
+              }
             </div>
           </div>
         </div>

@@ -2,6 +2,7 @@ package com.acm.cinema_ebkg_system.service;
 
 import com.acm.cinema_ebkg_system.repository.PromotionRepository;
 import com.acm.cinema_ebkg_system.model.Promotion;
+import com.acm.cinema_ebkg_system.model.User;
 import com.acm.cinema_ebkg_system.enums.DiscountType;
 import com.acm.cinema_ebkg_system.enums.PromotionStatus;
 
@@ -19,6 +20,12 @@ public class PromotionService {
 
     @Autowired
     private PromotionRepository promotionRepository;
+
+    @Autowired
+    private UserService userService;
+
+    @Autowired
+    private EmailService emailService;
 
     public List<Promotion> getAllPromotions() {
         List<Promotion> promotions = promotionRepository.findAll();
@@ -81,8 +88,21 @@ public class PromotionService {
             if (imageLink != null) promotion.setImageLink(imageLink);
             if (discountValue != null) promotion.setDiscountValue(discountValue);
             if (discountType != null) promotion.setDiscountType(discountType);
-            if (expirationDate != null) promotion.setExpirationDate(expirationDate);
-            if (status != null) promotion.setStatus(status);
+            if (expirationDate != null) promotion.setExpirationDate(expirationDate);            
+            if (status != null) { 
+                promotion.setStatus(status);
+                if (status == PromotionStatus.active) {
+                    List<User> enrolledUsers = userService.getAllUsersEnrolledForPromotions();
+                    System.out.println("Found users: " + enrolledUsers.size());
+                    for (User user : enrolledUsers) {
+                        try {
+                            emailService.sendPromotionToEnrolledUsers(user.getEmail(), promotion);
+                        } catch (Exception e) {
+                            System.err.println("Failed to send email to " + user.getEmail() + ": " + e.getMessage());
+                        }
+                    }
+                }
+            }
 
             promotion.setUpdatedAt(LocalDateTime.now());
 
