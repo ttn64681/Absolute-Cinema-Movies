@@ -1,84 +1,112 @@
-import Image from 'next/image';
+import { useMemo } from 'react';
 
-export default function OrderDetails() {
-  const tickets = [
-    {
-      name: 'adult',
-      price: '$4.99',
-    },
-    {
-      name: 'adult',
-      price: '$4.99',
-    },
-    {
-      name: 'child',
-      price: '$4.99',
-    },
-    {
-      name: 'child',
-      price: '$4.99',
-    },
-    {
-      name: 'senior',
-      price: '$4.99',
-    },
-  ];
+interface Ticket {
+  name: string;
+  price: number;
+  quantity: number;
+}
 
-  const total = 43.29;
-  const subtotal = 42.06;
-  const tax = 1.23;
+interface Movie {
+  title: string;
+  showDate: string;
+  rating: string;
+  imageUrl?: string;
+}
+
+const fallbackMovie: Movie = {
+  title: 'Godzilla',
+  showDate: 'Sat · Oct 1',
+  rating: 'PG-13',
+};
+
+const placeholderTickets: Ticket[] = [
+  { name: 'Adult ticket', price: 18.5, quantity: 3 },
+  { name: 'Child ticket', price: 12, quantity: 2 },
+  { name: 'Senior ticket', price: 10, quantity: 1 },
+];
+
+const defaultSeats = 'C4, C5, C6, C7, C8, C9';
+const gradientReverse = 'linear-gradient(90deg, #FF5C33 0%, #FF478B 100%)';
+
+export default function OrderDetails({
+  movie = fallbackMovie,
+  tickets = placeholderTickets,
+  seats = defaultSeats,
+}: {
+  movie?: Movie;
+  tickets?: Ticket[];
+  seats?: string;
+}) {
+  const subtotal = useMemo(
+    () => tickets.reduce((sum, ticket) => sum + ticket.price * ticket.quantity, 0),
+    [tickets],
+  );
+
+  const tax = subtotal * 0.0875;
+  const total = subtotal + tax;
 
   return (
-    <div className="p-[3px] rounded-2xl bg-gradient-to-r from-acm-orange to-acm-pink">
+    <div className="p-[3px] rounded-2xl h-full" style={{ backgroundImage: gradientReverse }}>
       <div className="flex flex-col p-6 bg-black text-white rounded-2xl shadow-md w-full h-full">
         <h2 className="text-2xl font-extrabold mb-4">Order Details</h2>
 
         <div className="flex items-start mb-4">
-          <div className="w-20 h-28 bg-gray-800 rounded-md border border-white flex items-center justify-center">
-            <span className="text-gray-400 text-xs">No Image</span>
+          <div className="w-20 h-28 bg-gray-800 rounded-md border border-white flex items-center justify-center flex-shrink-0 overflow-hidden">
+            {movie.imageUrl ? (
+              <img src={movie.imageUrl} alt={movie.title} className="w-full h-full object-cover" />
+            ) : (
+              <span className="text-gray-400 text-[10px] px-2 text-center">Poster pending</span>
+            )}
           </div>
           <div className="ml-4">
-            <h3 className="text-lg font-semibold">Sample Movie</h3>
-            <p className="text-sm">Sample Date</p>
-            <p className="text-sm">Rated: PG-13</p>
+            <p className="text-sm text-white font-semibold">{movie.title}</p>
+            <p className="text-sm text-white/70">{movie.showDate}</p>
+            <p className="text-sm text-white/70 mt-1">Rated: {movie.rating}</p>
           </div>
         </div>
-        {/* Divider */}
-        <hr className="border-t border-1 border-gray-200 mb-4" />
-        {/* Seats */}
-        <div className="mb-4 px-6">
-          <span className="text-white">Seatings: </span>
-          <span className="text-white font-bold">{'S8, 4B, H1, U8'}</span>
+
+        <Divider />
+
+        <div className="mb-4 text-sm">
+          <span className="text-white/70">Seats:</span>{' '}
+          <span className="font-semibold">{seats}</span>
         </div>
-        {/* Divider */}
-        <hr className="border-t border-1 border-gray-200 mb-4" />
-        <div className="space-y-2 mb-4 px-6">
-          {tickets.map((ticket, index) => (
-            <div key={index} className="flex justify-between text-white text-sm">
-              <span>{ticket.name}</span>
-              <span>{ticket.price}</span>
+
+        <Divider />
+
+        <div className="space-y-2 mb-4 text-sm">
+          {tickets.map((ticket) => (
+            <div key={ticket.name} className="flex justify-between">
+              <span>
+                {ticket.name} · x{ticket.quantity}
+              </span>
+              <span>${(ticket.price * ticket.quantity).toFixed(2)}</span>
             </div>
           ))}
         </div>
 
-        <hr className="border-t border-1 border-gray-200 mb-4" />
+        <Divider />
 
-        <div className="flex justify-between text-white text-sm mb-2 px-6">
-          <span>Subtotal</span>
-          <span>${subtotal.toFixed(2)}</span>
-        </div>
-        <div className="flex justify-between text-white text-sm mb-4 px-6">
-          <span>Tax</span>
-          <span>${tax.toFixed(2)}</span>
-        </div>
-        {/* Divider */}
-        <hr className="border-t border-1 border-gray-200 mb-4" />
-        {/* Total */}
-        <div className="flex justify-between text-lg font-semibold text-white px-6">
-          <span>Total</span>
-          <span>${total.toFixed(2)}</span>
+        <div className="space-y-2 text-sm">
+          <Row label="Subtotal" value={subtotal} />
+          <Row label="Tax" value={tax} />
+          <Divider />
+          <Row label="Total" value={total} large />
         </div>
       </div>
     </div>
   );
+}
+
+function Row({ label, value, large = false }: { label: string; value: number; large?: boolean }) {
+  return (
+    <div className={`flex justify-between ${large ? 'text-lg font-semibold' : ''}`}>
+      <span>{label}</span>
+      <span>${value.toFixed(2)}</span>
+    </div>
+  );
+}
+
+function Divider() {
+  return <hr className="border-t border-white/20 my-4" />;
 }
