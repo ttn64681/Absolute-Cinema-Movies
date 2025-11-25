@@ -1,15 +1,21 @@
 'use client';
-import { buildUrl, endpoints } from '../config/api';
-import { ShowTime, PaginatedMovieResponse, BackendMovieShow } from '@/types/admin';
+import { buildUrl } from '../config/api';
+import { ShowTime, BackendMovieShow } from '@/types/admin';
 
-// Gets all showtimes (date and time combined) for a single movie
-// Calls the getAvailableTimes backend endpoint in MovieController
+/**
+ * Gets all showtimes (date and time combined) for a single movie
+ * Calls the getAvailableTimes backend endpoint in MovieController
+ *
+ * Used by: useMovieShows hook
+ */
 async function getMovieShowsForMovie(movieId: number) {
   try {
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
     const response = await fetch(buildUrl(`/api/movie-shows/movie/${movieId}`), {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
+        ...(token && { Authorization: `Bearer ${token}` }),
       },
     });
 
@@ -19,12 +25,11 @@ async function getMovieShowsForMovie(movieId: number) {
     const responseText = await response.text();
     if (!responseText.trim()) {
       throw new Error('Empty response from server');
-    } 
+    }
 
     const data: ShowTime[] = JSON.parse(responseText);
 
     return data;
-
   } catch (error) {
     console.error('Error retrieving movie shows: ', error);
   }
@@ -32,12 +37,14 @@ async function getMovieShowsForMovie(movieId: number) {
 
 async function createMovieShow(newShow: BackendMovieShow) {
   try {
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
     const response = await fetch(buildUrl(`/api/movie-shows`), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        ...(token && { Authorization: `Bearer ${token}` }),
       },
-      body: JSON.stringify(newShow)
+      body: JSON.stringify(newShow),
     });
 
     if (!response.ok) {
@@ -46,12 +53,11 @@ async function createMovieShow(newShow: BackendMovieShow) {
     const responseText = await response.text();
     if (!responseText.trim()) {
       throw new Error('Empty response from server');
-    } 
+    }
 
     const data = JSON.parse(responseText);
 
     return data;
-
   } catch (error) {
     console.error('Error retrieving movie shows: ', error);
   }

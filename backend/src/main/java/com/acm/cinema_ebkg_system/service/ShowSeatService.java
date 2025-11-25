@@ -180,17 +180,22 @@ public class ShowSeatService {
     }
     
     /**
-     * Reserve seats for a user (sets is_available = false)
+     * Reserve seats (temporary hold - sets is_available = false)
+     * 
+     * Public method - anyone can reserve seats (userId can be null for anonymous users)
+     * Only logged-in users can complete booking (checkout requires authentication)
      * 
      * Finds or creates seats by matching:
      * - movie_show.id (from show_seats.show_id)
      * - seat_row and seat_number
      * 
      * Logic:
-     * 1. If seat exists and is available (is_available = true) → mark as booked
-     * 2. If seat exists and is booked (is_available = false) → throw error
-     * 3. If seat doesn't exist → create it and mark as booked
+     * 1. If seat exists and is available (is_available = true) → mark as reserved
+     * 2. If seat exists and is reserved/booked (is_available = false) → throw error
+     * 3. If seat doesn't exist → create it and mark as reserved
      * 
+     * @param userId Optional user ID (null for anonymous users)
+     * @param request Seat reservation request with showId and seat selections
      * @return List of reserved seat IDs
      */
     @Transactional

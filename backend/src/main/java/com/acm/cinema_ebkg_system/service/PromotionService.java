@@ -112,13 +112,14 @@ public class PromotionService {
     }
 
     public void deletePromotion(Long id) {
-        Optional<Promotion> existingPromotion = getPromotionById(id);
-        if (existingPromotion.isPresent()) {
-            if (existingPromotion.get().getStatus() == PromotionStatus.active) {
-                throw new RuntimeException("Cannot delete an active promotion");
-            }
-        } else {
-            throw new RuntimeException("promotion not found");
+        Optional<Promotion> existingPromotion = promotionRepository.findById(id);
+        if (!existingPromotion.isPresent()) {
+            throw new RuntimeException("Promotion not found");
+        }
+        
+        Promotion promotion = existingPromotion.get();
+        if (promotion.getStatus() == PromotionStatus.active) {
+            throw new RuntimeException("Cannot delete an active promotion");
         }
 
         promotionRepository.deleteById(id);

@@ -1,34 +1,34 @@
 'use client';
 
 import { BackendPromotion } from "@/types/promotion";
+import { useState, useEffect } from "react";
+import { promotionClient } from "@/clients/promotionClient";
 
-import { useState } from "react";
-import { buildUrl, endpoints } from "@/config/api";
-
+/**
+ * Hook for promotion operations
+ * 
+ * Responsibilities:
+ * - React state management (promotions, loading, error)
+ * - Fetch promotions from backend via promotionClient
+ * 
+ * Delegates to:
+ * - promotionClient (Facade): API calls
+ */
 export function usePromotions() {
     const [promotions, setPromotions] = useState<BackendPromotion[]>([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
     async function getPromotions() {
       try {
         setLoading(true);
-        const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-        // Fetch payment cards from new endpoint
-        const response = await fetch(buildUrl(endpoints.promotions.getPromotions()), {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: token ? `Bearer ${token}` : '',
-          },
-        });
-
-        if (response.ok) {
-          const data = (await response.json()) as BackendPromotion[];
-          console.log('Fetched promotion: ', data);
-          setPromotions(data);
-        }
-      } catch (error) {
-        console.error('Error fetching promotions:', error);
+        setError(null);
+        const data = await promotionClient.getAllPromotions();
+        setPromotions(data);
+      } catch (err) {
+        console.error('Error fetching promotions:', err);
+        setError('Failed to load promotions. Please try again later.');
+        setPromotions([]);
       } finally {
         setLoading(false);
       }
@@ -37,53 +37,24 @@ export function usePromotions() {
     async function addPromotion(newPromotion: Omit<BackendPromotion, 'id'>) {
       try {
         setLoading(true);
-        const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-        const response = await fetch(buildUrl(endpoints.promotions.addPromotion()), {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: token ? `Bearer ${token}` : '',
-          },
-          body: JSON.stringify(newPromotion),
-        });
-        
-
-        if (response.ok) {
-          // const data = (await response.json()) as BackendPromotion;
-          // console.log('Added promotion: ', data);
-          // setPromotions(prev => [...prev, data]);
-          await getPromotions(); // refresh list
-        }
-      } catch (error) {
-        console.error('Error adding promotion:', error);
+        await promotionClient.createPromotion(newPromotion);
+        await getPromotions(); // Refresh list
+      } catch (err) {
+        console.error('Error adding promotion:', err);
+        throw err; // Re-throw for caller to handle
       } finally {
         setLoading(false);
       }
     }
 
     async function updatePromotion(promotionId: number, updatedPromotion: Partial<BackendPromotion>) {
-      console.log(updatedPromotion);
       try {
         setLoading(true);
-        const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-        const response = await fetch(buildUrl(endpoints.promotions.updatePromotion(promotionId)), {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: token ? `Bearer ${token}` : '',
-          },
-          body: JSON.stringify(updatedPromotion),
-        });
-        console.log("Response: " + response.ok);
-        
-        if (response.ok) {
-          await getPromotions(); // refresh list
-          // const data = (await response.json()) as BackendPromotion;
-          // console.log('Updated promotion: ', data);
-          // setPromotions(prev => prev.map(promo => promo.id === promotionId ? data : promo));
-        }
-      } catch (error) {
-        console.error('Update payment error ', error);      
+        await promotionClient.updatePromotion(promotionId, updatedPromotion);
+        await getPromotions(); // Refresh list
+      } catch (err) {
+        console.error('Error updating promotion:', err);
+        throw err; // Re-throw for caller to handle
       } finally {
         setLoading(false);
       }
@@ -91,33 +62,33 @@ export function usePromotions() {
 
     async function deletePromotion(promotionId: number) {
       try {
-        console.log("Attempting to delete...");
         setLoading(true);
-        const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-        const response = await fetch(buildUrl(endpoints.promotions.deletePromotion(promotionId)), {
-          method: 'DELETE',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: token ? `Bearer ${token}` : '',
-          },
-        });
-        if (response.ok) await getPromotions(); // refresh list
-        return response.ok;
-      } catch (error) {
-        console.error('Delete payment error ', error);        
+        await promotionClient.deletePromotion(promotionId);
+        await getPromotions(); // Refresh list
+        return true;
+      } catch (err) {
+        console.error('Error deleting promotion:', err);
+        throw err; // Re-throw for caller to handle
       } finally {
         setLoading(false);
       }
     }
 
+    // Auto-fetch on mount (only for public pages)
+    // Admin pages should call getPromotions() manually
+    useEffect(() => {
+      getPromotions();
+    }, []);
+
     return {
         promotions,
         setPromotions,
         loading,
+        error,
         getPromotions,
         addPromotion,
         updatePromotion,
-        deletePromotion
+        deletePromotion,
     };
 
 }

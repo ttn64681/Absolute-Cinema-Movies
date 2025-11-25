@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { movieClient } from '@/clients/movieClient';
-import { BackendMovie, PaginatedMovieResponse } from '@/types/movie';
+import { MovieSummary, PaginatedMovieResponse } from '@/types/movie';
 import { CACHE_DURATION, initialPaginationState, createPaginationState } from '@/utils/pagination';
 
 /**
@@ -33,7 +33,7 @@ const lastFetch: Record<string, Record<number, number>> = {
 
 export function useMovies(activeTab: 'nowplaying' | 'upcoming') {
   const [page, setPage] = useState(0);
-  const [movies, setMovies] = useState<BackendMovie[]>([]);
+  const [movies, setMovies] = useState<MovieSummary[]>([]);
   const [pagination, setPagination] = useState(initialPaginationState);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

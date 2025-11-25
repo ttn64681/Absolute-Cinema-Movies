@@ -1,8 +1,8 @@
 import MovieCard from './MovieCard';
-import { BackendMovie } from '@/types/movie';
+import { MovieSummary } from '@/types/movie';
 
 interface MovieCardsGridProps {
-  movies: BackendMovie[];
+  movies: MovieSummary[];
 }
 
 // 5 movies per row 

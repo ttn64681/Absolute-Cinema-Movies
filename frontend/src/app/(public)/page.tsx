@@ -21,7 +21,7 @@ const Footer = dynamic(() => import('@/components/common/Footer'), {
   loading: () => <div className="h-32 bg-black" />,
 });
 
-import { sampleMovies, promotions } from '@/constants/movieData';
+import { sampleMovies } from '@/constants/movieData';
 import { useMovies } from '@/hooks/useMovies';
 import { useGenres } from '@/hooks/useGenres';
 
@@ -31,14 +31,7 @@ function Home() {
 
   // Custom hooks for data fetching
   // useMovies hook will re-run when activeTab changes due to useCallback dependency
-  const {
-    movies,
-    isLoading: isLoadingMovies,
-    pagination,
-    goToNextPage,
-    goToPreviousPage,
-    goToPage,
-  } = useMovies(activeTab);
+  const { movies, pagination, goToNextPage, goToPreviousPage, goToPage } = useMovies(activeTab);
   const { genres, isLoadingGenres } = useGenres();
 
   return (
@@ -65,7 +58,7 @@ function Home() {
       </div>
 
       <GenresSection genres={genres} isLoading={isLoadingGenres} />
-      <SmallPromoSection promotions={promotions} />
+      <SmallPromoSection />
 
       <div className="px-16 opacity-30 my-8">
         <WhiteSeparator />

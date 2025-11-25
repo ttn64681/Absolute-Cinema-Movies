@@ -1,11 +1,11 @@
 import MovieCardsGrid from '@/components/common/movies/MovieCardsGrid';
 import WhiteSeparator from '@/components/common/WhiteSeparator';
-import { BackendMovie } from '@/types/movie';
+import { MovieSummary } from '@/types/movie';
 import { IoChevronBack, IoChevronForward } from 'react-icons/io5';
 
 interface MovieSectionProps {
   title: string;
-  movies: BackendMovie[];
+  movies: MovieSummary[];
   isLoading: boolean;
   pagination?: {
     currentPage: number;
