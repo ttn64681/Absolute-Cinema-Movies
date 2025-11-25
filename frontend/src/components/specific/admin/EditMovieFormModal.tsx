@@ -327,7 +327,7 @@ export default function EditMovieFormModal({ isOpen, onClose, onSaved, initialMo
     
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-6">
 
           {/* Release Date */ }
           <div>
@@ -358,6 +358,24 @@ export default function EditMovieFormModal({ isOpen, onClose, onSaved, initialMo
                 className="w-full px-4 py-3 rounded-md bg-white/10 border border-white/20 text-white placeholder-white/60 focus:outline-none focus:ring-1 focus:ring-[#FF478B] focus:border-transparent no-number-spinner"
               />
               <span className="text-white/80">%</span>
+            </div>
+          </div>
+
+          {/* Duration */ }
+          <div>
+            <label className="block text-sm mb-2 font-afacad text-white">Duration (minutes)</label>
+            <div className="flex items-center gap-2">
+              <input
+                type="number"
+                min={1}
+                max={180}
+                inputMode="numeric"
+                value={duration}
+                onChange={(e) => setDuration(e.target.value)}
+                placeholder="ex. 120"
+                className="w-full px-4 py-3 rounded-md bg-white/10 border border-white/20 text-white placeholder-white/60 focus:outline-none focus:ring-1 focus:ring-[#FF478B] focus:border-transparent no-number-spinner"
+              />
+              <span className="text-white/80"></span>
             </div>
           </div>
 
