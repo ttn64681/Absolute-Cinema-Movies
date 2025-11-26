@@ -1,176 +1,37 @@
 'use client';
 
-import { useEffect, useState, Suspense } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { useAuth } from '@/contexts/AuthContext';
-import { useReservation } from '@/contexts/ReservationContext';
-import { useToast } from '@/contexts/ToastContext';
+import { useState } from 'react';
 import NavBar from '@/components/common/navBar/NavBar';
-import OrderDetails from '@/components/specific/booking/order/OrderDetails';
 import CheckoutSections from '@/components/specific/booking/order/CheckoutSections';
-import api from '@/config/api';
-import { RxDoubleArrowRight } from 'react-icons/rx';
+import OrderDetails from '@/components/specific/booking/order/OrderDetails';
 
-function CheckoutPageContent() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const { isAuthenticated, isLoading } = useAuth();
-  const { clearReservation } = useReservation();
-  const { showToast } = useToast();
+const checkoutSteps = [
+  { number: 1, label: 'Billing Address' },
+  { number: 2, label: 'Payment' },
+  { number: 3, label: 'Promo Code' },
+  { number: 4, label: 'Review' },
+];
 
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [bookingDetails, setBookingDetails] = useState({
-    showId: '',
-    seatIds: '',
-    title: '',
-    date: '',
-    time: '',
-    adult: 0,
-    child: 0,
-    senior: 0,
-    seats: 0,
-  });
-
-  // Separate effect for authentication check (runs once when auth status is determined)
-  useEffect(() => {
-    // Check authentication status - if not authenticated, redirect to login
-    if (!isLoading && !isAuthenticated) {
-      const currentPath = window.location.pathname + window.location.search;
-      showToast('Please log in to checkout', 'info');
-      router.push(`/auth/login?redirect=${encodeURIComponent(currentPath)}&message=${encodeURIComponent('Please log in to complete your booking')}`);
-    }
-  }, [isAuthenticated, isLoading, router]);
-
-  // Separate effect for loading booking details from URL params
-  useEffect(() => {
-    // Get booking details from URL params
-    const showId = searchParams.get('showId') || '';
-    const seatIds = searchParams.get('seatIds') || '';
-    const title = searchParams.get('title') || '';
-    const date = searchParams.get('date') || '';
-    const time = searchParams.get('time') || '';
-    const adult = parseInt(searchParams.get('adult') || '0');
-    const child = parseInt(searchParams.get('child') || '0');
-    const senior = parseInt(searchParams.get('senior') || '0');
-    const seats = parseInt(searchParams.get('seats') || '0');
-
-    setBookingDetails({
-      showId,
-      seatIds,
-      title,
-      date,
-      time,
-      adult,
-      child,
-      senior,
-      seats,
-    });
-  }, [searchParams]);
-
-  const handleCompleteBooking = async () => {
-    if (!bookingDetails.showId || !bookingDetails.seatIds) {
-      showToast('Missing booking information. Please start over.', 'error');
-      return;
-    }
-
-    setIsProcessing(true);
-
-    try {
-      // Parse seat display IDs (e.g., "1A,2B" -> ["1A", "2B"])
-      const selectedSeats = bookingDetails.seatIds.split(',').filter((id) => id.trim().length > 0);
-
-      // Convert seat display IDs to seat row/number objects
-      const seatSelections = selectedSeats.map((displayId) => {
-        const match = displayId.match(/^(\d+)([A-Z]+)$/);
-        if (match) {
-          return {
-            seatRow: match[1],
-            seatNumber: match[2],
-          };
-        } else {
-          throw new Error(`Invalid seat format: ${displayId}`);
-        }
-      });
-
-      // Create booking request
-      const bookingRequest = {
-        showId: parseInt(bookingDetails.showId),
-        seats: seatSelections,
-        ticketTypes: {
-          adult: bookingDetails.adult,
-          child: bookingDetails.child,
-          senior: bookingDetails.senior,
-        },
-      };
-
-      console.log('Creating booking:', bookingRequest);
-
-      // Create the booking
-      const response = await api.post('/api/bookings/create', bookingRequest);
-
-      console.log('Booking response:', response.data);
-
-      if (response.data.success) {
-        // Clear reservation timer - booking is complete
-        clearReservation();
-
-        showToast('Booking confirmed! Redirecting...', 'success');
-
-        // Small delay for toast visibility
-        await new Promise((resolve) => setTimeout(resolve, 500));
-
-        // Navigate to confirmation page
-        router.push(
-          `/booking/confirmation?bookingId=${response.data.bookingId}&totalAmount=${response.data.totalAmount}`
-        );
-      } else {
-        const errorMsg = response.data.error || 'Unknown error';
-        console.error('Booking failed:', errorMsg);
-        showToast(`Booking failed: ${errorMsg}`, 'error');
-        setIsProcessing(false);
-      }
-    } catch (error: any) {
-      console.error('Error creating booking:', error);
-
-      // Check if it's an authentication error (401 or 403)
-      if (error.response?.status === 401 || error.response?.status === 403) {
-        const currentPath = window.location.pathname + window.location.search;
-        showToast('Please log in to checkout', 'info');
-        router.push(`/auth/login?redirect=${encodeURIComponent(currentPath)}&message=${encodeURIComponent('Please log in to complete your booking')}`);
-        setIsProcessing(false);
-        return;
-      }
-
-      let errorMessage = 'Failed to create booking';
-      if (error.response?.data?.error) {
-        errorMessage = error.response.data.error;
-      } else if (error.userMessage) {
-        errorMessage = error.userMessage;
-      } else if (error.message) {
-        errorMessage = error.message;
-      }
-
-      showToast(errorMessage, 'error');
-      setIsProcessing(false);
-    }
-  };
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="text-white">Loading...</div>
-      </div>
-    );
-  }
+export default function CheckoutPage() {
+  const [currentStep, setCurrentStep] = useState(1);
 
   return (
-    <div>
+    <div className="min-h-screen bg-black">
       <NavBar />
-      <div className="flex flex-row gap-8 px-16 py-8">
-        <div className="flex-1">
-          <CheckoutSections />
+
+      <div className="w-full flex flex-row gap-6 p-30 pt-28 items-stretch">
+        <div className="flex-1 flex flex-col">
+          <StepTracker steps={checkoutSteps} currentStep={currentStep} />
+          <CheckoutSections currentStep={currentStep} setCurrentStep={setCurrentStep} />
         </div>
-        <div className="w-96">
+
+        <div className="w-96 flex-shrink-0 flex flex-col">
+          {/* Spacer keeps OrderDetails aligned with the form column */}
+          <div className="w-full pb-6">
+            <div className="max-w-4xl mx-auto invisible pointer-events-none">
+              <StepTracker steps={checkoutSteps} currentStep={currentStep} ghost />
+            </div>
+          </div>
           <OrderDetails />
           {/* Complete Booking Button */}
           <div className="mt-6 flex justify-end">
@@ -197,16 +58,55 @@ function CheckoutPageContent() {
   );
 }
 
-export default function CheckoutPage() {
+type Step = { number: number; label: string };
+
+interface StepTrackerProps {
+  steps: Step[];
+  currentStep: number;
+  ghost?: boolean;
+}
+
+function StepTracker({ steps, currentStep, ghost = false }: StepTrackerProps) {
   return (
-    <Suspense
-      fallback={
-        <div className="min-h-screen bg-black flex items-center justify-center">
-          <div className="text-white text-xl">Loading checkout...</div>
+    <div className={ghost ? 'opacity-0' : 'w-full pb-6'}>
+      <div className="max-w-4xl mx-auto">
+        <div className="grid grid-cols-4 items-center gap-0">
+          {steps.map((step, index) => (
+            <div key={step.number} className="flex items-center justify-center relative">
+              <div className="flex flex-col items-center">
+                <div
+                  className={`w-12 h-12 rounded-full flex items-center justify-center font-semibold text-lg transition-colors relative z-10 ${
+                    currentStep >= step.number
+                      ? 'bg-white text-black'
+                      : 'bg-black border-2 border-white text-white'
+                  }`}
+                >
+                  {step.number}
+                </div>
+              </div>
+              {index < steps.length - 1 && (
+                <div
+                  className="absolute left-full top-1/2 -translate-y-1/2 w-full flex items-center"
+                  style={{ width: 'calc(100% - 3rem)', left: 'calc(50% + 1.5rem)' }}
+                >
+                  <div className="w-full h-1 bg-white" />
+                </div>
+              )}
+            </div>
+          ))}
         </div>
-      }
-    >
-      <CheckoutPageContent />
-    </Suspense>
+
+        <div className="flex items-center mt-2">
+          {steps.map((step) => {
+            const labelColor = currentStep >= step.number ? 'text-white' : 'text-white/60';
+            return (
+              <div key={step.number} className="flex-1 text-center">
+                <span className={`text-sm ${labelColor}`}>{step.label}</span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
   );
 }
