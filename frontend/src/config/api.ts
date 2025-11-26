@@ -36,6 +36,7 @@ export const apiConfig = {
       // SHOW SCHEDULE ENDPOINTS BY MOVIE ID
       dates: (movieId: number) => `/api/movies/${movieId}/dates`, // function taking in movieId
       times: (movieId: number) => `/api/movies/${movieId}/times`, // function taking in movieId
+      showId: (movieId: number) => `/api/movies/${movieId}/show-id`, // Get movie_show.id from movie_id, date, and time
 
       // OPTIMIZED BROWSING ENDPOINTS (Lightweight)
       browseNowPlaying: '/api/movies/browse/now-playing',
@@ -53,6 +54,15 @@ export const apiConfig = {
       getUserInfo: (userId: number) => `/api/user/info?userId=${userId}`,
       updateUser: (userId: number) => `/api/users/${userId}/info`,
       changePassword: (userId: number) => `/api/users/${userId}/change-password`,
+      getAllUsers: '/api/users', // Get all users (admin only)
+      resetPassword: (userId: number) => `/api/users/${userId}/forgot-password`, // Admin can reset user password
+    },
+
+    // ADMIN ENDPOINTS
+    admin: {
+      getAllAdmins: '/api/admin/all',
+      suspendUser: (userId: number) => `/api/admin/users/${userId}/suspend`,
+      unsuspendUser: (userId: number) => `/api/admin/users/${userId}/unsuspend`,
     },
 
     // ADDRESS ENDPOINTS
@@ -72,6 +82,14 @@ export const apiConfig = {
       setDefaultCard: (userId: number, cardId: number) => `/api/payment-card/user/${userId}/set-default/${cardId}`,
     },
 
+    // PROMOTION ENDPOINTS
+    promotions: {
+      getPromotions: () => '/api/promotion/' ,
+      addPromotion: () => '/api/promotion/',
+      updatePromotion: (promotionId: number) => `/api/promotion/${promotionId}`,
+      deletePromotion: (promotionId: number) => `/api/promotion/${promotionId}`,
+    },
+
     // 🔐 AUTH ENDPOINTS
     auth: {
       login: '/api/auth/login',
@@ -83,6 +101,20 @@ export const apiConfig = {
       forgotPassword: '/api/auth/forgot-password',
       resetPassword: '/api/auth/reset-password',
       checkEmail: '/api/auth/check-email',
+    },
+
+    // SEAT ENDPOINTS
+    seats: {
+      getSeatsForShow: (showId: number) => `/api/seats/show/${showId}`,
+      reserve: '/api/seats/reserve',
+      release: '/api/seats/release',
+      releaseBySelection: '/api/seats/release-by-selection', // Release by showId + seat row/number
+      checkAvailability: '/api/seats/check-availability',
+    },
+
+    // BOOKING ENDPOINTS
+    bookings: {
+      create: '/api/bookings/create',
     },
   },
 
@@ -100,16 +132,79 @@ const api = axios.create({
   },
 });
 
+// Helper function to validate JWT token format
+function isValidJWT(token: string | null): boolean {
+  if (!token || typeof token !== 'string') {
+    return false;
+  }
+  // JWT should have 3 parts separated by periods: header.payload.signature
+  const parts = token.split('.');
+  return parts.length === 3 && parts.every(part => part.length > 0);
+}
+
 // Add request interceptor for JWT tokens
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token');
+    // Check both localStorage and sessionStorage for token
+    const localToken = localStorage.getItem('token');
+    const sessionToken = sessionStorage.getItem('token');
+    const token = localToken || sessionToken;
+    
     if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+      // Validate token format before sending
+      if (isValidJWT(token)) {
+        config.headers.Authorization = `Bearer ${token}`;
+      } else {
+        console.warn('Invalid JWT token format detected. Token will not be sent.');
+        console.warn('Token value:', token.substring(0, 20) + '...');
+        // Clear invalid token
+        if (localToken) localStorage.removeItem('token');
+        if (sessionToken) sessionStorage.removeItem('token');
+      }
     }
     return config;
   },
   (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Add response interceptor to handle errors and ensure error messages are preserved
+api.interceptors.response.use(
+  (response) => {
+    // Return successful responses as-is
+    return response;
+  },
+  (error) => {
+    // Enhance error object with better error message extraction
+    if (error.response) {
+      const responseData = error.response.data;
+      
+      // If response has error message in data, attach it to error object for easier access
+      if (responseData && typeof responseData === 'object') {
+        if (responseData.error) {
+          error.userMessage = responseData.error;
+        } else if (responseData.message) {
+          error.userMessage = responseData.message;
+        }
+      }
+      
+      // Set default user-friendly messages for common status codes
+      if (!error.userMessage) {
+        if (error.response.status === 401 || error.response.status === 403) {
+          // Check if it's a booking-related endpoint
+          const requestUrl = error.config?.url || '';
+          if (requestUrl.includes('/bookings/')) {
+            error.userMessage = 'Please log in to complete your booking';
+          } else {
+            error.userMessage = 'You need to be a logged in user to perform this action';
+          }
+        } else if (error.response.status === 409) {
+          error.userMessage = 'Seats have already been booked. Please select different seats.';
+        }
+      }
+    }
+    
     return Promise.reject(error);
   }
 );

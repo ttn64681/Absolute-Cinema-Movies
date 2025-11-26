@@ -2,10 +2,12 @@ package com.acm.cinema_ebkg_system.controller;
 
 import com.acm.cinema_ebkg_system.dto.auth.AuthResponse;
 import com.acm.cinema_ebkg_system.dto.auth.LoginRequest;
-import com.acm.cinema_ebkg_system.mapper.UserDtoFactory;
 import com.acm.cinema_ebkg_system.model.Admin;
+import com.acm.cinema_ebkg_system.model.User;
 import com.acm.cinema_ebkg_system.service.AdminService;
+import com.acm.cinema_ebkg_system.service.UserService;
 import com.acm.cinema_ebkg_system.util.JwtUtil;
+import com.acm.cinema_ebkg_system.mapper.UserDtoFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -47,6 +49,9 @@ public class AdminController {
     private AdminService adminService;
 
     @Autowired
+    private UserService userService;
+
+    @Autowired
     private JwtUtil jwtUtil;
 
     // ========== UTILITY ENDPOINTS ==========
@@ -74,13 +79,9 @@ public class AdminController {
     /**
      * Admin login endpoint - authenticates admin users
      * 
-     * Process Flow:
-     * 1. Authenticate admin credentials (email/password)
-     * 2. Check if admin is active
-     * 3. Generate JWT tokens for admin session
-     * 4. Return success response with tokens and admin data
+     * Delegates authentication, token generation, and DTO creation to AdminService.
      * 
-     * @param request LoginRequest containing email and password
+     * @param request LoginRequest containing email, password, and rememberMe flag
      * @return ResponseEntity<AuthResponse> with success status, tokens, and admin info
      */
     @PostMapping("/login")
@@ -93,15 +94,13 @@ public class AdminController {
             String token = jwtUtil.generateToken(admin.getEmail(), admin.getId(), "ADMIN", request.isRememberMe());
             String refreshToken = jwtUtil.generateRefreshToken(admin.getEmail(), admin.getId(), "ADMIN", request.isRememberMe());
 
-            // Step 3: Create admin DTO using factory method (Factory Method pattern)
+            // Step 3: Create admin DTO using static factory method
             AuthResponse.UserDto adminDto = UserDtoFactory.fromAdmin(admin);
 
             // Step 4: Return success response with tokens and admin data
             AuthResponse response = new AuthResponse(true, "Admin login successful", token, refreshToken, adminDto);
             return ResponseEntity.ok(response);
-
         } catch (Exception e) {
-            // Handle authentication failures
             AuthResponse response = new AuthResponse(false, e.getMessage());
             return ResponseEntity.badRequest().body(response);
         }
@@ -199,30 +198,70 @@ public class AdminController {
         }
     }
 
+    // ========== USER MANAGEMENT ENDPOINTS ==========
+
+    /**
+     * Suspend a user account
+     * 
+     * Suspended users cannot log in to the system.
+     * 
+     * @param userId User ID to suspend
+     * @return ResponseEntity<User> with updated user data
+     */
+    @PutMapping("/users/{userId}/suspend")
+    public ResponseEntity<?> suspendUser(@PathVariable Long userId) {
+        try {
+            System.out.println("AdminController.suspendUser - userId: " + userId);
+            User user = userService.suspendUser(userId);
+            System.out.println("AdminController.suspendUser - Success: " + user.getEmail() + ", status: " + user.getAccountStatus());
+            return ResponseEntity.ok(user);
+        } catch (Exception e) {
+            System.err.println("AdminController.suspendUser - Error: " + e.getMessage());
+            e.printStackTrace();
+            AuthResponse response = new AuthResponse(false, "Failed to suspend user: " + e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
+    /**
+     * Unsuspend a user account (reactivate)
+     * 
+     * Unsuspended users can log in again.
+     * 
+     * @param userId User ID to unsuspend
+     * @return ResponseEntity<User> with updated user data
+     */
+    @PutMapping("/users/{userId}/unsuspend")
+    public ResponseEntity<?> unsuspendUser(@PathVariable Long userId) {
+        try {
+            System.out.println("AdminController.unsuspendUser - userId: " + userId);
+            User user = userService.unsuspendUser(userId);
+            System.out.println("AdminController.unsuspendUser - Success: " + user.getEmail() + ", status: " + user.getAccountStatus());
+            return ResponseEntity.ok(user);
+        } catch (Exception e) {
+            System.err.println("AdminController.unsuspendUser - Error: " + e.getMessage());
+            e.printStackTrace();
+            AuthResponse response = new AuthResponse(false, "Failed to unsuspend user: " + e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
     // ========== REQUEST DTOs ==========
     
+    @lombok.Data
+    @lombok.NoArgsConstructor
+    @lombok.AllArgsConstructor
     public static class CreateAdminRequest {
         private String email;
         private String password;
         private String profileImageLink;
-
-        // Getters and setters
-        public String getEmail() { return email; }
-        public void setEmail(String email) { this.email = email; }
-        public String getPassword() { return password; }
-        public void setPassword(String password) { this.password = password; }
-        public String getProfileImageLink() { return profileImageLink; }
-        public void setProfileImageLink(String profileImageLink) { this.profileImageLink = profileImageLink; }
     }
 
+    @lombok.Data
+    @lombok.NoArgsConstructor
+    @lombok.AllArgsConstructor
     public static class UpdateProfileImageRequest {
         private String email;
         private String profileImageLink;
-
-        // Getters and setters
-        public String getEmail() { return email; }
-        public void setEmail(String email) { this.email = email; }
-        public String getProfileImageLink() { return profileImageLink; }
-        public void setProfileImageLink(String profileImageLink) { this.profileImageLink = profileImageLink; }
     }
 }

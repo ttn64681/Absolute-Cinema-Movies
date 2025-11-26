@@ -1,23 +1,35 @@
 package com.acm.cinema_ebkg_system.controller;
 
-import com.acm.cinema_ebkg_system.dto.movie.MovieSummary;
+import com.acm.cinema_ebkg_system.dto.movie.MovieDTO;
+import com.acm.cinema_ebkg_system.dto.movie.PaginatedMovieResponse;
+import jakarta.validation.constraints.Min;
+import org.springframework.validation.annotation.Validated;
 import com.acm.cinema_ebkg_system.model.Movie;
-import com.acm.cinema_ebkg_system.model.ShowTime;
 import com.acm.cinema_ebkg_system.service.MovieService;
 import com.acm.cinema_ebkg_system.service.ShowTimeService;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController // Bean that creates a RESTful controller class that handles HTTP requests
 @RequestMapping("/api/movies")
+@Validated // Enables method-level validation for @RequestParam/@PathVariable
 public class MovieController {
 
     // Dependency injection of services for business logic
@@ -30,25 +42,22 @@ public class MovieController {
         this.showTimeService = showTimeService;
     }
 
+    // ===== NON-PAGINATED ENDPOINTS ===== //
     /**
      * Get all now playing movies, ordered by earliest show_date.
      * Use when displaying the now playing movies on the homepage. (default behavior)
-     * @return
      */
     @GetMapping("/now-playing")
     public List<Movie> getNowPlaying() {
-        // Return JSON: [ { "movie_id": 2, "title": "Superman", ... }, ... ] (NOW_PLAYING ordered by earliest show_date)
         return movieService.getNowPlayingOrdered();
     }
 
     /**
      * Get all upcoming movies, ordered by earliest show_date.
      * Use when clicking the "Upcoming" button on the homepage.
-     * @return
      */
     @GetMapping("/upcoming")
     public List<Movie> getUpcoming() {
-        // Return JSON: [ { "movie_id": 12, "title": "Materialists", ... }, ... ] (UPCOMING ordered by first show_date)
         return movieService.getUpcomingOrdered();
     }
 
@@ -59,57 +68,212 @@ public class MovieController {
      */
     @GetMapping("/genres")
     public List<String> getAvailableGenres() {
-        // Return JSON: ["Action", "Comedy", "Drama", "Horror", "Sci-Fi"] (sorted alphabetically)
         return movieService.getAvailableGenres();
     }
 
+    // ===== PAGINATED BROWSING ENDPOINTS ===== //
     /**
-     * Search for movies based on AND filters title, genres (internal OR), 
-     * and date (month, day, year) (internal OR).
-     * Use when searching for movies via search bar.
+     * Paginated NOW_PLAYING movies (10/page). Validates page >= 0
+     */
+    @GetMapping("/browse/now-playing")
+    public PaginatedMovieResponse getNowPlayingForBrowsingPaginated(
+            @RequestParam(defaultValue = "0") @Min(value = 0, message = "Page number must be >= 0") int page) {
+        return movieService.getNowPlayingForBrowsingPaginated(page);
+    }
+
+    /**
+     * Paginated UPCOMING movies (10/page). Validates page >= 0
+     */
+    @GetMapping("/browse/upcoming")
+    public PaginatedMovieResponse getUpcomingForBrowsingPaginated(
+            @RequestParam(defaultValue = "0") @Min(value = 0, message = "Page number must be >= 0") int page) {
+        return movieService.getUpcomingForBrowsingPaginated(page);
+    }
+
+     /**
+     * Paginated movies regardless of status (10/page). Validates page >= 0
+     */
+    @GetMapping("/browse/all")
+    public PaginatedMovieResponse getBrowsingPaginated(
+            @RequestParam(defaultValue = "0") @Min(value = 0, message = "Page number must be >= 0") int page) {
+        return movieService.getAllMoviesForBrowsingPaginated(page);
+    }
+
+    // ===== PAGINATED SEARCH ENDPOINTS ===== //
+    /**
+     * Paginated search NOW_PLAYING (10/page). Validates page >= 0
      */
     @GetMapping("/search-now-playing")
-    public List<Movie> searchNowPlaying(
+    public PaginatedMovieResponse searchNowPlayingPaginated(
             @RequestParam(required = false) String title,
             @RequestParam(required = false) String genres,
             @RequestParam(required = false) Integer month,
             @RequestParam(required = false) Integer day,
-            @RequestParam(required = false) Integer year) {
-        // Return JSON: [ { "movie_id": 5, "status": "NOW_PLAYING", ... }, ... ] (ordered by earliest show_date)
-        return movieService.searchNowPlayingOrdered(title, genres, month, day, year);
+            @RequestParam(required = false) Integer year,
+            @RequestParam(defaultValue = "0") @Min(value = 0, message = "Page number must be >= 0") int page) {
+        return movieService.searchNowPlayingPaginated(title, genres, month, day, year, page);
     }
 
     /**
-     * Search for upcoming movies based on AND filters title, genres (internal OR), 
-     * and date (month, day, year) (internal OR).
-     * Use when searching for movies via search bar.
+     * Paginated search UPCOMING (10/page). Validates page >= 0
      */
     @GetMapping("/search-upcoming")
-    public List<Movie> searchUpcoming(
+    public PaginatedMovieResponse searchUpcomingPaginated(
             @RequestParam(required = false) String title,
             @RequestParam(required = false) String genres,
             @RequestParam(required = false) Integer month,
             @RequestParam(required = false) Integer day,
-            @RequestParam(required = false) Integer year) {
-        // Return JSON: [ { "movie_id": 9, "status": "UPCOMING", ... }, ... ] (ordered by earliest show_date)
-        return movieService.searchUpcomingOrdered(title, genres, month, day, year);
+            @RequestParam(required = false) Integer year,
+            @RequestParam(defaultValue = "0") @Min(value = 0, message = "Page number must be >= 0") int page) {
+        return movieService.searchUpcomingPaginated(title, genres, month, day, year, page);
+    }
+
+    // ===== SHOWTIME ENDPOINTS ===== //
+    /**
+     * Get all available dates for a movie ordered by earliest show_date.
+     * Use when displaying the dates for a movie.
+     */
+    @GetMapping("/{movieId}/dates")
+    public List<LocalDate> getAvailableDates(@PathVariable Long movieId) {
+        return showTimeService.getAvailableDatesForMovie(movieId);
     }
 
     /**
+     * Get all available times for a movie on a certain date.
+     * Use when displaying the times for a movie.
+     */
+    @GetMapping("/{movieId}/times")
+    public List<String> getAvailableTimesForDate(@PathVariable Long movieId, @RequestParam String date) {
+        LocalDate showDate = LocalDate.parse(date);
+        return showTimeService.getAvailableTimesForMovieAndDate(movieId, showDate);
+    }
+
+    /**
+     * Get all available showings of a movie (date and time combined).
+     */
+    @GetMapping("/{movieId}/times/combined")
+    public List<LocalDateTime> getAvailableTimes(@PathVariable Long movieId) {
+        return showTimeService.getAvailableTimesForMovie(movieId);
+    }
+
+    /**
+     * Get movie_show.id from movieId, date, and time
+     * Used by booking flow to identify which show to book
+     * 
+     * Endpoint: GET /api/movies/{movieId}/show-id?date=YYYY-MM-DD&time=HH:MM:SS
+     * 
+     * @param movieId The movie.movie_id
+     * @param date The show date (YYYY-MM-DD format)
+     * @param time The show start_time (HH:MM:SS format)
+     * @return movie_show.id (Long) or null if not found
+     */
+    @GetMapping("/{movieId}/show-id")
+    public ResponseEntity<Map<String, Object>> getMovieShowId(
+            @PathVariable Long movieId,
+            @RequestParam String date,
+            @RequestParam String time) {
+        try {
+            LocalDate showDate = LocalDate.parse(date);
+            LocalTime startTime = LocalTime.parse(time);
+            
+            Long showId = showTimeService.getMovieShowIdByMovieDateAndTime(movieId, showDate, startTime);
+            
+            Map<String, Object> response = new HashMap<>();
+            if (showId != null) {
+                response.put("showId", showId);
+                response.put("success", true);
+                return ResponseEntity.ok(response);
+            } else {
+                response.put("success", false);
+                response.put("error", "No movie show found for the given movie, date, and time");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+            }
+        } catch (Exception e) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("error", "Error getting show ID: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    // @GetMapping("/{movieId}/schedule")
+    // public Map<LocalDate, List<ShowTime>> getMovieSchedule(@PathVariable Long movieId) {
+    //     // Frontend (optional convenience): fetch full schedule (dates -> times) in one call.
+    //     // Return format (JSON): {"2025-10-01": [ShowTime, ...], "2025-10-02": [ShowTime, ...], ...}
+    //     return showTimeService.getMovieShowSchedule(movieId);
+    // }
+
+    // ===== MOVIE DETAIL ENDPOINTS ===== //
+
+    /**
+     * Get full movie details by ID (including cast, directors, producers).
+     * Called when selecting a movie for detailed view.
+     */
+    @GetMapping("/{movieId}")
+    public Movie getMovieDetails(@PathVariable Long movieId) {
+        return movieService.getMovieById(movieId);
+    }
+
+    /**
+     * Get full movie details by title (including cast, directors, producers).
+     * Called when searching for a movie by title.
+     */
+    @GetMapping("/title/{title}")
+    public Movie getMovieDetailsByTitle(@PathVariable String title) {
+        return movieService.getMovieByTitle(title);
+    }
+
+    // ===== MOVIE CRUD OPERATIONS ===== //
+    /**
+     * POST api/movies/create
+     * Called when adding a new movie (when logged in as Admin).
+     * 
+     * Takes MovieDTO, delegates to service for entity creation and persistence.
+     */
+    @PostMapping("/create")
+    public ResponseEntity<?> createMovie(@RequestBody MovieDTO dto) {
+        try {
+            Movie created = movieService.createMovie(dto);
+            return ResponseEntity.ok(created);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Error creating movie: " + e.getMessage());
+        }
+    }
+
+    /**
+     * PUT api/movies/create
+     * Called when editing a movie (when logged in as Admin).
+     * 
+     * Takes MovieDTO, delegates to service for entity creation and persistence.
+     */
+    @PutMapping("/{movieId}")
+    public ResponseEntity<?> editMovie(@PathVariable Long movieId, @RequestBody MovieDTO dto) {
+        try {
+            Movie created = movieService.updateMovie(movieId, dto);
+            return ResponseEntity.ok(created);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Error updating movie: " + e.getMessage());
+        }
+    }
+
+
+    /**
+     * DELETE /api/movies/{movieId}
+     * Used to delete a movie.
+     */
+    @DeleteMapping("/{movieId}")
+    public ResponseEntity<Void> deleteMovie(@PathVariable Long movieId) {
+        movieService.deleteMovie(movieId);
+        return ResponseEntity.ok().build();
+    }
+
+    // ===== TEST ENDPOINTS ===== //
+    /**
      * Test endpoint to check if the API is working.
-     * Use when testing the API.
      */
     @GetMapping("/test")
     public String testEndpoint() {
         return "API is working!";
-    }
-
-    /**
-     * Create a new movie (placeholder).
-     */
-    @PostMapping("/create")
-    public String postMovie() {
-        return "Posted movie.";
     }
 
     /**
@@ -126,84 +290,6 @@ public class MovieController {
     @GetMapping("/db-test")
     public String getDbTest() {
         return movieService.testDatabaseConnection();
-    }
-
-    /**
-     * Get all available dates for a movie ordered by earliest show_date.
-     * Use when displaying the dates for a movie.
-     */
-    @GetMapping("/{movieId}/dates")
-    public List<LocalDate> getAvailableDates(@PathVariable Long movieId) {
-        // Frontend: call this first to populate the date dropdown for a selected movie.
-        // Return format (JSON): ["2025-10-01", "2025-10-02", ...]
-        return showTimeService.getAvailableDatesForMovie(movieId);
-    }
-
-    /**
-     * Get all available times for a movie on a given date ordered by start_time.
-     * Use when displaying the times for a movie.
-     */
-    @GetMapping("/{movieId}/times")
-    public List<ShowTime> getAvailableTimes(@PathVariable Long movieId, @RequestParam String date) {
-        // Frontend: when user picks a date from the dropdown, call this with that date.
-        // Return format (JSON): array of ShowTime objects, e.g.
-        // [{"show_time_id": 123, "show_date_id": 45, "start_time": "10:00:00", "end_time": "12:30:00", "created_at": "2025-09-26T12:00:00"}, ...]
-        LocalDate showDate = LocalDate.parse(date);
-        return showTimeService.getAvailableTimesForMovieAndDate(movieId, showDate);
-    }
-
-    // @GetMapping("/{movieId}/schedule")
-    // public Map<LocalDate, List<ShowTime>> getMovieSchedule(@PathVariable Long movieId) {
-    //     // Frontend (optional convenience): fetch full schedule (dates -> times) in one call.
-    //     // Return format (JSON): {"2025-10-01": [ShowTime, ...], "2025-10-02": [ShowTime, ...], ...}
-    //     return showTimeService.getMovieShowSchedule(movieId);
-    // }
-
-
-
-
-
-
-    // ===== OPTIMIZED BROWSING ENDPOINTS =====
-
-    /**
-     * Get lightweight movie summaries for browsing (excludes cast, directors, producers).
-     * Perfect for homepage, search results, and movie grids.
-     */
-    // @GetMapping("/browse")
-    // public List<MovieSummary> getMoviesForBrowsing(
-    //         @RequestParam(required = false) String title,
-    //         @RequestParam(required = false) String genres,
-    //         @RequestParam(required = false) Integer month,
-    //         @RequestParam(required = false) Integer day,
-    //         @RequestParam(required = false) Integer year) {
-    //     return movieService.getMoviesForBrowsing(title, genres, month, day, year);
-    // }
-
-    /**
-     * Lightweight version of getNowPlaying() for browsing.
-     */
-    @GetMapping("/browse/now-playing")
-    public List<MovieSummary> getNowPlayingForBrowsing() {
-        return movieService.getNowPlayingForBrowsing();
-    }
-
-    /**
-     * Lightweight version of getUpcoming() for browsing.
-     */
-    @GetMapping("/browse/upcoming")
-    public List<MovieSummary> getUpcomingForBrowsing() {
-        return movieService.getUpcomingForBrowsing();
-    }
-
-
-    /**
-     * Get full movie details by ID (including cast, directors, producers).
-     * Use this only when user clicks on a movie for detailed view.
-     */
-    @GetMapping("/{movieId}")
-    public Movie getMovieDetails(@PathVariable Long movieId) {
-        return movieService.getMovieById(movieId);
     }
 
 }

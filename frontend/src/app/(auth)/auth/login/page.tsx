@@ -1,23 +1,36 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Checkbox from '@/components/common/forms/Checkbox';
 import AuthFormContainer from '@/components/common/auth/AuthFormContainer';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastContext';
-import { validateEmail } from '@/services/auth';
+import { validateEmail } from '@/clients/authClient';
 
-export default function LoginPage() {
+function LoginPageContent() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { login } = useAuth();
   const { showToast } = useToast();
+
+  // Get redirect path and message from query params
+  const redirectPath = searchParams.get('redirect') || '/';
+  const message = searchParams.get('message');
+
+  // Show message if provided (e.g., "Please log in to checkout")
+  useEffect(() => {
+    if (message) {
+      showToast(message, 'info');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [message]); // showToast is stable, don't need it in deps
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,9 +49,9 @@ export default function LoginPage() {
       const response = await login(email, password, rememberMe);
 
       if (response.success) {
-        // Show toast notification and redirect immediately
+        // Show toast notification and redirect to intended page
         showToast('Welcome! Login successful', 'success');
-        router.push('/');
+        router.push(redirectPath);
       } else {
         setError(response.message);
       }
@@ -106,10 +119,7 @@ export default function LoginPage() {
             onChange={setRememberMe}
             disabled={isLoading}
           />
-          <Link 
-            href="/auth/forgot-password" 
-            className="text-sm text-acm-pink hover:text-acm-pink/80 transition-colors"
-          >
+          <Link href="/auth/forgot-password" className="text-sm text-acm-pink hover:text-acm-pink/80 transition-colors">
             Forgot Password?
           </Link>
         </div>
@@ -130,11 +140,11 @@ export default function LoginPage() {
             Sign up
           </Link>
         </p>
-        
+
         <div className="border-t border-white/10 pt-3">
           <p className="text-white/60 text-sm mb-2">Administrator Access</p>
-          <Link 
-            href="/auth/admin-login" 
+          <Link
+            href="/auth/admin-login"
             className="text-acm-orange hover:text-acm-orange/80 transition-colors text-sm font-medium"
           >
             Login as Admin
@@ -142,5 +152,23 @@ export default function LoginPage() {
         </div>
       </div>
     </AuthFormContainer>
+  );
+}
+
+// Wrap in Suspense for useSearchParams
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <AuthFormContainer title="Login" subtitle="Welcome back to ACM">
+          <div className="text-center py-8">
+            <div className="inline-block w-8 h-8 border-2 border-white/30 border-t-acm-pink rounded-full animate-spin"></div>
+            <p className="mt-4 text-white/60">Loading...</p>
+          </div>
+        </AuthFormContainer>
+      }
+    >
+      <LoginPageContent />
+    </Suspense>
   );
 }

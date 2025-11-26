@@ -1,7 +1,8 @@
-import { BackendMovie } from '@/types/movie';
+import { MovieSummary } from '@/types/movie';
 
 // DUMMY MOVIE DATA
-export const sampleMovies: BackendMovie[] = [
+// Sample movies for fallback display (includes extra fields but typed as MovieSummary)
+export const sampleMovies: MovieSummary[] = [
   {
     movie_id: 1,
     title: 'Godzilla',
@@ -10,11 +11,10 @@ export const sampleMovies: BackendMovie[] = [
     genres: 'Action, Sci-Fi, Thriller',
     rating: 'PG-13',
     release_date: '2024-03-15',
-    cast_names: 'Actor 1, Actor 2, Actor 3',
-    producers: 'Producer Name',
-    directors: 'Director Name',
     status: 'now_playing',
     trailer_link: 'https://www.youtube.com/embed/UJ2cYbw6vX0?si=unIGRoDNLg9rKZPL',
+    score: 8,
+    duration: 120,
   },
   {
     movie_id: 2,
@@ -24,11 +24,10 @@ export const sampleMovies: BackendMovie[] = [
     genres: 'Drama, Comedy',
     rating: 'PG',
     release_date: '2024-04-20',
-    cast_names: 'Actor 1, Actor 2, Actor 3, Actor 4, Actor 5',
-    producers: 'Producer Name',
-    directors: 'Director Name',
     status: 'now_playing',
     trailer_link: 'https://www.youtube.com/embed/UJ2cYbw6vX0?si=unIGRoDNLg9rKZPL',
+    score: 7,
+    duration: 95,
   },
   {
     movie_id: 3,
@@ -38,11 +37,10 @@ export const sampleMovies: BackendMovie[] = [
     genres: 'Horror, Thriller, Drama, Mystery',
     rating: 'R',
     release_date: '2024-05-10',
-    cast_names: 'Actor 1, Actor 2, Actor 3',
-    producers: 'Producer Name',
-    directors: 'Director Name',
     status: 'now_playing',
     trailer_link: 'https://www.youtube.com/embed/UJ2cYbw6vX0?si=unIGRoDNLg9rKZPL',
+    score: 9,
+    duration: 120,
   },
 ];
 

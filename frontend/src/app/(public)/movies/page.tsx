@@ -11,7 +11,20 @@ function MoviesPageContent() {
   // Custom hooks for clean separation of concerns
   const { searchQuery, setSearchQuery, handleSearch, handleKeyPress } = useSearchLogic();
 
-  const { nowPlayingMovies, upcomingMovies, isLoadingNowPlaying, isLoadingUpcoming } = useMovieSearch();
+  const {
+    nowPlayingMovies,
+    upcomingMovies,
+    isLoadingNowPlaying,
+    isLoadingUpcoming,
+    nowPlayingPagination,
+    upcomingPagination,
+    goToNextPageNowPlaying,
+    goToPreviousPageNowPlaying,
+    goToPageNowPlaying,
+    goToNextPageUpcoming,
+    goToPreviousPageUpcoming,
+    goToPageUpcoming,
+  } = useMovieSearch();
 
   return (
     <div>
@@ -26,9 +39,25 @@ function MoviesPageContent() {
         onKeyPress={handleKeyPress}
       />
 
-      <MovieSection title="Now Playing" movies={nowPlayingMovies} isLoading={isLoadingNowPlaying} />
+      <MovieSection
+        title="Now Playing"
+        movies={nowPlayingMovies}
+        isLoading={isLoadingNowPlaying}
+        pagination={nowPlayingPagination}
+        goToNextPage={goToNextPageNowPlaying}
+        goToPreviousPage={goToPreviousPageNowPlaying}
+        goToPage={goToPageNowPlaying}
+      />
 
-      <MovieSection title="Upcoming" movies={upcomingMovies} isLoading={isLoadingUpcoming} />
+      <MovieSection
+        title="Upcoming"
+        movies={upcomingMovies}
+        isLoading={isLoadingUpcoming}
+        pagination={upcomingPagination}
+        goToNextPage={goToNextPageUpcoming}
+        goToPreviousPage={goToPreviousPageUpcoming}
+        goToPage={goToPageUpcoming}
+      />
     </div>
   );
 }

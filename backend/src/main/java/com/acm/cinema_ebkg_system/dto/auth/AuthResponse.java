@@ -37,8 +37,8 @@ public class AuthResponse {
      * User DTO - Represents user data safe for frontend consumption
      * 
      * Security: Excludes password hash and sensitive data.
-     * Design: Simple data container. Factory methods are in UserDtoFactory class.
-     * Nullable fields are acceptable in DTOs per Spring Boot conventions.
+     * Design: Simple data container. Static factory methods are in UserDtoFactory class.
+     * Note: Address information is provided separately via UserProfileDTO when needed.
      */
     @Data
     @NoArgsConstructor
@@ -49,8 +49,5 @@ public class AuthResponse {
         private String firstName;
         private String lastName;
         private String phoneNumber; // Optional
-        private String address; // Optional
-        private String state; // Optional
-        private String country; // Optional
     }
 }

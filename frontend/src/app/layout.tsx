@@ -5,8 +5,10 @@ import { FiltersProvider } from '@/contexts/FiltersContext';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { ToastProvider } from '@/contexts/ToastContext';
 import { ProfileProvider } from '@/contexts/ProfileContext';
+import { ReservationProvider } from '@/contexts/ReservationContext';
 import QueryProvider from '@/contexts/QueryProvider';
 import BokehBackground from '@/components/common/BokehBackground';
+import ReservationTimerToast from '@/components/common/ReservationTimerToast';
 
 export const metadata: Metadata = {
   title: 'ACM Actual Cinema Movies',
@@ -46,11 +48,14 @@ export default function RootLayout({
           <AuthProvider>
             <ProfileProvider>
               <FiltersProvider>
-                <ToastProvider>
-                  <BokehBackground>
-                    {children}
-                  </BokehBackground>
-                </ToastProvider>
+                <ReservationProvider>
+                  <ToastProvider>
+                    <BokehBackground>
+                      <ReservationTimerToast />
+                      {children}
+                    </BokehBackground>
+                  </ToastProvider>
+                </ReservationProvider>
               </FiltersProvider>
             </ProfileProvider>
           </AuthProvider>

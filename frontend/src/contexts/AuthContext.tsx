@@ -1,7 +1,8 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, useMemo, useCallback, useRef, ReactNode } from 'react';
-import { authAPI, AuthResponse } from '@/services/auth';
+import { authClient, AuthResponse } from '@/clients/authClient';
+import { getAuthToken } from '@/utils/auth';
 
 interface User {
   id: number;
@@ -29,16 +30,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // CACHES: Function reference (not behavior) - persists across AuthProvider re-renders
   // CHANGES: Never (empty deps) - BUT will recreate if AuthProvider component unmounts/remounts
-  // WITHOUT useCallback: New reference every AuthProvider re-render → useMemo recreates context → all auth consumers re-render
+  // WITHOUT useCallback: New reference every AuthProvider re-render -> useMemo recreates context → all auth consumers re-render
   // WHY MATTERS: Prevents context recreation cascade
   const checkAuthStatus = useCallback(() => {
     console.log('checkAuthStatus called');
     setIsLoading(true);
 
     // Check localStorage first, then sessionStorage
-    const localToken = localStorage.getItem('token');
-    const sessionToken = sessionStorage.getItem('token');
-    const token = localToken || sessionToken;
+    const token = getAuthToken();
+    const localToken = localStorage.getItem('token'); // For logging only
+    const sessionToken = sessionStorage.getItem('token'); // For logging only
     const rememberMe = localStorage.getItem('rememberMe') === 'true';
 
     // Check for refresh token
@@ -63,7 +64,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (token && refreshToken) {
       console.log('Attempting to refresh token...');
       // Try to refresh token to validate it
-      authAPI
+      authClient
         .refreshToken()
         .then((response) => {
           console.log('refreshToken response:', response);
@@ -143,11 +144,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Removed cross-tab communication to fix logout issues
   // CACHES: Function reference (not behavior) - persists across AuthProvider re-renders
   // CHANGES: Never (empty deps) - BUT will recreate if AuthProvider component unmounts/remounts
-  // WITHOUT useCallback: New reference every AuthProvider re-render → useMemo recreates context → all auth consumers re-render
+  // WITHOUT useCallback: New reference every AuthProvider re-render -> useMemo recreates context → all auth consumers re-render
   // WHY MATTERS: Prevents context recreation cascade
   const login = useCallback(async (email: string, password: string, rememberMe = false): Promise<AuthResponse> => {
     console.log('Login attempt - rememberMe:', rememberMe);
-    const response = await authAPI.login({ email, password, rememberMe });
+    const response = await authClient.login({ email, password, rememberMe });
     console.log('Login response:', response);
 
     if (response.success && response.user && response.token) {
@@ -187,7 +188,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const adminLogin = useCallback(async (email: string, password: string, rememberMe = false): Promise<AuthResponse> => {
     console.log('Admin login attempt - rememberMe:', rememberMe);
-    const response = await authAPI.adminLogin({ email, password, rememberMe });
+    const response = await authClient.adminLogin({ email, password, rememberMe });
     console.log('Admin login response:', response);
 
     if (response.success && response.user && response.token) {
@@ -221,10 +222,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // CACHES: Function reference (not behavior) - persists across AuthProvider re-renders
   // CHANGES: Never (empty deps) - BUT will recreate if AuthProvider component unmounts/remounts
-  // WITHOUT useCallback: New reference every AuthProvider re-render → useMemo recreates context → all auth consumers re-render
+  // WITHOUT useCallback: New reference every AuthProvider re-render -> useMemo recreates context → all auth consumers re-render
   // WHY MATTERS: Prevents context recreation cascade
   const logout = useCallback(async (): Promise<void> => {
     console.log('Logout initiated - INSTANT LOGOUT');
+
+    // Clear reservation when user logs out (stop timer and release seats)
+    // Dispatch event to clear reservation - ReservationContext will listen for this
+    window.dispatchEvent(new CustomEvent('userLogout'));
 
     // Clear everything immediately - no delays, no complex logic
     setUser(null);
@@ -241,7 +246,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // CACHES: Context value object { user, isAuthenticated, isLoading, login, logout, checkAuthStatus } - persists across AuthProvider re-renders
   // CHANGES: When user, isLoading, or function references change - BUT will recreate if AuthProvider component unmounts/remounts
-  // WITHOUT useMemo: New object every AuthProvider re-render → all auth consumers re-render (NavBar, protected routes, etc.)
+  // WITHOUT useMemo: New object every AuthProvider re-render -> all auth consumers re-render (NavBar, protected routes, etc.)
   // WHY MATTERS: Prevents cascading re-renders across entire auth component tree
   const contextValue = useMemo(
     () => ({

@@ -1,8 +1,15 @@
 package com.acm.cinema_ebkg_system.service;
 
+import com.acm.cinema_ebkg_system.dto.payment.PaymentCardRequestDTO;
+import com.acm.cinema_ebkg_system.dto.payment.PaymentCardResponseDTO;
 import com.acm.cinema_ebkg_system.model.PaymentCard;
+import com.acm.cinema_ebkg_system.model.Address;
+import com.acm.cinema_ebkg_system.model.User;
+import com.acm.cinema_ebkg_system.enums.AddressType;
 import com.acm.cinema_ebkg_system.repository.PaymentCardRepository;
 import com.acm.cinema_ebkg_system.repository.AddressRepository;
+import com.acm.cinema_ebkg_system.service.AddressService;
+import com.acm.cinema_ebkg_system.service.UserService;
 import com.acm.cinema_ebkg_system.util.PaymentEncryptionUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -21,6 +28,12 @@ public class PaymentCardService {
     
     @Autowired
     private AddressRepository addressRepository;
+    
+    @Autowired
+    private AddressService addressService;
+    
+    @Autowired
+    private UserService userService;
     
     /**
      * Get all payment cards for a user (default first) with decrypted card numbers
@@ -213,5 +226,92 @@ public class PaymentCardService {
             newDefaultCard.get().setIsDefault(true);
             paymentCardRepository.save(newDefaultCard.get());
         }
+    }
+
+    /**
+     * Get all payment cards for a user with billing addresses loaded
+     * 
+     * @param userId User ID
+     * @return List of payment cards with addresses loaded
+     */
+    public List<PaymentCard> getUserPaymentCardsWithAddresses(Long userId) {
+        List<PaymentCard> cards = getUserPaymentCards(userId);
+        // Load billing address for each card
+        for (PaymentCard card : cards) {
+            if (card.getAddressId() != null) {
+                Optional<Address> address = addressService.getAddressById(card.getAddressId());
+                address.ifPresent(card::setAddress);
+            }
+        }
+        return cards;
+    }
+
+    /**
+     * Create payment card from DTO (includes address creation)
+     * 
+     * @param dto PaymentCardDTO containing card and billing address information
+     * @return Created PaymentCard
+     */
+    @Transactional
+    public PaymentCard createPaymentCardFromDto(PaymentCardRequestDTO dto) {
+        // Get user
+        User user = userService.getUserById(dto.getUserId());
+        
+        // Create billing address
+        Address address = new Address();
+        address.setUser(user);
+        address.setAddressType(AddressType.billing);
+        address.setStreet(dto.getBillingStreet());
+        address.setCity(dto.getBillingCity());
+        address.setState(dto.getBillingState());
+        address.setZip(dto.getBillingZip());
+        address.setCountry(dto.getBillingCountry() != null ? dto.getBillingCountry() : "US");
+        Address savedAddress = addressService.createAddress(address);
+        
+        // Create payment card
+        PaymentCard paymentCard = new PaymentCard();
+        paymentCard.setUser(user);
+        paymentCard.setAddress(savedAddress);
+        paymentCard.setCardNumber(dto.getCardNumber());
+        paymentCard.setCardholderName(dto.getCardholderName());
+        paymentCard.setPaymentCardType(dto.getCardType());
+        paymentCard.setExpirationDate(dto.getExpirationDate());
+        paymentCard.setIsDefault(dto.getIsDefault() != null ? dto.getIsDefault() : false);
+        
+        return createPaymentCard(paymentCard);
+    }
+
+    /**
+     * Update payment card from DTO (includes address update)
+     * 
+     * @param paymentCardId Payment card ID to update
+     * @param dto PaymentCardDTO containing updated card and billing address information
+     * @return Updated PaymentCard
+     */
+    @Transactional
+    public PaymentCard updatePaymentCardFromDto(Long paymentCardId, PaymentCardRequestDTO dto) {
+        // Get existing payment card
+        PaymentCard existingCard = getPaymentCardById(paymentCardId)
+            .orElseThrow(() -> new RuntimeException("Payment card not found"));
+        
+        // Update card fields
+        existingCard.setPaymentCardType(dto.getCardType());
+        existingCard.setCardNumber(dto.getCardNumber());
+        existingCard.setCardholderName(dto.getCardholderName());
+        existingCard.setExpirationDate(dto.getExpirationDate());
+        existingCard.setIsDefault(dto.getIsDefault() != null ? dto.getIsDefault() : false);
+        
+        // Update billing address
+        if (existingCard.getAddress() != null) {
+            Address address = existingCard.getAddress();
+            address.setStreet(dto.getBillingStreet());
+            address.setCity(dto.getBillingCity());
+            address.setState(dto.getBillingState());
+            address.setZip(dto.getBillingZip());
+            address.setCountry(dto.getBillingCountry() != null ? dto.getBillingCountry() : "US");
+            addressService.updateAddress(address);
+        }
+        
+        return updatePaymentCard(existingCard);
     }
 }

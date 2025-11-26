@@ -10,37 +10,7 @@ import styles from './profile.module.css';
 
 // Hook to retrieve user from backend
 import { useUser } from '@/hooks/useUser';
-
-// Decode the token for the current login session
-function decodeJWT(token: string) {
-  const [, payloadBase64] = token.split('.');
-  const decodedPayload = Buffer.from(payloadBase64, 'base64').toString('utf-8');
-
-  return JSON.parse(decodedPayload);
-}
-
-// Get the ID of the logged in user using the token
-function getUserID() {
-  // Check if we're on the client side before accessing storage
-  if (typeof window === 'undefined') {
-    return 0; // Return default value during SSR
-  }
-
-  // Check localStorage first, then sessionStorage
-  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-  //console.log(token);
-
-  if (token) {
-    const userData = decodeJWT(token);
-    //console.log("Decoded User Data:", userData);
-    const userId = userData.userId;
-    //console.log("User ID:", userId);
-    return userId;
-  } else {
-    // If the token is somehow not present, return 0 as a failsafe, which is an unused ID
-    return 0;
-  }
-}
+import { getUserIdFromToken } from '@/utils/auth';
 
 function validatePhoneNumber(phoneNumber: string) {
   const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
@@ -69,7 +39,8 @@ function checkPasswordSecurity(currentPwd: string, newPwd: string) {
 export default function ProfilePage() {
   // Initialize user profile data
   // Get the user profile data from the backend
-  const { user, isLoading, error, updateUser, updatePassword } = useUser(getUserID());
+  // useUser expects number, use nullish coalescing w/ 0 fallback for now
+  const { user, isLoading, error, updateUser, updatePassword } = useUser(getUserIdFromToken() ?? 0);
 
   // Promotions subscription state
   const [subscribeToPromotions, setSubscribeToPromotions] = useState(false);

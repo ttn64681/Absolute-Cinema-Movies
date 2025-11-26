@@ -6,11 +6,14 @@ import { formatDateInput } from './movieFormUtils';
 interface Promotion {
   id: number;
   name: string;
-  value: string;
-  expirationDate?: string;
-  description?: string;
-  promoCode?: string;
-  discountType?: string;
+  value: number;
+  expirationDate: string;
+  description: string;
+  promoCode: string;
+  discountType: string;
+  sent: boolean;
+  active: boolean;
+  imageLink: string;
 }
 
 interface PromotionModalProps {
@@ -34,13 +37,15 @@ export default function PromotionModal({ isOpen, onClose, onSave, editingPromo }
 
   useEffect(() => {
     if (editingPromo) {
-      const discountValue = parseFloat(editingPromo.value) || 0;
+      const discountValue = editingPromo.value || 0;      
+      const formattedExpirationDate = `${editingPromo.expirationDate.substring(5, 7)}/${editingPromo.expirationDate.substring(8, 10)}/${editingPromo.expirationDate.substring(0, 4)}`;
+      
       setForm({
-        image: '',
+        image: editingPromo.imageLink,
         name: editingPromo.name,
         discount: discountValue,
         discountType: (editingPromo.discountType || '% off') as '% off' | '$ off',
-        expirationDate: editingPromo.expirationDate || '',
+        expirationDate: formattedExpirationDate || '',
         description: editingPromo.description || '',
         promoCode: editingPromo.promoCode || '',
       });
@@ -68,13 +73,16 @@ export default function PromotionModal({ isOpen, onClose, onSave, editingPromo }
       }
     }
 
+    const formattedExpirationDate = `${form.expirationDate.substring(6, 10)}-${form.expirationDate.substring(0, 2)}-${form.expirationDate.substring(3, 5)}T00:00:00`;
+
     onSave({
       name: form.name,
-      value: form.discount.toString(),
-      expirationDate: form.expirationDate,
+      value: form.discount,
+      expirationDate: formattedExpirationDate,
       description: form.description,
       promoCode: form.promoCode,
       discountType: form.discountType,
+      imageLink: form.image
     });
     onClose();
   };

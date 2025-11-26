@@ -1,14 +1,9 @@
 package com.acm.cinema_ebkg_system.model;
 
 import jakarta.persistence.*;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
-
-import com.acm.cinema_ebkg_system.enums.TicketType;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.acm.cinema_ebkg_system.enums.TicketType;
 import java.time.LocalDateTime;
-import java.util.List;
 
 /**
  * Ticket Entity - Represents individual tickets for movie bookings
@@ -23,9 +18,6 @@ import java.util.List;
  * - Associates with ShowSeats via TicketSeat junction table
  * - Tracks ticket price at time of purchase
  */
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
 @Entity
 @Table(name = "ticket")
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
@@ -39,30 +31,24 @@ public class Ticket {
     private Long id;
     
     // Many-to-one relationship with Booking
-    // TODO: Uncomment when Booking model is fully implemented
     // Many tickets belong to one booking (one booking can have multiple tickets)
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "booking_id", nullable = false)
+    @JoinColumn(name = "booking_id", nullable = false) // NOT NULL in database schema
     @JsonIgnoreProperties({"tickets", "createdAt", "updatedAt"})
     private Booking booking;
     
-    // Many-to-one relationship with TicketCategory
-    // Many tickets belong to one ticket category (one category applies to many tickets)
+    // Ticket type as ENUM (matches database ticket_type ENUM)
+    // Database column: tic_type of type ticket_type
     @Enumerated(EnumType.STRING)
-    @Column(name = "ticket_category_id", nullable = false)
-    @JsonIgnoreProperties({"tickets"})
-    private TicketType ticketType;
+    @Column(name = "tic_type", nullable = false)
+    private TicketType ticType;
     
-    // Price at time of purchase (may differ from current category price)
-    @Column(name = "price_at_purchase", nullable = false, precision = 8, scale = 2)
-    private java.math.BigDecimal priceAtPurchase;
+    // One-to-one relationship with TicketSeat
+    // One ticket is linked to exactly one seat (ticket_id is UNIQUE in ticket_seat table)
+    @OneToOne(mappedBy = "ticket", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnoreProperties({"ticket"})
+    private TicketSeat ticketSeat;
     
-    // One-to-many relationship with TicketSeat (junction table)
-    // One ticket can be associated with many seats via TicketSeat
-    
-    // Reference to booking ID (for future use when Booking is implemented)
-    @Column(name = "booking_id", insertable = false, updatable = false)
-    private Long bookingId;
     
     // Timestamp when record was created
     @Column(name = "created_at")
@@ -71,6 +57,19 @@ public class Ticket {
     // Timestamp when record was last updated
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    // Default constructor
+    public Ticket() {}
+
+    // All-args constructor
+    public Ticket(Long id, Booking booking, TicketType ticType, TicketSeat ticketSeat, LocalDateTime createdAt, LocalDateTime updatedAt) {
+        this.id = id;
+        this.booking = booking;
+        this.ticType = ticType;
+        this.ticketSeat = ticketSeat;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+    }
     
     @PrePersist
     protected void onCreate() {
@@ -81,5 +80,55 @@ public class Ticket {
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
+    }
+
+    // Getters
+    public Long getId() {
+        return id;
+    }
+
+    public Booking getBooking() {
+        return booking;
+    }
+
+    public TicketType getTicType() {
+        return ticType;
+    }
+
+    public TicketSeat getTicketSeat() {
+        return ticketSeat;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    // Setters
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public void setBooking(Booking booking) {
+        this.booking = booking;
+    }
+
+    public void setTicType(TicketType ticType) {
+        this.ticType = ticType;
+    }
+
+    public void setTicketSeat(TicketSeat ticketSeat) {
+        this.ticketSeat = ticketSeat;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
     }
 }

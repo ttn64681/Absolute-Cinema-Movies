@@ -33,6 +33,25 @@ export default function CheckoutPage() {
             </div>
           </div>
           <OrderDetails />
+          {/* Complete Booking Button */}
+          <div className="mt-6 flex justify-end">
+            <button
+              type="button"
+              onClick={handleCompleteBooking}
+              disabled={isProcessing}
+              className={`inline-flex items-center gap-2 px-8 py-4 rounded-lg font-bold text-lg transition-all ${
+                isProcessing
+                  ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                  : 'bg-gradient-to-r from-acm-pink to-acm-orange text-white hover:brightness-110 cursor-pointer'
+              }`}
+              title="Complete Booking"
+            >
+              <span>{isProcessing ? 'PROCESSING...' : 'COMPLETE BOOKING'}</span>
+              <span className="text-xl leading-none">
+                <RxDoubleArrowRight />
+              </span>
+            </button>
+          </div>
         </div>
       </div>
     </div>

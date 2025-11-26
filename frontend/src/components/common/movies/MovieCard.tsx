@@ -2,15 +2,16 @@ import React, { useState, useMemo } from 'react';
 import Image from 'next/image';
 import SelectedMovie from './selectedMovie/SelectedMovie';
 import TrailerEmbed from './TrailerEmbed';
-import { BackendMovie } from '@/types/movie';
+import { MovieSummary, BackendMovie } from '@/types/movie';
 import { IoPlay } from 'react-icons/io5';
 
 interface MovieCardProps {
-  movie: BackendMovie;
+  movie: MovieSummary;
 }
 
 export default function MovieCard({ movie }: MovieCardProps) {
-  const [selectedMovie, setSelectedMovie] = useState<BackendMovie | null>(null);
+  // SelectedMovie accepts MovieSummary and fetches full details via Virtual Proxy
+  const [selectedMovie, setSelectedMovie] = useState<MovieSummary | null>(null);
   const [isTrailerOpen, setIsTrailerOpen] = useState(false);
 
   // CACHES: Genres array ["Action", "Drama", "Thriller"] - persists across MovieCard re-renders
@@ -63,10 +64,25 @@ export default function MovieCard({ movie }: MovieCardProps) {
             blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCdABmX/9k=" // Base64 blur placeholder
           />
 
-          {/* MPAA Rating Badge - Above overlay */}
-          <div className="absolute top-3 right-3 z-10 rounded-full bg-white/90 backdrop-blur-sm px-2 py-1 text-xs font-bold text-gray-800 shadow-sm">
+          {/* Top Right Badges - Rating and Score */}
+          <div className="absolute top-3 right-3 z-10 flex flex-col gap-1.5 items-end">
+            <div className="rounded-full bg-white/90 backdrop-blur-sm px-2 py-1 text-xs font-bold text-gray-800 shadow-sm">
             {movie.rating}
           </div>
+            {movie.score > 0 && (
+              <div className="rounded-full bg-acm-pink/90 backdrop-blur-sm px-2 py-1 text-xs font-bold text-white shadow-sm flex items-center gap-1">
+                <span>★</span>
+                <span>{movie.score}/100</span>
+              </div>
+            )}
+          </div>
+
+          {/* Bottom Left Badge - Duration */}
+          {movie.duration > 0 && (
+            <div className="absolute bottom-3 left-3 z-10 rounded-full bg-black/70 backdrop-blur-sm px-2 py-1 text-xs font-semibold text-white shadow-sm">
+              {Math.floor(movie.duration / 60)}h {movie.duration % 60}m
+            </div>
+          )}
 
           {/* Hover Overlay */}
           <div className="absolute inset-0 bg-black/0 group-hover:bg-black/60 transition-all duration-300 z-0">

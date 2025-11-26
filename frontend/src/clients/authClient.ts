@@ -1,4 +1,27 @@
-// Authentication API service
+/**
+ * Authentication Client - Facade for authentication API operations
+ *
+ * Centralizes all auth-related API calls with standardized error handling
+ * and request configuration.
+ *
+ * Follows Facade pattern: Single interface to complex auth API subsystem
+ *
+ * Responsibilities:
+ * - HTTP requests to auth endpoints
+ * - Request/response formatting
+ * - Basic error handling
+ *
+ * Delegates to:
+ * - /utils/auth.ts for token retrieval/parsing
+ * - AuthContext for state management
+ *
+ * Usage:
+ *   const response = await authClient.login({ email, password });
+ *   const refreshed = await authClient.refreshToken();
+ */
+
+import { getRefreshToken } from '@/utils/auth';
+
 export interface LoginRequest {
   email: string;
   password: string;
@@ -38,9 +61,6 @@ export interface AuthResponse {
     firstName: string;
     lastName: string;
     phoneNumber?: string;
-    address?: string;
-    state?: string;
-    country?: string;
   };
 }
 
@@ -49,14 +69,29 @@ export interface ValidationError {
   message: string;
 }
 
-// API functions using Spring Boot backend
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api';
 
-export const authAPI = {
+/**
+ * Authentication Client API
+ *
+ * Provides methods for all authentication operations:
+ * - Login (user & admin)
+ * - Registration
+ * - Token refresh
+ * - Logout
+ * - Email validation
+ */
+export const authClient = {
+  /**
+   * User login
+   *
+   * @param credentials - Email, password, and rememberMe flag
+   * @returns AuthResponse with token and user info
+   */
   async login(credentials: LoginRequest): Promise<AuthResponse> {
     try {
-      console.log('authAPI.login - Making request to:', `${API_BASE_URL}/auth/login`);
-      console.log('authAPI.login - Credentials:', { ...credentials, password: '[HIDDEN]' });
+      console.log('authClient.login - Making request to:', `${API_BASE_URL}/auth/login`);
+      console.log('authClient.login - Credentials:', { ...credentials, password: '[HIDDEN]' });
 
       const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: 'POST',
@@ -66,12 +101,12 @@ export const authAPI = {
         body: JSON.stringify(credentials),
       });
 
-      console.log('authAPI.login - Response status:', response.status);
+      console.log('authClient.login - Response status:', response.status);
       const data = await response.json();
-      console.log('authAPI.login - Response data:', data);
+      console.log('authClient.login - Response data:', data);
       return data;
     } catch (error) {
-      console.error('authAPI.login - Login API error:', error);
+      console.error('authClient.login - Login API error:', error);
       return {
         success: false,
         message: 'Network error. Please try again.',
@@ -79,6 +114,12 @@ export const authAPI = {
     }
   },
 
+  /**
+   * User registration
+   *
+   * @param userData - Registration data including user info and optional payment cards
+   * @returns AuthResponse with token and user info
+   */
   async register(userData: RegisterRequest): Promise<AuthResponse> {
     try {
       const response = await fetch(`${API_BASE_URL}/auth/register`, {
@@ -100,21 +141,18 @@ export const authAPI = {
     }
   },
 
+  /**
+   * Refresh access token using refresh token
+   *
+   * @returns AuthResponse with new token
+   */
   async refreshToken(): Promise<AuthResponse> {
     try {
-      const refreshToken = localStorage.getItem('refreshToken') || sessionStorage.getItem('refreshToken');
-      console.log('authAPI.refreshToken - refreshToken found:', refreshToken ? 'exists' : 'null');
-      console.log(
-        'authAPI.refreshToken - localStorage refreshToken:',
-        localStorage.getItem('refreshToken') ? 'exists' : 'null'
-      );
-      console.log(
-        'authAPI.refreshToken - sessionStorage refreshToken:',
-        sessionStorage.getItem('refreshToken') ? 'exists' : 'null'
-      );
+      const refreshToken = getRefreshToken();
+      console.log('authClient.refreshToken - refreshToken found:', refreshToken ? 'exists' : 'null');
 
       if (!refreshToken) {
-        console.log('authAPI.refreshToken - No refresh token found');
+        console.log('authClient.refreshToken - No refresh token found');
         return {
           success: false,
           message: 'No refresh token found',
@@ -122,7 +160,7 @@ export const authAPI = {
       }
 
       console.log(
-        'authAPI.refreshToken - Making request to:',
+        'authClient.refreshToken - Making request to:',
         `${API_BASE_URL}/auth/refresh?refreshToken=${encodeURIComponent(refreshToken)}`
       );
       const response = await fetch(`${API_BASE_URL}/auth/refresh?refreshToken=${encodeURIComponent(refreshToken)}`, {
@@ -132,12 +170,12 @@ export const authAPI = {
         },
       });
 
-      console.log('authAPI.refreshToken - Response status:', response.status);
+      console.log('authClient.refreshToken - Response status:', response.status);
       const data = await response.json();
-      console.log('authAPI.refreshToken - Response data:', data);
+      console.log('authClient.refreshToken - Response data:', data);
       return data;
     } catch (error) {
-      console.error('authAPI.refreshToken - Token refresh error:', error);
+      console.error('authClient.refreshToken - Token refresh error:', error);
       return {
         success: false,
         message: 'Token refresh failed',
@@ -145,6 +183,11 @@ export const authAPI = {
     }
   },
 
+  /**
+   * Logout (currently client-side only, no backend call needed for JWT)
+   *
+   * @returns AuthResponse
+   */
   async logout(): Promise<AuthResponse> {
     try {
       const response = await fetch(`${API_BASE_URL}/auth/logout`, {
@@ -165,6 +208,12 @@ export const authAPI = {
     }
   },
 
+  /**
+   * Check if email already exists
+   *
+   * @param email - Email to check
+   * @returns AuthResponse indicating if email is available
+   */
   async checkEmail(email: string): Promise<AuthResponse> {
     try {
       const response = await fetch(`${API_BASE_URL}/auth/check-email`, {
@@ -186,10 +235,16 @@ export const authAPI = {
     }
   },
 
+  /**
+   * Admin login
+   *
+   * @param credentials - Email, password, and rememberMe flag
+   * @returns AuthResponse with admin token and user info
+   */
   async adminLogin(credentials: LoginRequest): Promise<AuthResponse> {
     try {
-      console.log('🔐 authAPI.adminLogin - Making request to:', `${API_BASE_URL}/admin/login`);
-      console.log('🔐 authAPI.adminLogin - Credentials:', { ...credentials, password: '[HIDDEN]' });
+      console.log('authClient.adminLogin - Making request to:', `${API_BASE_URL}/admin/login`);
+      console.log('authClient.adminLogin - Credentials:', { ...credentials, password: '[HIDDEN]' });
 
       const response = await fetch(`${API_BASE_URL}/admin/login`, {
         method: 'POST',
@@ -199,12 +254,12 @@ export const authAPI = {
         body: JSON.stringify(credentials),
       });
 
-      console.log('🔐 authAPI.adminLogin - Response status:', response.status);
+      console.log('authClient.adminLogin - Response status:', response.status);
       const data = await response.json();
-      console.log('🔐 authAPI.adminLogin - Response data:', data);
+      console.log('authClient.adminLogin - Response data:', data);
       return data;
     } catch (error) {
-      console.error('❌ authAPI.adminLogin - Admin login API error:', error);
+      console.error('authClient.adminLogin - Admin login API error:', error);
       return {
         success: false,
         message: 'Network error. Please try again.',
@@ -213,7 +268,10 @@ export const authAPI = {
   },
 };
 
-// Validation utilities
+/**
+ * Validation Utilities
+ */
+
 export const validateEmail = (email: string): boolean => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return emailRegex.test(email);
@@ -239,3 +297,4 @@ export const validatePhoneNumber = (phone: string): boolean => {
   const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
   return phoneRegex.test(phone.replace(/[\s\-\(\)]/g, ''));
 };
+

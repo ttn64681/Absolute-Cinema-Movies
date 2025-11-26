@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { BackendMovieShow } from "@/types/admin";
+import { useAdminMovieShows } from '@/hooks/useAdminMovieShows';
 
 type Showtime = {
   date: string;
@@ -12,37 +14,39 @@ type Showtime = {
 interface ScheduleModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSchedule: (date: string, time: string, showRoomId: number) => void;
+  //onSchedule: (date: string, time: string, showRoomId: number) => void;
   movieId: number;
   movieTitle: string;
-  existingShowtimes?: Showtime[];
+  //existingShowtimes?: Showtime[];
 }
 
 // Hardcoded show rooms with capacities: 60, 70, 80, 90
 const SHOW_ROOMS = [
-  { id: 1, name: "A", capacity: 60 },
-  { id: 2, name: "B", capacity: 70 },
-  { id: 3, name: "C", capacity: 80 },
-  { id: 4, name: "D", capacity: 90 },
+  { id: 3, name: "A", capacity: 60 },
+  { id: 4, name: "B", capacity: 70 },
+  { id: 5, name: "C", capacity: 80 },
+  { id: 6, name: "D", capacity: 90 },
 ];
 
 export default function ScheduleModal({
   isOpen,
   onClose,
-  onSchedule,
+  //nSchedule,
   movieId,
   movieTitle,
-  existingShowtimes = [],
 }: ScheduleModalProps) {
+
+  const {movieShows, isLoading, error, scheduleMovieShow} = useAdminMovieShows(movieId);
+
   const [selectedDate, setSelectedDate] = useState("");
   const [selectedTime, setSelectedTime] = useState("");
   const [selectedShowRoomId, setSelectedShowRoomId] = useState<number | null>(null);
-  const [showtimes, setShowtimes] = useState<Showtime[]>(existingShowtimes);
+  const [showtimes, setShowtimes] = useState<Showtime[]>(movieShows);
 
   // Update showtimes when existingShowtimes prop changes
   useEffect(() => {
-    setShowtimes(existingShowtimes);
-  }, [existingShowtimes]);
+    setShowtimes(movieShows);
+  }, [movieShows]);
 
   // Reset state when modal opens/closes
   useEffect(() => {
@@ -50,14 +54,77 @@ export default function ScheduleModal({
       setSelectedDate("");
       setSelectedTime("");
       setSelectedShowRoomId(null);
-      setShowtimes(existingShowtimes);
+      setShowtimes(movieShows);
     }
-  }, [isOpen, existingShowtimes]);
+  }, [isOpen]);
 
-  const handleSchedule = () => {
+  // Save the new movie show!
+  const handleSchedule = async () => {
+    console.log(selectedDate);
+    console.log(selectedTime);
+    console.log(selectedShowRoomId);
+
     if (selectedDate && selectedTime && selectedShowRoomId !== null) {
+
+      // Parse the input date
+      const dateParts = selectedDate.split("-");
+      const year = parseInt(dateParts[0], 10);
+      const month = parseInt(dateParts[1], 10) - 1; // Month is 0-indexed in JavaScript
+      const day = parseInt(dateParts[2], 10);
+
+      // Parse the input time
+      const timeParts = selectedTime.split(/:|\s/); // Split by ":" and whitespace
+      let hour = parseInt(timeParts[0], 10);
+      const minute = parseInt(timeParts[1], 10);
+      const period = timeParts[2]; // "AM" or "PM"
+
+      console.log(hour, minute);
+
+      // Convert to 24-hour format if necessary
+      if (period === "PM" && hour < 12) {
+          hour += 12; // Convert PM hour
+      }
+      if (period === "AM" && hour === 12) {
+          hour = 0; // 12 AM should be 0 hours
+      }
+
+      console.log(hour, minute);
+
+      // Create a Date object
+      const dateTime = new Date(year, month, day, hour, minute, 0); // Seconds set to 0
+      console.log(dateTime);
+
+      // Get all the pieces to create a string that looks like a Java LocalDateTime object (for backend)
+      const localYear = dateTime.getFullYear();
+      const localMonth = String(dateTime.getMonth() + 1).padStart(2, '0');
+      const localDate = String(dateTime.getDate()).padStart(2, '0');
+
+      const localHour = String(dateTime.getHours()).padStart(2, '0');
+      const localMinute = String(dateTime.getMinutes()).padStart(2, '0');
+
+      // Format to mimic Java LocalDateTime (YYYY-MM-DDTHH:mm:ss)
+      const formattedDateTime = `${localYear}-${localMonth}-${localDate}T${localHour}:${localMinute}:00`;
+      console.log(formattedDateTime);
+
+      // Create an object the backend will accept
+      const newMovieShow: BackendMovieShow = {
+          movieId: movieId,
+          showRoomId: selectedShowRoomId,
+          startTime: formattedDateTime
+      }
+
+      // Send the movie show to backend and await response
+      const movieShowStatus = await scheduleMovieShow(newMovieShow);
+      if (movieShowStatus) {
+        alert("Movie show successfully scheduled.");
+        onClose();
+      } else {
+        alert("Movie show schedule conflict. Check that there isn't another show at the same time in the same room.");
+      }
+      
+
       // Parse time string (e.g., "7:30 PM" -> time: "7:30", ampm: "PM")
-      const timeParts = selectedTime.trim().split(/\s+/);
+      /*const timeParts = selectedTime.trim().split(/\s+/);
       const timeValue = timeParts[0];
       const ampm = timeParts[1] || 'PM';
 
@@ -80,7 +147,8 @@ export default function ScheduleModal({
       // Reset form fields after scheduling
       setSelectedDate("");
       setSelectedTime("");
-      setSelectedShowRoomId(null);
+      setSelectedShowRoomId(null);*/
+      
     }
   };
 
@@ -90,28 +158,23 @@ export default function ScheduleModal({
   // TODO: Replace with dates from backend
   const generateDateOptions = () => {
     return [
-      "12/15/2024",
-      "12/16/2024",
-      "12/17/2024",
-      "12/18/2024",
-      "12/19/2024",
-      "12/20/2024",
-      "12/21/2024",
-      "12/22/2024",
-      "12/23/2024",
-      "12/24/2024",
-      "12/25/2024",
-      "12/26/2024",
-      "12/27/2024",
-      "12/28/2024",
-      "12/29/2024",
-      "12/30/2024",
-      "12/31/2024",
-      "01/01/2025",
-      "01/02/2025",
-      "01/03/2025",
-      "01/04/2025",
-      "01/05/2025",
+      "2025-12-15",
+      "2025-12-16",
+      "2025-12-17",
+      "2025-12-18",
+      "2025-12-19",
+      "2025-12-20",
+      "2025-12-21",
+      "2025-12-22",
+      "2025-12-23",
+      "2025-12-24",
+      "2025-12-25",
+      "2025-12-26",
+      "2025-12-27",
+      "2025-12-28",
+      "2025-12-29",
+      "2025-12-30",
+      "2025-12-31",
     ];
   };
 
@@ -200,6 +263,7 @@ export default function ScheduleModal({
                 value={selectedDate}
                 onChange={(e) => {
                   setSelectedDate(e.target.value);
+                  console.log("Date:" + selectedDate);
                   setSelectedTime("");
                   setSelectedShowRoomId(null);
                 }}
@@ -228,6 +292,7 @@ export default function ScheduleModal({
                 value={selectedTime}
                 onChange={(e) => {
                   setSelectedTime(e.target.value);
+                  console.log("Time:" + selectedTime);
                   setSelectedShowRoomId(null);
                 }}
                 disabled={!selectedDate}
@@ -256,7 +321,10 @@ export default function ScheduleModal({
             <div className="relative">
               <select
                 value={selectedShowRoomId || ""}
-                onChange={(e) => setSelectedShowRoomId(e.target.value ? Number(e.target.value) : null)}
+                onChange={(e) => {
+                  setSelectedShowRoomId(e.target.value ? Number(e.target.value) : null);
+                  console.log(selectedShowRoomId);
+                }}
                 disabled={!selectedTime}
                 className={`w-full pl-4 pr-10 py-3 rounded-md bg-white/10 border border-white/20 text-white focus:outline-none focus:ring-1 focus:ring-[#FF478B] focus:border-transparent appearance-none font-afacad ${
                   !selectedTime ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
@@ -265,7 +333,7 @@ export default function ScheduleModal({
                 <option value="">-Select Room-</option>
                 {SHOW_ROOMS.map((room) => (
                   <option key={room.id} value={room.id} className="bg-[#242424]">
-                    {room.name}
+                    {room.id}
                   </option>
                 ))}
               </select>

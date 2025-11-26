@@ -1,9 +1,6 @@
 package com.acm.cinema_ebkg_system.model;
 
 import jakarta.persistence.*;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
 import java.time.LocalDateTime;
 
 /**
@@ -12,9 +9,6 @@ import java.time.LocalDateTime;
  * This entity maps to the 'show_room' table in the database and contains
  * auditorium information including name and seating capacity.
  */
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
 @Entity
 @Table(name = "show_room")
 public class ShowRoom {
@@ -48,5 +42,59 @@ public class ShowRoom {
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
+    }
+
+    // Default constructor
+    public ShowRoom() {}
+
+    // Constructor
+    public ShowRoom(Long id, String name, Integer capacity, LocalDateTime createdAt, LocalDateTime updatedAt) {
+        this.id = id;
+        this.name = name;
+        this.capacity = capacity;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+    }
+
+    // Getters
+    public Long getId() {
+        return id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public Integer getCapacity() {
+        return capacity;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    // Setters
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setCapacity(Integer capacity) {
+        this.capacity = capacity;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
     }
 }

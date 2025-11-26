@@ -1,55 +1,566 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Seat } from '@/types/booking';
+import api from '@/config/api';
+import { useReservation } from '@/contexts/ReservationContext';
 
-export function useSeats(capacity: number = 70) {
-  const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
+interface SeatDTO {
+  id: number; // Database ID
+  seatRow: string;
+  seatNumber: string;
+  seatType?: string;
+  isAvailable: boolean;
+  isReserved?: boolean; // May not always be present
+  isTaken?: boolean; // Backend sends this - true if seat is booked (in ticket_seat table) or unavailable
+}
 
-  // CACHES: seatLetters array ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"] - persists across useSeats hook re-runs
-  // CHANGES: Never (empty deps) - BUT will recreate if useSeats hook unmounts/remounts
-  // WITHOUT useMemo: Array recreated on every useSeats re-render (booking page changes, parent changes)
-  // WHY MATTERS: Minimal - array creation is fast, mostly unnecessary optimization
+export function useSeats(showId?: number) {
+  const [selectedSeats, setSelectedSeats] = useState<string[]>([]); // Display IDs for UI
+  const [selectedSeatIds, setSelectedSeatIds] = useState<number[]>([]); // Actual database seat IDs
+  const [selectedSeatDetails, setSelectedSeatDetails] = useState<Array<{seatRow: string, seatNumber: string}>>([]); // Store seat row/number for reservation
+  const [seats, setSeats] = useState<SeatDTO[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  
+  // Get active reservation to check if seats are reserved by current user
+  const { showId: reservationShowId, selectedSeats: reservationSeats } = useReservation();
+
+  // Sync selectedSeats with reservation context when user returns to page with active reservation
+  useEffect(() => {
+    // Only sync if there's an active reservation for this specific show
+    // AND we don't already have the same selection (to avoid unnecessary updates)
+    if (reservationShowId !== null && reservationShowId === showId && reservationSeats.length > 0) {
+      const currentSelection = selectedSeats.sort().join(',');
+      const reservationSelection = [...reservationSeats].sort().join(',');
+      
+      // Only update if the selection is different
+      if (currentSelection !== reservationSelection) {
+        console.log('Syncing selectedSeats with reservation context:', {
+          reservationShowId,
+          showId,
+          reservationSeats,
+          currentSelectedSeats: selectedSeats
+        });
+        
+        // User has an active reservation for this show - restore their selection
+        setSelectedSeats([...reservationSeats]);
+        // Also restore seat details for reservation
+        const seatDetails = reservationSeats.map(displayId => {
+          const match = displayId.match(/^(\d+)([A-Z]+)$/);
+          if (match) {
+            return {
+              seatRow: match[1],
+              seatNumber: match[2]
+            };
+          }
+          return null;
+        }).filter((detail): detail is {seatRow: string, seatNumber: string} => detail !== null);
+        setSelectedSeatDetails(seatDetails);
+      }
+    } else if (reservationShowId !== null && reservationShowId !== showId && selectedSeats.length > 0) {
+      // If reservation is for a different show (and there IS a reservation), clear selection
+      console.log('Clearing selection - reservation is for different show:', {
+        reservationShowId,
+        showId,
+        selectedSeats
+      });
+      setSelectedSeats([]);
+      setSelectedSeatDetails([]);
+    }
+    // If reservationShowId is null (no active reservation), don't interfere with local selections
+  }, [reservationShowId, showId, reservationSeats]);
+
+  // Fetch seats from backend if showId is provided
+  useEffect(() => {
+    if (showId) {
+      setLoading(true);
+      setError(null);
+      api.get(`/api/seats/show/${showId}`)
+        .then(response => {
+          console.log('Seats API response:', response.data);
+          const seatData: SeatDTO[] = response.data.seats || [];
+          console.log('Parsed seat data:', seatData);
+          console.log('Number of seats:', seatData.length);
+          if (seatData.length > 0) {
+            console.log('First seat example:', seatData[0]);
+            console.log('First seat ID:', seatData[0].id, 'type:', typeof seatData[0].id);
+            console.log('First seat seatRow:', seatData[0].seatRow, 'seatNumber:', seatData[0].seatNumber);
+            
+            // Validate that seats have required fields
+            const invalidSeats = seatData.filter(s => !s.seatRow || !s.seatNumber);
+            if (invalidSeats.length > 0) {
+              console.error('Found seats with missing seatRow or seatNumber:', invalidSeats);
+            }
+          } else {
+            console.warn('No seats returned from backend for showId:', showId);
+            console.warn('Seats will be auto-initialized when first reserved');
+          }
+          // Log seat availability for debugging
+          const availableCount = seatData.filter(s => s.isAvailable === true).length;
+          const unavailableCount = seatData.filter(s => s.isAvailable === false).length;
+          const undefinedCount = seatData.filter(s => s.isAvailable === undefined).length;
+          console.log('Seat availability summary:', {
+            total: seatData.length,
+            available: availableCount,
+            unavailable: unavailableCount,
+            undefined: undefinedCount
+          });
+          
+          setSeats(seatData);
+          setLoading(false);
+        })
+        .catch(err => {
+          console.error('Error fetching seats:', err);
+          console.error('Error details:', err.response?.data || err.message);
+          setError('Failed to load seats. Please check if the show exists.');
+          setLoading(false);
+        });
+    }
+  }, [showId]);
+
+  // Convert backend seats to frontend format
   const seatLetters = useMemo(() => ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'], []);
 
-  // CACHES: rows array dynamically generated based on capacity - persists across useSeats hook re-runs
-  // CHANGES: When capacity changes - BUT will recreate if useSeats hook unmounts/remounts
-  // WITHOUT useMemo: Objects recreated on every useSeats re-render (booking page changes, parent changes)
-  // WHY MATTERS: Moderate - prevents unnecessary object creation, but not "expensive"
-  // Calculate number of rows: capacity / 10 seats per row
-  const rows = useMemo(
-    () => {
-      const seatsPerRow = 10;
-      const numRows = Math.floor(capacity / seatsPerRow);
-      
-      return Array.from({ length: numRows }, (_, rowIdx) => {
-        const rowNumber = rowIdx + 1;
-        return Array.from({ length: seatsPerRow }, (_, seatIdx) => ({
-          id: `${rowNumber}${seatLetters[seatIdx]}`,
+  // Group seats by row for display
+  const frontRows = useMemo(() => {
+    if (!showId) {
+      // No showId - return empty or mock data (but warn that seatId will be missing)
+      console.warn('No showId provided - using mock data without seatId');
+      return [
+        Array.from({ length: 9 }, (_, idx) => ({ 
+          id: `1${seatLetters[idx]}`, 
           occupied: false,
-        }));
-      });
-    },
-    [seatLetters, capacity]
-  ); // Include seatLetters and capacity dependencies
+          seatId: undefined // Mock data - no real seatId
+        })),
+        Array.from({ length: 9 }, (_, idx) => ({ 
+          id: `2${seatLetters[idx]}`, 
+          occupied: false,
+          seatId: undefined
+        })),
+        Array.from({ length: 9 }, (_, idx) => ({ 
+          id: `3${seatLetters[idx]}`, 
+          occupied: false,
+          seatId: undefined
+        })),
+      ];
+    }
+    
+    if (seats.length === 0) {
+      console.warn('ShowId provided but no seats returned from backend');
+      return [];
+    }
 
-  const toggleSeat = (seat: Seat) => {
-    if (selectedSeats.includes(seat.id)) {
-      setSelectedSeats(selectedSeats.filter((id) => id !== seat.id));
+    // Group seats by row
+    const rows: { [key: string]: SeatDTO[] } = {};
+    seats.forEach(seat => {
+      const row = seat.seatRow;
+      if (!rows[row]) rows[row] = [];
+      rows[row].push(seat);
+    });
+
+    // Convert to frontend format and sort
+    const sortedRows = Object.keys(rows).sort();
+    return sortedRows.slice(0, 3).map(row => {
+      const rowSeats = rows[row].sort((a, b) => a.seatNumber.localeCompare(b.seatNumber));
+      return rowSeats.map(seat => {
+        // Validate that seat has required fields
+        if (!seat.seatRow || !seat.seatNumber) {
+          console.error('Seat missing seatRow or seatNumber:', seat);
+          return null;
+        }
+        
+        // Create display ID from row and number (e.g., "1A", "2B")
+        const displayId = `${seat.seatRow}${seat.seatNumber}`;
+        // Handle seat.id - may be null/undefined for seats not yet in database
+        const dbSeatId = seat.id != null ? (typeof seat.id === 'number' ? seat.id : Number(seat.id)) : null;
+        if (dbSeatId !== null && (isNaN(dbSeatId) || dbSeatId <= 0)) {
+          console.warn('Invalid seat ID in mapping (will be created on reservation):', { seat, dbSeatId });
+        }
+        
+        // A seat is occupied/taken if:
+        // 1. It's linked to a ticket (permanently booked) - isTaken from backend
+        // 2. OR it's explicitly not available (isAvailable === false) AND it's NOT in the user's active reservation
+        // If it's in the user's active reservation, it should be selectable (not occupied)
+        // Default to available if isAvailable is undefined
+        const isInUserReservation = reservationShowId === showId && reservationSeats.includes(displayId);
+        const isExplicitlyUnavailable = seat.isAvailable === false;
+        const isTaken = seat.isTaken === true ? true : (isExplicitlyUnavailable && !isInUserReservation);
+        
+        // Determine seatId - handle null case properly
+        const finalSeatId: number | undefined = dbSeatId !== null && !isNaN(dbSeatId) && dbSeatId > 0 ? dbSeatId : undefined;
+        
+        return {
+          id: displayId, // Display ID for UI
+          seatId: finalSeatId, // Database ID (may be undefined for new seats)
+          seatRow: seat.seatRow, // REQUIRED for reservation
+          seatNumber: seat.seatNumber, // REQUIRED for reservation
+          occupied: isTaken, // Use isTaken from backend (checks ticket_seat table), but allow user's reserved seats
+          isAvailable: seat.isAvailable !== false || isInUserReservation, // Consider user's reserved seats as available, default to true if undefined
+          isReserved: seat.isReserved || isTaken,
+        };
+      }).filter((seat) => seat !== null) as Seat[]; // Remove null entries
+    });
+  }, [seats, seatLetters, showId, reservationShowId, reservationSeats]);
+
+  const backRows = useMemo(() => {
+    if (!showId) {
+      // No showId - return empty or mock data (but warn that seatId will be missing)
+      console.warn('No showId provided - using mock data without seatId');
+      return [
+        Array.from({ length: 10 }, (_, idx) => ({ 
+          id: `4${seatLetters[idx]}`, 
+          occupied: false,
+          seatId: undefined
+        })),
+        Array.from({ length: 10 }, (_, idx) => ({ 
+          id: `5${seatLetters[idx]}`, 
+          occupied: false,
+          seatId: undefined
+        })),
+        Array.from({ length: 10 }, (_, idx) => ({ 
+          id: `6${seatLetters[idx]}`, 
+          occupied: false,
+          seatId: undefined
+        })),
+        Array.from({ length: 10 }, (_, idx) => ({ 
+          id: `7${seatLetters[idx]}`, 
+          occupied: false,
+          seatId: undefined
+        })),
+      ];
+    }
+    
+    if (seats.length === 0) {
+      console.warn('ShowId provided but no seats returned from backend');
+      return [];
+    }
+
+    // Group seats by row
+    const rows: { [key: string]: SeatDTO[] } = {};
+    seats.forEach(seat => {
+      const row = seat.seatRow;
+      if (!rows[row]) rows[row] = [];
+      rows[row].push(seat);
+    });
+
+    // Convert to frontend format and sort
+    const sortedRows = Object.keys(rows).sort();
+    return sortedRows.slice(3).map(row => {
+      const rowSeats = rows[row].sort((a, b) => a.seatNumber.localeCompare(b.seatNumber));
+      return rowSeats.map(seat => {
+        // Validate that seat has required fields
+        if (!seat.seatRow || !seat.seatNumber) {
+          console.error('Seat missing seatRow or seatNumber:', seat);
+          return null;
+        }
+        
+        // Create display ID from row and number (e.g., "4A", "5B")
+        const displayId = `${seat.seatRow}${seat.seatNumber}`;
+        // Handle seat.id - may be null/undefined for seats not yet in database
+        const dbSeatId = seat.id != null ? (typeof seat.id === 'number' ? seat.id : Number(seat.id)) : null;
+        if (dbSeatId !== null && (isNaN(dbSeatId) || dbSeatId <= 0)) {
+          console.warn('Invalid seat ID in mapping (will be created on reservation):', { seat, dbSeatId });
+        }
+        
+        // A seat is occupied/taken if:
+        // 1. It's linked to a ticket (permanently booked) - isTaken from backend
+        // 2. OR it's explicitly not available (isAvailable === false) AND it's NOT in the user's active reservation
+        // If it's in the user's active reservation, it should be selectable (not occupied)
+        // Default to available if isAvailable is undefined or null
+        const isInUserReservation = reservationShowId === showId && reservationSeats.includes(displayId);
+        const isExplicitlyUnavailable = seat.isAvailable === false;
+        // Only mark as taken if explicitly unavailable AND not in user's reservation
+        // If isTaken is true from backend, always mark as taken (permanently booked)
+        const isTaken = seat.isTaken === true ? true : (isExplicitlyUnavailable && !isInUserReservation);
+        
+        // Debug log for first few seats to understand the data
+        if (displayId === '1A' || displayId === '4A') {
+          console.log('Seat occupation check:', {
+            displayId,
+            isAvailable: seat.isAvailable,
+            isTaken: seat.isTaken,
+            isReserved: seat.isReserved,
+            isExplicitlyUnavailable,
+            isInUserReservation,
+            reservationShowId,
+            showId,
+            reservationSeats,
+            finalIsTaken: isTaken
+          });
+        }
+        
+        // Determine seatId - handle null case properly
+        const finalSeatId: number | undefined = dbSeatId !== null && !isNaN(dbSeatId) && dbSeatId > 0 ? dbSeatId : undefined;
+        
+        return {
+          id: displayId, // Display ID for UI
+          seatId: finalSeatId, // Database ID (may be undefined for new seats)
+          seatRow: seat.seatRow, // REQUIRED for reservation
+          seatNumber: seat.seatNumber, // REQUIRED for reservation
+          occupied: isTaken, // Use isTaken from backend (checks ticket_seat table), but allow user's reserved seats
+          isAvailable: seat.isAvailable !== false || isInUserReservation, // Consider user's reserved seats as available, default to true if undefined
+          isReserved: seat.isReserved || isTaken,
+        };
+      }).filter((seat) => seat !== null) as Seat[]; // Remove null entries
+    });
+  }, [seats, seatLetters, showId, reservationShowId, reservationSeats]);
+
+  const toggleSeat = async (seat: Seat) => {
+    // Prevent selecting occupied seats
+    if (seat.occupied) {
+      console.log('Seat is occupied, cannot select:', seat);
+      console.log('Seat details:', {
+        id: seat.id,
+        seatRow: seat.seatRow,
+        seatNumber: seat.seatNumber,
+        occupied: seat.occupied,
+        isAvailable: seat.isAvailable,
+        isReserved: seat.isReserved
+      });
+      return;
+    }
+    
+    console.log('Seat is NOT occupied, proceeding with toggle:', {
+      id: seat.id,
+      seatRow: seat.seatRow,
+      seatNumber: seat.seatNumber,
+      occupied: seat.occupied,
+      isAvailable: seat.isAvailable,
+      isReserved: seat.isReserved,
+      currentlySelected: selectedSeats.includes(seat.id)
+    });
+
+    // Get seat row and number from the seat object
+    let seatRow = seat.seatRow;
+    let seatNumber = seat.seatNumber;
+    const displayId = seat.id; // This is the display ID (e.g., "1A", "2B")
+
+    console.log('Toggle seat - seat object:', seat);
+    console.log('Toggle seat - seatRow:', seatRow, 'seatNumber:', seatNumber);
+    console.log('Toggle seat - displayId:', displayId);
+
+    // If seatRow or seatNumber is missing, try to extract from displayId
+    // Display ID format: "1A", "2B", "7J" (row number + letter)
+    if (!seatRow || !seatNumber) {
+      console.warn('Seat row or number missing, attempting to extract from displayId:', displayId);
+      
+      // Try to extract: first character(s) = row, rest = seat number
+      // Pattern: "1A" -> row="1", number="A"
+      // Pattern: "12A" -> row="12", number="A" (if rows go beyond 9)
+      const match = displayId.match(/^(\d+)([A-Z]+)$/);
+      if (match) {
+        seatRow = match[1];
+        seatNumber = match[2];
+        console.log('Extracted from displayId - seatRow:', seatRow, 'seatNumber:', seatNumber);
+      } else {
+        // Try reverse pattern: "A1" -> row="A", number="1"
+        const reverseMatch = displayId.match(/^([A-Z]+)(\d+)$/);
+        if (reverseMatch) {
+          seatRow = reverseMatch[1];
+          seatNumber = reverseMatch[2];
+          console.log('Extracted from displayId (reverse) - seatRow:', seatRow, 'seatNumber:', seatNumber);
+        }
+      }
+    }
+
+    // Validate seatRow and seatNumber after extraction attempt
+    if (!seatRow || !seatNumber) {
+      console.error('Seat row or number is missing after extraction attempt:', { 
+        seat, 
+        seatRow, 
+        seatNumber, 
+        displayId 
+      });
+      alert('Seat information is missing. Please refresh the page and try again.');
+      return;
+    }
+
+    console.log('Toggle seat called:', { seat, seatRow, seatNumber, displayId, showId, selectedSeats });
+    console.log('ShowId validation:', { 
+      showId, 
+      showIdType: typeof showId, 
+      showIdIsNumber: typeof showId === 'number',
+      showIdIsValid: showId !== undefined && showId !== null && !isNaN(Number(showId))
+    });
+
+    if (selectedSeats.includes(displayId)) {
+      // Deselect seat - just remove from selection (no API call)
+      setSelectedSeats(prev => prev.filter((id) => id !== displayId));
+      // Remove from selectedSeatIds if we have the seatId
+      if (seat.seatId) {
+        setSelectedSeatIds(prev => prev.filter((id) => id !== seat.seatId!));
+      }
+      // Remove from selectedSeatDetails
+      setSelectedSeatDetails(prev => prev.filter(s => !(s.seatRow === seatRow && s.seatNumber === seatNumber)));
     } else {
-      setSelectedSeats([...selectedSeats, seat.id]);
+      // Select seat - just update local state (NO API call - reservation happens on Continue)
+      setSelectedSeats([...selectedSeats, displayId]);
+      // Track seatId if available
+      if (seat.seatId) {
+        setSelectedSeatIds([...selectedSeatIds, seat.seatId]);
+      }
+      // Store seat details for later reservation
+      setSelectedSeatDetails(prev => [...prev, { seatRow, seatNumber }]);
+      console.log('Seat selected (not yet reserved):', { seatRow, seatNumber, displayId });
+    }
+  };
+
+  // Reserve all currently selected seats (called when user clicks Continue)
+  const reserveSelectedSeats = async (): Promise<boolean> => {
+    if (!showId || selectedSeats.length === 0) {
+      console.error('Cannot reserve seats: missing showId or no seats selected');
+      return false;
+    }
+
+    // If selectedSeatDetails is empty but selectedSeats has items, derive details from selectedSeats
+    let seatDetailsToUse = selectedSeatDetails;
+    if (seatDetailsToUse.length === 0 && selectedSeats.length > 0) {
+      console.log('selectedSeatDetails is empty, deriving from selectedSeats:', selectedSeats);
+      seatDetailsToUse = selectedSeats.map(displayId => {
+        const match = displayId.match(/^(\d+)([A-Z]+)$/);
+        if (match) {
+          return {
+            seatRow: match[1],
+            seatNumber: match[2]
+          };
+        }
+        return null;
+      }).filter((detail): detail is {seatRow: string, seatNumber: string} => detail !== null);
+      
+      // Update selectedSeatDetails for future use
+      setSelectedSeatDetails(seatDetailsToUse);
+    }
+
+    if (seatDetailsToUse.length === 0) {
+      console.error('Cannot reserve seats: unable to extract seat details from selected seats');
+      alert('Unable to process seat selection. Please try selecting seats again.');
+      return false;
+    }
+
+    // Check if seats are already in the active reservation
+    const selectedDisplayIds = seatDetailsToUse.map(detail => `${detail.seatRow}${detail.seatNumber}`);
+    const allSeatsInReservation = selectedDisplayIds.every(id => reservationSeats.includes(id));
+    
+    if (reservationShowId === showId && allSeatsInReservation && selectedDisplayIds.length === reservationSeats.length) {
+      // Seats are already reserved and match the active reservation - skip API call
+      console.log('Seats are already in active reservation, skipping reservation API call');
+      return true;
+    }
+
+    try {
+      const requestBody = {
+        showId: showId,
+        seats: seatDetailsToUse.map(detail => ({
+          seatRow: detail.seatRow,
+          seatNumber: detail.seatNumber
+        }))
+      };
+
+      console.log('Reserving selected seats:', requestBody);
+      const response = await api.post('/api/seats/reserve', requestBody);
+      console.log('Seats reserved successfully, response:', response.data);
+      
+      // Seats are reserved - we don't need the IDs anymore since we use showId + row/number
+      return true;
+    } catch (err: any) {
+      console.error('Error reserving seats:', err);
+      console.error('Error response:', err.response);
+      console.error('Error response data:', err.response?.data);
+      console.error('Error response status:', err.response?.status);
+      console.error('Error userMessage:', err.userMessage);
+      
+      // Extract error message with priority order
+      let errorMsg = '';
+      
+      // Priority 1: Check if interceptor set a userMessage
+      if (err.userMessage && err.userMessage !== 'Forbidden' && err.userMessage !== 'Unauthorized') {
+        errorMsg = err.userMessage;
+      }
+      // Priority 2: Extract from response data
+      else if (err.response?.data) {
+        const responseData = err.response.data;
+        
+        if (typeof responseData === 'string') {
+          // Response is a plain string
+          if (responseData !== 'Forbidden' && responseData !== 'Unauthorized') {
+            errorMsg = responseData;
+          }
+        } else if (typeof responseData === 'object' && responseData !== null) {
+          // Response is an object - check for error or message fields
+          if (responseData.error && responseData.error !== 'Forbidden' && responseData.error !== 'Unauthorized') {
+            errorMsg = String(responseData.error);
+          } else if (responseData.message && responseData.message !== 'Forbidden' && responseData.message !== 'Unauthorized') {
+            errorMsg = String(responseData.message);
+          }
+        }
+      }
+      
+      // Priority 3: Use status code to determine message (if we don't have a good message yet)
+      if (!errorMsg || errorMsg.trim() === '' || errorMsg === 'Forbidden' || errorMsg === 'Unauthorized') {
+        const status = err.response?.status;
+        if (status === 401 || status === 403) {
+          errorMsg = 'You need to be a logged in user to reserve seats';
+        } else if (status === 409) {
+          errorMsg = 'Seats have already been booked. Please select different seats.';
+        } else {
+          // For any other error, use a generic message
+          errorMsg = 'Unable to reserve seats. Please try again.';
+        }
+      }
+      
+      // Final safety check - never show "Forbidden" or "Unauthorized"
+      if (errorMsg === 'Forbidden' || errorMsg === 'Unauthorized' || !errorMsg || errorMsg.trim() === '') {
+        errorMsg = 'You need to be a logged in user to reserve seats';
+      }
+      
+      // Show clean error message
+      alert(errorMsg);
+      return false;
+    }
+  };
+
+  // Reserve multiple seats (legacy function - kept for compatibility)
+  const reserveSeats = async (showId: number, seatIds: number[]) => {
+    try {
+      // This function is deprecated - use reserveSelectedSeats instead
+      console.warn('reserveSeats with seatIds is deprecated. Use reserveSelectedSeats instead.');
+      await api.post('/api/seats/reserve', {
+        showId: showId,
+        seatIds: seatIds
+      });
+      return true;
+    } catch (err) {
+      console.error('Error reserving seats:', err);
+      return false;
     }
   };
 
   const resetSeats = () => {
+    // Just clear local state - seats aren't reserved until Continue is clicked
     setSelectedSeats([]);
+    setSelectedSeatIds([]);
+    setSelectedSeatDetails([]);
   };
 
+  // Combine frontRows and backRows into a single rows array
+  const rows = useMemo(() => {
+    return [...frontRows, ...backRows];
+  }, [frontRows, backRows]);
+
   return {
-    selectedSeats,
-    rows,
+    selectedSeats, // Display IDs for UI
+    selectedSeatIds, // Actual database seat IDs for API calls
+    selectedSeatDetails, // Seat row/number details for reservation
+    rows, // Combined rows array for CinemaLayout
+    frontRows, // Keep for backward compatibility if needed
+    backRows, // Keep for backward compatibility if needed
     toggleSeat,
     resetSeats,
-    totalSeats: capacity,
+    reserveSelectedSeats, // New function to reserve all selected seats
+    reserveSeats, // Legacy function (deprecated)
+    loading,
+    error,
+    totalSeats: frontRows.length * frontRows[0]?.length + backRows.length * backRows[0]?.length || 0,
   };
 }

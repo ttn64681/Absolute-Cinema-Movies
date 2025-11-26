@@ -4,6 +4,7 @@ import com.acm.cinema_ebkg_system.dto.auth.AuthResponse;
 import com.acm.cinema_ebkg_system.dto.auth.LoginRequest;
 import com.acm.cinema_ebkg_system.dto.auth.RegisterRequest;
 import com.acm.cinema_ebkg_system.dto.auth.ResetPasswordRequest;
+import com.acm.cinema_ebkg_system.dto.payment.PaymentCardRequestDTO;
 import com.acm.cinema_ebkg_system.mapper.UserDtoFactory;
 import com.acm.cinema_ebkg_system.model.User;
 import com.acm.cinema_ebkg_system.model.Address;
@@ -109,7 +110,7 @@ public class AuthController {
             
             // Step 4: Create payment cards and billing addresses if provided
             if (request.getPaymentCards() != null && !request.getPaymentCards().isEmpty()) {
-                for (com.acm.cinema_ebkg_system.dto.payment.PaymentCardDTO cardDto : request.getPaymentCards()) {
+                for (PaymentCardRequestDTO cardDto : request.getPaymentCards()) {
                     // Create billing address for this payment card
                     Address billingAddress = new Address();
                     billingAddress.setUser(savedUser);
@@ -190,7 +191,7 @@ public class AuthController {
             String token = jwtUtil.generateToken(user.getEmail(), user.getId(), request.isRememberMe());
             String refreshToken = jwtUtil.generateRefreshToken(user.getEmail(), user.getId(), request.isRememberMe());
 
-            // Step 4: Create user DTO using factory method (Factory Method pattern)
+            // Step 4: Create user DTO using static factory method
             AuthResponse.UserDto userDto = UserDtoFactory.fromUser(user);
 
             // Step 5: Return success response with tokens and user data
@@ -234,7 +235,7 @@ public class AuthController {
             // Step 3: Generate new access token with same user information and remember me preference
             String newToken = jwtUtil.generateToken(email, userId, rememberMe != null ? rememberMe : false);
 
-            // Step 4: Create user DTO using factory method
+            // Step 4: Create user DTO using static factory method
             AuthResponse.UserDto userDto = UserDtoFactory.fromUser(user);
 
             // Step 5: Return new access token with user information (refresh token stays the same)
@@ -264,7 +265,7 @@ public class AuthController {
             String jwtToken = jwtUtil.generateToken(user.getEmail(), user.getId(), true);
             String refreshToken = jwtUtil.generateRefreshToken(user.getEmail(), user.getId(), true);
             
-            // Step 3: Create user DTO using factory method
+            // Step 3: Create user DTO using static factory method
             AuthResponse.UserDto userDto = UserDtoFactory.fromUser(user);
             
             // Step 4: Return success response with tokens

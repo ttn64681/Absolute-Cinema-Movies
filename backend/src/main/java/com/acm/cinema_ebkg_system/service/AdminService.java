@@ -1,7 +1,11 @@
 package com.acm.cinema_ebkg_system.service;
 
+import com.acm.cinema_ebkg_system.dto.auth.AuthResponse;
+import com.acm.cinema_ebkg_system.dto.auth.LoginRequest;
+import com.acm.cinema_ebkg_system.mapper.UserDtoFactory;
 import com.acm.cinema_ebkg_system.model.Admin;
 import com.acm.cinema_ebkg_system.repository.AdminRepository;
+import com.acm.cinema_ebkg_system.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -34,6 +38,9 @@ public class AdminService {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private JwtUtil jwtUtil;
 
     // ========== AUTHENTICATION METHODS ==========
     
@@ -159,5 +166,32 @@ public class AdminService {
         String hashedPassword = passwordEncoder.encode(newPassword);
         admin.setPassword(hashedPassword);
         return adminRepository.save(admin);
+    }
+
+    /**
+     * Authenticate admin and generate login response with tokens
+     * 
+     * Process Flow:
+     * 1. Authenticate admin credentials
+     * 2. Generate JWT tokens with ADMIN role
+     * 3. Create admin DTO
+     * 
+     * @param request LoginRequest containing email, password, and rememberMe flag
+     * @return AuthResponse with success status, tokens, and admin data
+     * @throws RuntimeException if authentication fails
+     */
+    public AuthResponse adminLogin(LoginRequest request) {
+        // Step 1: Authenticate admin credentials
+        Admin admin = authenticateAdmin(request.getEmail(), request.getPassword());
+        
+        // Step 2: Generate new JWT tokens for authenticated admin session with ADMIN role
+        String token = jwtUtil.generateToken(admin.getEmail(), admin.getId(), "ADMIN", request.isRememberMe());
+        String refreshToken = jwtUtil.generateRefreshToken(admin.getEmail(), admin.getId(), "ADMIN", request.isRememberMe());
+
+        // Step 3: Create admin DTO using factory method (Factory Method pattern)
+        AuthResponse.UserDto adminDto = UserDtoFactory.fromAdmin(admin);
+
+        // Step 4: Return success response with tokens and admin data
+        return new AuthResponse(true, "Admin login successful", token, refreshToken, adminDto);
     }
 }

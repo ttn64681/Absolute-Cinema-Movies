@@ -80,10 +80,13 @@ A full-stack cinema booking application built with Next.js frontend and Spring B
    npm run dev
 
    # Terminal 2 - Backend (http://localhost:8080)
+   source ../set_env.sh  # From project root
    cd backend
    ./mvnw spring-boot:run  # macOS/Linux
    # mvnw spring-boot:run  # Windows
    ```
+   
+   **Important**: If running from IDE (IntelliJ, Eclipse, VS Code), make sure to configure environment variables in IDE settings
 
 ### Application URLs
 

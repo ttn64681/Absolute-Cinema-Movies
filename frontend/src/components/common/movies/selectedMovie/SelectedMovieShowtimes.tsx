@@ -98,13 +98,13 @@ export default function SelectedMovieShowtimes({
       </div>
 
       {/* Date dropdown */}
-      <div className="mb-6">
-        <label className="block text-white/80 text-sm font-medium mb-2">Select Date</label>
+      <div className="z-50 mb-6">
+        <label className="z-50 block text-white/80 text-sm font-medium mb-2">Select Date</label>
         <div
           onClick={() => setOpenDateDropdown(!openDateDropdown)}
-          className="relative w-full max-w-xs h-12 rounded-xl bg-black/60 text-lg border-2 border-white/20 hover:border-acm-pink/50 flex items-center cursor-pointer transition-all duration-200 backdrop-blur-sm"
+          className="z-50 relative w-full max-w-xs h-12 rounded-xl bg-black/60 text-lg border-2 border-white/20 hover:border-acm-pink/50 flex items-center cursor-pointer transition-all duration-200 backdrop-blur-sm"
         >
-          <span className="ml-4 mr-2 text-white">{currentDate}</span>
+          <span className=" ml-4 mr-2 text-white">{currentDate}</span>
           <IoChevronDown className="ml-auto mr-4 text-white/60 hover:text-acm-pink transition-colors" />
 
           {openDateDropdown && (
@@ -131,7 +131,7 @@ export default function SelectedMovieShowtimes({
                           e.stopPropagation();
                           handleShowDateSelect(date);
                         }}
-                        className="block px-4 py-3 text-white text-sm transition-all duration-200 hover:bg-white/10 hover:text-acm-pink w-full text-left cursor-pointer"
+                        className="z-50 block px-4 py-3 text-white text-sm transition-all duration-200 hover:bg-white/10 hover:text-acm-pink w-full text-left cursor-pointer"
                       >
                         {date}
                       </button>
@@ -144,7 +144,7 @@ export default function SelectedMovieShowtimes({
 
         {/* Showtimes */}
         <div className="mb-4">
-          <label className="block text-white/80 text-sm font-medium mb-3">Available Times</label>
+          <label className="block text-white/80 text-sm font-medium mb-2 mt-2">Available Times</label>
           <div className="flex gap-3 flex-wrap">
             {timesLoading && <Spinner size="sm" color="pink" text="Loading times..." />}
             {timesError && (

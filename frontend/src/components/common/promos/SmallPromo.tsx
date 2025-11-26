@@ -13,9 +13,9 @@ export default function SmallPromo({ discount, promo, imageUrl }: SmallPromoProp
       className="bg-black border-2 border-white/60 flex flex-row rounded-xl max-h-40 w-[400px] flex-shrink-0 overflow-hidden"
       whileHover={{ borderColor: '#ec4899', scale: 1.02 }}
       transition={{ duration: 0.3, ease: 'easeOut' }}
-      style={{ paddingTop: '16px', paddingBottom: '16px' }}
+      style={{ paddingBottom: '16px' }}
     >
-      <div className="relative w-40 h-40 border-r-2 border-white/60 flex-shrink-0">
+      <div className="relative w-40 h-40 border-r-2 border-white/60">
         <Image
           src={imageUrl ?? '/cinema_seats.jpg'}
           alt="Promotion Image"

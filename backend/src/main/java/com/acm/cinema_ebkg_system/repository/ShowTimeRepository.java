@@ -1,9 +1,11 @@
 package com.acm.cinema_ebkg_system.repository;
 
 import com.acm.cinema_ebkg_system.model.ShowTime;
+import java.time.LocalDateTime;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -13,36 +15,86 @@ import org.springframework.stereotype.Repository;
 public interface ShowTimeRepository extends JpaRepository<ShowTime, Long> {
 
     /**
-     * Returns all showtimes for a specific ShowDate row (one calendar date for a movie).
-     * Using explicit @Query because entity fields use snake_case (show_date_id, start_time).
+     * Returns distinct showtimes that have show entries for a given movie.
+     * Uses movie_show relationship only.
+     *
+     * @param movieId movie primary key (used to find corresponding movie_show)
+     * @return ordered list of LocalDate values (no duplicates), ascending
      */
-    @Query("SELECT st FROM ShowTime st WHERE st.show_date_id = :showDateId ORDER BY st.start_time")
-    List<ShowTime> findByShowDateIdOrderByStartTime(@Param("showDateId") Long showDateId);
+    @Query(value = """
+        SELECT DISTINCT st.show_time
+        FROM show_time st
+        INNER JOIN movie_show ms ON st.movie_show_id = ms.id
+        WHERE ms.movie_id = :movieId
+        ORDER BY st.show_time
+    """, nativeQuery = true)
+    List<java.sql.Timestamp> findAvailableTimesByMovieId(@Param("movieId") Long movieId);
 
     /**
-     * Returns all showtimes for a given movie title date combination.
+     * Returns only the distinct calendar dates that have show entries for a given movie.
+     * Uses movie_show relationship only.
      *
-     * @param movieId movie primary key
-     * @param showDate calendar date to match
-     * @return list of ShowTime ordered by start_time ascending
+     * @param movieId movie primary key (used to find corresponding movie_show)
+     * @return ordered list of LocalDate values (no duplicates), ascending
+     */
+    @Query(value = """
+        SELECT DISTINCT st.show_time::date AS show_date
+        FROM show_time st
+        INNER JOIN movie_show ms ON st.movie_show_id = ms.id
+        WHERE ms.movie_id = :movieId
+        ORDER BY show_date
+    """, nativeQuery = true)
+    List<java.sql.Date> findAvailableDatesByMovieId(@Param("movieId") Long movieId);
+
+    /**
+     * Returns the times for a specific movie on a specific date.
+     * Uses movie_show relationship only.
+     */
+    @Query(value = """
+        SELECT DISTINCT st.show_time::time AS show_time
+        FROM show_time st
+        INNER JOIN movie_show ms ON st.movie_show_id = ms.id
+        WHERE ms.movie_id = :movieId AND st.show_time::date = :showDate
+        ORDER BY show_time
+    """, nativeQuery = true)
+    List<java.sql.Time> findTimesByMovieIdAndDate(@Param("movieId") Long movieId, @Param("showDate") LocalDate showDate);
+
+    /**
+     * Returns all ShowTime rows for a movie, ordered by date ascending.
+     * Uses movie_show relationship.
+     * Based on schema: movie_show.show_time_id → show_time.id
      */
     @Query(value = """
         SELECT st.* FROM show_time st 
-        JOIN show_date sd ON st.show_date_id = sd.show_date_id 
-        JOIN movie_show ms ON sd.movie_show_id = ms.id
-        WHERE ms.movie_id = :movieId AND sd.show_date = :showDate 
-        ORDER BY st.start_time
+        INNER JOIN movie_show ms ON ms.show_time_id = st.id
+        WHERE ms.movie_id = :movieId
+        ORDER BY st.show_time
     """, nativeQuery = true)
-    List<ShowTime> findByMovieIdAndDate(@Param("movieId") Long movieId, @Param("showDate") LocalDate showDate);
+    List<ShowTime> findByMovieId(@Param("movieId") Long movieId);
 
     /**
-     * Returns showtimes for a specific date filtered by a time range.
-     * Using explicit @Query because of snake_case column names.
+     * Get movie_show.id from movieId, date, and time
+     * Used by booking flow to identify which show to book
+     * 
+     * Based on actual DB schema:
+     * - movie_show.show_time_id → show_time.id (foreign key)
+     * - show_time.show_time → timestamp column
+     * 
+     * @param movieId The movie ID
+     * @param showDateTime The show date and time (LocalDateTime)
+     * @return The movie_show.id (Long) or null if not found
      */
-    @Query("SELECT st FROM ShowTime st WHERE st.show_date_id = :showDateId AND st.start_time >= :startTime AND st.start_time <= :endTime ORDER BY st.start_time")
-    List<ShowTime> findByShowDateIdAndTimeRange(@Param("showDateId") Long showDateId,
-                                              @Param("startTime") LocalTime startTime,
-                                              @Param("endTime") LocalTime endTime);
+    @Query(value = """
+        SELECT ms.id
+        FROM movie_show ms
+        INNER JOIN show_time st ON ms.show_time_id = st.id
+        WHERE ms.movie_id = :movieId 
+        AND DATE(st.show_time) = DATE(CAST(:showDateTime AS TIMESTAMP))
+        AND EXTRACT(HOUR FROM st.show_time) = EXTRACT(HOUR FROM CAST(:showDateTime AS TIMESTAMP))
+        AND EXTRACT(MINUTE FROM st.show_time) = EXTRACT(MINUTE FROM CAST(:showDateTime AS TIMESTAMP))
+        LIMIT 1
+    """, nativeQuery = true)
+    Long findMovieShowIdByMovieIdAndDateTime(@Param("movieId") Long movieId, @Param("showDateTime") java.sql.Timestamp showDateTime);
 }
 
 

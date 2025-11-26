@@ -6,6 +6,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import java.util.List;
+import java.time.LocalDateTime;
+
 
 /**
  * Movie Show Repository
@@ -16,17 +18,33 @@ import java.util.List;
 public interface MovieShowRepository extends JpaRepository<MovieShow, Long> {
     
     // Find movie shows by movie (using native query because Movie uses 'movie_id' field)
-    @Query("SELECT ms FROM MovieShow ms WHERE ms.movie.movie_id = :movieId")
+    @Query(value = "SELECT ms.* FROM movie_show ms WHERE ms.movie_id = :movieId", nativeQuery = true)
     List<MovieShow> findByMovieId(@Param("movieId") Long movieId);
     
     // Find movie shows by show room
     List<MovieShow> findByShowRoomId(Long showRoomId);
     
-    // Find movie shows by status
-    List<MovieShow> findByStatus(String status);
-    
-    // Find movie shows by movie and status (using native query because Movie uses 'movie_id' field)
-    @Query("SELECT ms FROM MovieShow ms WHERE ms.movie.movie_id = :movieId AND ms.status = :status")
-    List<MovieShow> findByMovieIdAndStatus(@Param("movieId") Long movieId, @Param("status") String status);
+    /**FINDING SCHEDULING CONFLICTS: 
+     * @params roomId, startTime, and endTime of a MovieShow the admin wishes to schedule.
+     * 
+     * For each existing show in the same room, the ShowTimes are compared to see if they overlap.
+     * This occurs when the start time of the existing show is less than or equal to the end time of the new show
+     * and the end time of the existing show is greater than or equal to the start time of the new show.
+     * 
+     * Note: ShowTime table only contains the start time. End time is the start time + the movie duration.
+     * 
+     * @return A list of existing MovieShows that cause conflicts.
+     */
+    @Query(value =
+     "SELECT ms.* " +
+     "FROM movie_show ms " +
+     "JOIN show_time st ON ms.show_time_id = st.id " +
+     "WHERE ms.show_room_id = :roomId " +
+     "AND (st.show_time < :endTime " +
+     "AND (st.show_time + interval '1 minute' * (SELECT m.duration FROM movie m WHERE m.movie_id = ms.movie_id)) > :startTime) ",
+     nativeQuery = true)
+    List<MovieShow> findOverlappingMovieShows(@Param("roomId") Long roomId, @Param("startTime") LocalDateTime startTime, @Param("endTime") LocalDateTime endTime);
 }
+
+
 

@@ -2,7 +2,9 @@ package com.acm.cinema_ebkg_system.service;
 
 import com.acm.cinema_ebkg_system.model.User;
 import com.acm.cinema_ebkg_system.model.Address;
+import com.acm.cinema_ebkg_system.dto.user.UserUpdateRequest;
 import com.acm.cinema_ebkg_system.enums.AddressType;
+import com.acm.cinema_ebkg_system.enums.UserStatus;
 import com.acm.cinema_ebkg_system.repository.UserRepository;
 import com.acm.cinema_ebkg_system.repository.AddressRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,6 +46,9 @@ public class UserService {
     
     @Autowired
     private AddressRepository addressRepository;
+    
+    @Autowired
+    private AddressService addressService;  // Service for address operations
     
     @Autowired
     private EmailService emailService;  // Data access layer for user operations
@@ -180,6 +185,46 @@ public class UserService {
         return userRepository.findAll();
     }
 
+    /**
+     * Suspend a user account
+     * 
+     * This method sets a user's account_status to suspended.
+     * Suspended users cannot log in to the system.
+     * 
+     * @param userId User ID to suspend
+     * @return User Updated user object with suspended status
+     * @throws RuntimeException if user not found
+     */
+    @Transactional
+    public User suspendUser(Long userId) {
+        User user = getUserById(userId);
+        System.out.println("Suspending user - User: " + user.getEmail() + ", current account_status: " + user.getAccountStatus());
+        user.setAccountStatus(UserStatus.suspended);
+        User suspendedUser = userRepository.save(user);
+        System.out.println("User suspended - User: " + suspendedUser.getEmail() + ", new account_status: " + suspendedUser.getAccountStatus());
+        return suspendedUser;
+    }
+
+    /**
+     * Unsuspend a user account (reactivate)
+     * 
+     * This method sets a user's account_status back to active.
+     * The user can log in again after being unsuspended.
+     * 
+     * @param userId User ID to unsuspend
+     * @return User Updated user object with active status
+     * @throws RuntimeException if user not found
+     */
+    @Transactional
+    public User unsuspendUser(Long userId) {
+        User user = getUserById(userId);
+        System.out.println("Unsuspending user - User: " + user.getEmail() + ", current account_status: " + user.getAccountStatus());
+        user.setAccountStatus(UserStatus.active);
+        User unsuspendedUser = userRepository.save(user);
+        System.out.println("User unsuspended - User: " + unsuspendedUser.getEmail() + ", new account_status: " + unsuspendedUser.getAccountStatus());
+        return unsuspendedUser;
+    }
+
     // ========== USER DATA UPDATE ==========
 
     /**
@@ -194,7 +239,7 @@ public class UserService {
      * @throws RuntimeException if user not found
      */
     @Transactional // Ensures all profile updates (user + address) succeed or fail together
-    public User updatePersonalInfo(Long userId, com.acm.cinema_ebkg_system.dto.user.UserUpdateRequest userUpdateRequest) {
+    public User updatePersonalInfo(Long userId, UserUpdateRequest userUpdateRequest) {
         User user = getUserById(userId);
         
         // Update fields if provided
@@ -331,34 +376,37 @@ public class UserService {
         String currentPassword = passwordChangeRequest.getCurrentPassword();
         String newPassword = passwordChangeRequest.getNewPassword();
 
+        // Validate that current password is provided
+        if (currentPassword == null || currentPassword.trim().isEmpty()) {
+            throw new RuntimeException("Current password is required");
+        }
+
         // Validate that the current password is correct
         if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
             System.out.println("Incorrect password!");
             throw new RuntimeException("Incorrect password!");
+        }
 
         // If correct, encrypt the new password and save it in the database
-        } else {
+        // Hash the new password using BCrypt
+        String hashedPassword = passwordEncoder.encode(newPassword);
 
-            // Hash the new password using BCrypt
-            String hashedPassword = passwordEncoder.encode(newPassword);
+        // Update the password
+        user.setPassword(hashedPassword);
 
-            // Update the password
-            user.setPassword(hashedPassword);
+        System.out.println("New password: " + newPassword);
+        System.out.println("New hashed password: " + hashedPassword);
 
-            System.out.println("New password: " + newPassword);
-            System.out.println("New hashed password: " + hashedPassword);
+        // Save the user to database
+        User savedUser = userRepository.save(user);
 
-            // Save the user to database
-            User savedUser = userRepository.save(user);
+        System.out.println("Saved hashed password: " + savedUser.getPassword());
+        System.out.println("Passwords match: " + passwordEncoder.matches(newPassword, savedUser.getPassword()));
 
-            System.out.println("Saved hashed password: " + savedUser.getPassword());
-            System.out.println("Passwords match: " + passwordEncoder.matches(newPassword, savedUser.getPassword()));
+        // Send confirmation email
+        emailService.sendChangePasswordConfirmationEmail(user.getEmail(), user.getFirstName());
 
-            // Send confirmation email
-            emailService.sendChangePasswordConfirmationEmail(user.getEmail(), user.getFirstName());
-
-            return savedUser;
-        }
+        return savedUser;
     }
 
     // ========== PASSWORD RESET ==========
@@ -457,12 +505,13 @@ public class UserService {
         LocalDateTime expirationTime = LocalDateTime.now().plusHours(24);
         user.setVerificationToken(token);
         user.setVerificationTokenExpiresAt(expirationTime);
-        user.setActive(false);
+        user.setAccountStatus(UserStatus.inactive);
         User savedUser = userRepository.save(user);
         
         // DEBUG: Log token info
         System.out.println("=== VERIFICATION TOKEN GENERATED ===");
         System.out.println("User Email: " + savedUser.getEmail());
+        System.out.println("account_status: " + savedUser.getAccountStatus());
         System.out.println("Token Generated: " + token);
         System.out.println("Token in DB: " + savedUser.getVerificationToken());
         System.out.println("Expires At: " + savedUser.getVerificationTokenExpiresAt());
@@ -493,16 +542,19 @@ public class UserService {
         
         User user = userOptional.get();
         System.out.println("Result: TOKEN FOUND for user: " + user.getEmail());
+        System.out.println("account_status before verification: " + user.getAccountStatus());
         System.out.println("===========================");
         
         if (user.getVerificationTokenExpiresAt().isBefore(LocalDateTime.now())) {
             throw new RuntimeException("Verification token has expired. Please request a new verification email.");
         }
         
-        user.setActive(true);
+        user.setAccountStatus(UserStatus.active);
         user.setVerificationToken(null);
         user.setVerificationTokenExpiresAt(null);
-        return userRepository.save(user);
+        User verifiedUser = userRepository.save(user);
+        System.out.println("Email verified - account_status updated to: " + verifiedUser.getAccountStatus());
+        return verifiedUser;
     }
 
     /**
@@ -513,10 +565,49 @@ public class UserService {
      */
     public String resendVerificationEmail(String email) {
         User user = getUserByEmail(email);
-        if (user.isActive()) {
+        System.out.println("Resending verification email - User: " + user.getEmail() + ", account_status: " + user.getAccountStatus());
+        if (user.getAccountStatus() == UserStatus.active) {
             throw new RuntimeException("User is already verified");
         }
         return generateVerificationToken(user);
+    }
+
+    /**
+     * Get user profile with home address
+     * 
+     * Combines user information and home address into a UserProfileDTO.
+     * 
+     * @param userId User ID to get profile for
+     * @return UserProfileDTO containing user info and home address (if available)
+     * @throws RuntimeException if user not found
+     */
+    public com.acm.cinema_ebkg_system.dto.user.UserProfileDTO getUserProfile(Long userId) {
+        User user = getUserById(userId);
+        Optional<Address> homeAddressOpt = addressService.getUserHomeAddress(userId);
+        
+        // Convert User entity to UserDto using factory method (excludes sensitive data)
+        com.acm.cinema_ebkg_system.dto.auth.AuthResponse.UserDto userDto = 
+            com.acm.cinema_ebkg_system.mapper.UserDtoFactory.fromUser(user);
+        
+        // Convert Address entity to AddressDTO if present
+        com.acm.cinema_ebkg_system.dto.user.UserProfileDTO.AddressDTO addressDto = null;
+        if (homeAddressOpt.isPresent()) {
+            Address homeAddress = homeAddressOpt.get();
+            addressDto = new com.acm.cinema_ebkg_system.dto.user.UserProfileDTO.AddressDTO(
+                homeAddress.getId(),
+                homeAddress.getStreet(),
+                homeAddress.getCity(),
+                homeAddress.getState(),
+                homeAddress.getZip(),
+                homeAddress.getCountry()
+            );
+        }
+        
+        return new com.acm.cinema_ebkg_system.dto.user.UserProfileDTO(userDto, addressDto, null, null);
+    }
+
+    public List<User> getAllUsersEnrolledForPromotions() {
+        return userRepository.findAllByEnrolledForPromotionsTrue();
     }
 
 }

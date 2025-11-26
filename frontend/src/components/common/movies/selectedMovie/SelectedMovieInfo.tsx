@@ -10,33 +10,61 @@ interface SelectedMovieInfoProps {
 
 export default function SelectedMovieInfo({ movie }: SelectedMovieInfoProps) {
   const [imageLoading, setImageLoading] = useState(true);
+
+  // Format duration (in minutes) to hours and minutes
+  const formatDuration = (minutes: number): string => {
+    if (!minutes) return '';
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    if (hours > 0) {
+      return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
+    }
+    return `${mins}m`;
+  };
+
   return (
     <div className="w-1/2 h-full relative overflow-hidden rounded-l-3xl">
-      {/* Poster with proper containment */}
+      {/* Poster with proper containment - blur only applied to poster layer */}
       <div className="w-full h-full relative">
         {/* Loading Spinner */}
-        {imageLoading && <Spinner size="xl" color="pink" text="Loading poster..." overlay={true} />}
+        {imageLoading && (
+          <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/50 backdrop-blur-md rounded-l-3xl">
+            <Spinner size="xl" color="pink" text="Loading poster..." overlay={false} />
+          </div>
+        )}
 
-        <Image
-          src={movie.poster_link}
-          alt={movie.title}
-          className="object-cover rounded-l-3xl"
-          fill
-          sizes="45vw"
-          onLoad={() => setImageLoading(false)}
-          onError={() => setImageLoading(false)}
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent rounded-l-3xl" />
+        {/* Poster image with blur only on this layer */}
+        <div className="w-full h-full relative backdrop-blur-sm">
+          <Image
+            src={movie.poster_link}
+            alt={movie.title}
+            className="object-cover rounded-l-3xl"
+            fill
+            sizes="45vw"
+            onLoad={() => setImageLoading(false)}
+            onError={() => setImageLoading(false)}
+          />
+        </div>
+
+        {/* Darker gradient overlay - darker at bottom */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent rounded-l-3xl pointer-events-none" />
       </div>
 
-      {/* Content positioned at bottom - Compact and non-scrollable */}
-      <div className="absolute bottom-0 left-0 right-0 p-6">
-        {/* Movie Title, Rating, and Release Date - Compact */}
+      {/* Content positioned at bottom - No blur applied here */}
+      <div className="absolute bottom-0 left-0 right-0 p-6 z-10">
+        {/* Movie Title, Rating, Release Date, Score, Duration - Compact */}
         <div className="mb-4">
           <h2 className="text-3xl font-bold text-white leading-tight mb-2">{movie.title || 'No Title'}</h2>
-          <div className="flex items-center gap-4 text-lg text-white/90">
+          <div className="flex items-center gap-4 text-lg text-white/90 flex-wrap">
             <span>{movie.rating ? `Rated ${movie.rating}` : 'No Rating'}</span>
             <span>{movie.release_date || 'No Date'}</span>
+            {movie.score > 0 && (
+              <span className="flex items-center gap-1">
+                <span className="text-acm-pink">★</span>
+                <span>{movie.score}/100</span>
+              </span>
+            )}
+            {movie.duration && <span>{formatDuration(movie.duration)}</span>}
           </div>
         </div>
 

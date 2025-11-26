@@ -2,22 +2,26 @@
 
 import Link from 'next/link';
 import { PiPencilSimple, PiX, PiPlus } from 'react-icons/pi';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import AdminNavBar from '@/components/common/navBar/AdminNavBar';
 import PromotionModal from '@/components/specific/admin/PromotionModal';
 import BookingFeeModal from '@/components/specific/admin/BookingFeeModal';
 import TicketPriceEditor from '@/components/specific/admin/TicketPriceEditor';
+import { usePromotions } from '@/hooks/usePromotions';
+import { BackendPromotion, DiscountType, PromotionStatus } from '@/types/promotion';
+import Spinner from '@/components/common/Spinner';
 
 interface Promotion {
   id: number;
   name: string;
-  value: string;
-  expirationDate?: string;
-  description?: string;
-  promoCode?: string;
-  discountType?: string;
+  value: number;
+  expirationDate: string;
+  description: string;
+  promoCode: string;
+  discountType: string;
   sent: boolean;
   active: boolean;
+  imageLink: string;
 }
 
 interface BookingFee {
@@ -51,12 +55,10 @@ export default function AdminPricingPage() {
   const [editingPromotion, setEditingPromotion] = useState<Promotion | null>(null);
   const [editingBookingFee, setEditingBookingFee] = useState<BookingFee | null>(null);
 
-  const [promotions, setPromotions] = useState<Promotion[]>([
-    { id: 1, name: 'Summer Sale', value: '20', expirationDate: '12/31/2025', description: 'Get 20% off on all tickets this summer!', 
-      promoCode: 'SUMMER20', discountType: '% off', sent: true, active: true },
-    { id: 2, name: 'Student Discount', value: '5.00', expirationDate: '01/15/2026', description: 'Students save $5 on every ticket purchase', 
-      promoCode: 'STUDENT5', discountType: '$ off', sent: true, active: true },
-  ]);
+  const {promotions, loading, getPromotions, addPromotion, updatePromotion, deletePromotion} = usePromotions();
+  const [isAdding, setIsAdding] = useState(false);
+  const [loadingPromoId, setLoadingPromoId] = useState<number | null>(null);
+  
 
   const [ticketPrices, setTicketPrices] = useState<TicketPrices>({
     child: 3.29,
@@ -69,48 +71,85 @@ export default function AdminPricingPage() {
     { id: 2, name: 'Processing Fee', amount: 1.0 },
   ]);
 
-  const handlePromotionSave = (promoData: Omit<Promotion, 'id' | 'sent' | 'active'>) => {
+  // Fetch once on mount
+  useEffect(() => {
+    getPromotions();
+  }, []);
+
+  const handlePromotionSave = async (promoData: Omit<Promotion, 'id' | 'sent' | 'active'>) => {
+    console.log("HandlePromotionSave called");
     if (editingPromotion) {
-      setPromotions(
-        promotions.map((promo) => {
-          if (promo.id === editingPromotion.id) {
-            return { ...promo, ...promoData };
-          }
-          return promo;
-        })
-      );
+      setLoadingPromoId(editingPromotion.id);
+      const updatedPromotion: Partial<BackendPromotion> = {
+          promoCode: promoData.promoCode,
+          title: promoData.name,
+          description: promoData.description,
+          imageLink: promoData.imageLink,
+          discountValue: promoData.value,
+          discountType: (promoData.discountType == '% off') ? DiscountType.percentage: DiscountType.fixed,
+          expirationDate: promoData.expirationDate
+      }
+      await updatePromotion(editingPromotion.id, updatedPromotion);
+      setLoadingPromoId(null);
     } else {
-      setPromotions([
-        ...promotions,
+      setIsAdding(true);
+      await addPromotion(
         {
-          id: Date.now(),
-          ...promoData,
-          sent: false,
-          active: false,
-        },
-      ]);
+          promoCode: promoData.promoCode,
+          title: promoData.name,
+          description: promoData.description,
+          imageLink: promoData.imageLink,
+          discountValue: promoData.value,
+          discountType: (promoData.discountType == '% off') ? DiscountType.percentage: DiscountType.fixed,
+          status: PromotionStatus.inactive,
+          expirationDate: promoData.expirationDate
+        }
+      );
+      setIsAdding(false);
     }
     setEditingPromotion(null);
+    
   };
 
-  const editPromotion = (promo: Promotion) => {
-    setEditingPromotion(promo);
+  const editPromotion = (promo: BackendPromotion) => {
+
+
+    setEditingPromotion({
+      id: promo.id,
+      promoCode: promo.promoCode,
+      name: promo.title,
+      description: promo.description,
+      value: promo.discountValue,
+      discountType: (promo.discountType == DiscountType.percentage) ? '% off' : '$ off',
+      imageLink: promo.imageLink,
+      expirationDate: promo.expirationDate,
+      active: promo.status == PromotionStatus.active,
+      sent: promo.status == PromotionStatus.active,
+
+    });
     setShowPromotionModal(true);
   };
 
-  const deletePromotion = (promoId: number) => {
-    setPromotions(promotions.filter((promo) => promo.id !== promoId));
+  const handleDeletePromotion = async (promoId: number) => {
+    console.log("Trying to delete promotion with ID " + promoId);
+    setLoadingPromoId(promoId);
+    await deletePromotion(promoId);
+    setLoadingPromoId(null);
   };
 
-  const sendPromotion = (promoId: number) => {
-    setPromotions(
-      promotions.map((promo) => {
-        if (promo.id === promoId) {
-          return { ...promo, sent: true, active: true };
-        }
-        return promo;
-      })
-    );
+  // Sets promotion to active when sent
+  const sendPromotion = (promo: BackendPromotion) => {
+    console.log("Sending promotion");
+    updatePromotion(promo.id, {
+      promoCode: promo.promoCode,
+      title: promo.title,
+      description: promo.description,
+      imageLink: promo.imageLink,
+      discountValue: promo.discountValue,
+      discountType: promo.discountType,
+      status: PromotionStatus.active,
+      expirationDate: promo.expirationDate,
+    })
   };
 
   const handleBookingFeeSave = (feeData: { name: string; amount: number }) => {
@@ -222,66 +261,74 @@ export default function AdminPricingPage() {
             </div>
           </div>
         </div>
-
+                
         {/* Promotions */}
+        {/* const formattedExpirationDate = `${editingPromo.expirationDate.substring(5, 7)}/${editingPromo.expirationDate.substring(8, 10)}/${editingPromo.expirationDate.substring(0, 4)}`; */}
         <div className="mb-16">
           <div className="text-xl font-afacad mb-3">Promotions</div>
           <div className="rounded-md overflow-hidden shadow-lg h-48 overflow-y-auto bg-[#242424]">
-            {promotions.map((promo) => (
+            {(loading && !isAdding && loadingPromoId == null) ? <div className="flex justify-center items-center h-48"><Spinner size="md" color="pink" /></div> : promotions.map((promo) => (
                 <div key={promo.id} className="flex items-center justify-between px-5 py-4 border-b border-white/10">
                   <div className="flex-1 font-afacad flex items-center gap-4">
-                    <span className="w-32">{promo.name}:</span>
-                    <span className="w-32">{formatDiscountValue(promo.value, promo.discountType || '% off')}</span>
-                    <span className="w-40 text-white/60 text-sm">Expires: {promo.expirationDate || 'N/A'}</span>
+                    <span className="w-32">{promo.title}:</span>
+                    <span className="w-32">{formatDiscountValue(promo.discountValue.toString(), promo.discountType || '% off')}</span>
+                    <span className="w-40 text-white/60 text-sm">{`Expires: ${promo.expirationDate.substring(5, 7)}/${promo.expirationDate.substring(8, 10)}/${promo.expirationDate.substring(0, 4) || 'N/A'}`}</span>
                   </div>
                   <div className="w-24 text-center"></div>
-                  <div className="flex items-center gap-4 text-gray-300">
-                    {promo.sent ? (
-                      <span className="text-gray-400 text-sm">{promo.active ? 'Active' : 'Inactive'}</span>
-                    ) : (
+                  {loadingPromoId === promo.id ?
+                    <Spinner size="md" color="pink" /> : 
+                    <div className="flex items-center gap-4 text-gray-300">
+                      {promo.status == PromotionStatus.active ? (
+                        <span className="text-gray-400 text-sm">{promo.status == PromotionStatus.active ? 'Active' : 'Inactive'}</span>
+                      ) : (
+                        <button
+                          title="Send"
+                          type="button"
+                          onClick={() => sendPromotion(promo)}
+                          className="text-black px-4 py-1 rounded-full transition-colors hover:opacity-90 font-afacad font-bold text-sm 
+                          bg-gradient-to-r from-[#FF478B] to-[#FF5C33]"
+                        >
+                          Send
+                        </button>
+                      )}
                       <button
-                        title="Send"
+                        title={promo.status == PromotionStatus.active ? "Cannot edit active promotion" : "Edit"}
                         type="button"
-                        onClick={() => sendPromotion(promo.id)}
-                        className="text-black px-4 py-1 rounded-full transition-colors hover:opacity-90 font-afacad font-bold text-sm 
-                        bg-gradient-to-r from-[#FF478B] to-[#FF5C33]"
+                        className={promo.status == PromotionStatus.active ? "transition-colors text-gray-500 opacity-50" : "transition-colors hover:text-white"}
+                        onClick={() => promo.status == PromotionStatus.inactive && editPromotion(promo)}
+                        disabled={promo.status == PromotionStatus.active}
                       >
-                        Send
+                          <PiPencilSimple className="text-lg" />                                            
+                      </button>                 
+                      <button
+                        title={promo.status == PromotionStatus.active ? "Cannot delete active promotion" : "Delete"}
+                        type="button"
+                        className={promo.status == PromotionStatus.active ? "transition-colors text-gray-500 opacity-50" : "transition-colors hover:text-white"}
+                        onClick={() => promo.status == PromotionStatus.inactive && handleDeletePromotion(promo.id)}
+                        disabled={promo.status == PromotionStatus.active}
+                      >
+                        <PiX className="text-lg" />
                       </button>
-                    )}
-                    <button
-                      title={promo.active ? "Cannot edit active promotion" : "Edit"}
-                      type="button"
-                      className={promo.active ? "transition-colors text-gray-500 opacity-50" : "transition-colors hover:text-white"}
-                      onClick={() => !promo.active && editPromotion(promo)}
-                      disabled={promo.active}
-                    >
-                      <PiPencilSimple className="text-lg" />
-                    </button>
-                    <button
-                      title={promo.active ? "Cannot delete active promotion" : "Delete"}
-                      type="button"
-                      className={promo.active ? "transition-colors text-gray-500 opacity-50" : "transition-colors hover:text-white"}
-                      onClick={() => !promo.active && deletePromotion(promo.id)}
-                      disabled={promo.active}
-                    >
-                      <PiX className="text-lg" />
-                    </button>
-                  </div>
+                      
+                    </div>
+                  }
                 </div>
             ))}
             <div className="flex items-center justify-end py-5 pr-5">
-              <button
-                type="button"
-                title="Add promotion"
-                className="text-gray-300 hover:text-white transition-colors"
-                onClick={() => {
-                  setEditingPromotion(null);
-                  setShowPromotionModal(true);
-                }}
-              >
-                <PiPlus className="text-lg" />
-              </button>
+              {(loading && isAdding) ?
+                <Spinner size="md" color="pink" /> : 
+                <button
+                  type="button"
+                  title="Add promotion"
+                  className="text-gray-300 hover:text-white transition-colors"
+                  onClick={() => {
+                    setEditingPromotion(null);
+                    setShowPromotionModal(true);
+                  }}
+                >
+                  {!(loading && !isAdding && loadingPromoId == null) && <PiPlus className="text-lg" />}
+                </button>
+              }
             </div>
           </div>
         </div>
