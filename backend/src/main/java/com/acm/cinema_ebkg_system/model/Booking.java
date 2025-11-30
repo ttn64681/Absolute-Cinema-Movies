@@ -46,7 +46,7 @@ public class Booking {
     // Many-to-one relationship with Promotion (optional)
     // Many bookings can use one promotion
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "promotion_id", nullable = true)
+    @JoinColumn(name = "promotion_id", referencedColumnName = "id", nullable = true)
     @JsonIgnoreProperties({"bookings"})
     private Promotion promotion;
     

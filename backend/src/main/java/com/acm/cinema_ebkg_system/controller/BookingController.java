@@ -79,6 +79,70 @@ public class BookingController {
     }
     
     /**
+     * Complete payment for a booking
+     * Updates booking status to "paid" and payment_info with actual card details
+     * POST /api/bookings/{bookingId}/complete-payment
+     */
+    @PostMapping("/{bookingId}/complete-payment")
+    public ResponseEntity<Map<String, Object>> completePayment(
+            @PathVariable Long bookingId,
+            @RequestBody Map<String, Object> paymentData,
+            HttpServletRequest httpRequest) {
+        
+        try {
+            Long userId = getUserIdFromRequest(httpRequest);
+            if (userId == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(createErrorResponse("User not authenticated"));
+            }
+            
+            // Extract payment data
+            String cardNumber = (String) paymentData.get("cardNumber");
+            String expirationDate = (String) paymentData.get("expirationDate");
+            String cardholderName = (String) paymentData.get("cardholderName");
+            String billingAddress = (String) paymentData.get("billingAddress");
+            
+            // Safely extract promotionId - only if it's a valid number
+            Long promotionId = null;
+            Object promoIdObj = paymentData.get("promotionId");
+            if (promoIdObj != null && !promoIdObj.toString().equals("null") && !promoIdObj.toString().isEmpty()) {
+                try {
+                    promotionId = Long.parseLong(promoIdObj.toString());
+                    // Verify promotion exists before proceeding
+                    if (promotionId <= 0) {
+                        promotionId = null;
+                    }
+                } catch (NumberFormatException e) {
+                    promotionId = null;
+                }
+            }
+            
+            java.math.BigDecimal finalTotalAmount = paymentData.get("finalTotalAmount") != null
+                ? new java.math.BigDecimal(paymentData.get("finalTotalAmount").toString())
+                : null;
+            
+            // Complete payment
+            Booking booking = bookingService.completePayment(bookingId, userId, cardNumber, 
+                expirationDate, cardholderName, billingAddress, promotionId, finalTotalAmount);
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "Payment completed successfully");
+            response.put("bookingId", booking.getBookingId());
+            response.put("totalAmount", booking.getTotalAmount());
+            response.put("status", booking.getStatus());
+            
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(createErrorResponse(e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(createErrorResponse("Failed to complete payment: " + e.getMessage()));
+        }
+    }
+    
+    /**
      * Create error response map
      */
     private Map<String, Object> createErrorResponse(String message) {

@@ -1,15 +1,63 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import TicketCounter from '@/components/specific/booking/ticketAge/TicketCounter';
 import CheckoutButtonWrapper from '@/components/specific/booking/ticketAge/CheckoutButtonWrapper';
+import { buildUrl } from '@/config/api';
 
 interface props {
   reservedSeats: number;
 }
 
+interface TicketCategory {
+  id: number;
+  name: string;
+  price: number | string;
+}
+
 export default function TicketTable({ reservedSeats }: props) {
   const [ticketsByCategory, setTicketsByCategory] = useState([0, 0, 0]); // Currently selected tickets for each category of ticket (0-adult, 1-child, 2-senior)
   const [totalTickets, setTotalTickets] = useState(0); // Total selected tickets
+  const [ticketPrices, setTicketPrices] = useState<{ [key: string]: number }>({});
+  const [isLoadingPrices, setIsLoadingPrices] = useState(true);
+
+  // Fetch ticket prices from API
+  useEffect(() => {
+    const fetchTicketPrices = async () => {
+      try {
+        const response = await fetch(buildUrl('/api/ticket-categories'));
+        if (!response.ok) throw new Error('Failed to fetch ticket prices');
+        
+        const categories: TicketCategory[] = await response.json();
+        const prices: { [key: string]: number } = {};
+        
+        categories.forEach((cat) => {
+          let priceValue: number;
+          if (typeof cat.price === 'number') {
+            priceValue = cat.price;
+          } else if (typeof cat.price === 'string') {
+            priceValue = parseFloat(cat.price);
+            if (isNaN(priceValue)) {
+              console.error(`Invalid price for ${cat.name}: ${cat.price}`);
+              priceValue = 0;
+            }
+          } else {
+            priceValue = 0;
+          }
+          prices[cat.name] = priceValue;
+        });
+        
+        setTicketPrices(prices);
+      } catch (error) {
+        console.error('Error fetching ticket prices:', error);
+        // Fallback to API prices if fetch fails
+        setTicketPrices({ adult: 12, child: 8, senior: 10 });
+      } finally {
+        setIsLoadingPrices(false);
+      }
+    };
+
+    fetchTicketPrices();
+  }, []);
 
   // useState function to update the selected ticket totals
   const updateSelectedTickets = (index: number, count: number) => {
@@ -21,9 +69,15 @@ export default function TicketTable({ reservedSeats }: props) {
     setTotalTickets(currentTotal);
   };
 
-  // Calculate the total price of all tickets the user has selected
+  // Calculate the total price of all tickets the user has selected using prices from API
   function calculatePrice() {
-    const price = ticketsByCategory[0] * 5 + (ticketsByCategory[1] * 3.5 + ticketsByCategory[2] * 2);
+    const adultPrice = ticketPrices.adult || 0;
+    const childPrice = ticketPrices.child || 0;
+    const seniorPrice = ticketPrices.senior || 0;
+    
+    const price = (ticketsByCategory[0] * adultPrice) + 
+                  (ticketsByCategory[1] * childPrice) + 
+                  (ticketsByCategory[2] * seniorPrice);
     return price;
   }
 
@@ -72,7 +126,9 @@ export default function TicketTable({ reservedSeats }: props) {
                 onCountChange={(count) => updateSelectedTickets(0, count)}
               />
             </div>
-            <div className="text-right text-sm sm:text-base">$5.00</div>
+            <div className="text-right text-sm sm:text-base">
+              {isLoadingPrices ? 'Loading...' : formatPriceString(ticketPrices.adult || 0)}
+            </div>
             <div></div>
           </div>
 
@@ -87,7 +143,9 @@ export default function TicketTable({ reservedSeats }: props) {
                 onCountChange={(count) => updateSelectedTickets(1, count)}
               />
             </div>
-            <div className="text-right text-sm sm:text-base">$3.50</div>
+            <div className="text-right text-sm sm:text-base">
+              {isLoadingPrices ? 'Loading...' : formatPriceString(ticketPrices.child || 0)}
+            </div>
             <div></div>
           </div>
 
@@ -102,7 +160,9 @@ export default function TicketTable({ reservedSeats }: props) {
                 onCountChange={(count) => updateSelectedTickets(2, count)}
               />
             </div>
-            <div className="text-right text-sm sm:text-base">$2.00</div>
+            <div className="text-right text-sm sm:text-base">
+              {isLoadingPrices ? 'Loading...' : formatPriceString(ticketPrices.senior || 0)}
+            </div>
             <div></div>
           </div>
         </div>

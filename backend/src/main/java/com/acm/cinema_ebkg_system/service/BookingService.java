@@ -19,6 +19,8 @@ import com.acm.cinema_ebkg_system.repository.UserRepository;
 import com.acm.cinema_ebkg_system.repository.PaymentInfoRepository;
 import com.acm.cinema_ebkg_system.model.PaymentInfo;
 import com.acm.cinema_ebkg_system.model.ShowSeat;
+import com.acm.cinema_ebkg_system.model.Promotion;
+import com.acm.cinema_ebkg_system.repository.PromotionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -241,5 +243,148 @@ public class BookingService {
     
     @Autowired
     private ShowSeatService showSeatService;
+    
+    @Autowired
+    private PromotionRepository promotionRepository;
+    
+    /**
+     * Complete payment for a booking
+     * Updates booking status to "paid", updates payment_info, and applies promotion if provided
+     * @param finalTotalAmount - Final total amount including tax, fees, and discount (calculated on frontend)
+     */
+    @Transactional
+    public Booking completePayment(Long bookingId, Long userId, String cardNumber, 
+            String expirationDate, String cardholderName, String billingAddress, Long promotionId, BigDecimal finalTotalAmount) {
+        
+        // Get booking
+        Booking booking = bookingRepository.findById(bookingId)
+            .orElseThrow(() -> new RuntimeException("Booking not found with id: " + bookingId));
+        
+        // Verify booking belongs to user
+        if (!booking.getUser().getId().equals(userId)) {
+            throw new RuntimeException("Booking does not belong to user");
+        }
+        
+        // Verify booking is not already paid
+        if ("paid".equals(booking.getStatus())) {
+            throw new RuntimeException("Booking is already paid");
+        }
+        
+        // Handle promotion - only set if valid, otherwise ensure it's null
+        // First, clear any existing promotion to avoid foreign key issues
+        booking.setPromotion(null);
+        
+        // Apply promotion if provided and exists
+        if (promotionId != null && promotionId > 0) {
+            try {
+                java.util.Optional<Promotion> promotionOpt = promotionRepository.findById(promotionId);
+                if (promotionOpt.isPresent()) {
+                    Promotion promotion = promotionOpt.get();
+                    // Verify promotion is active and not expired
+                    if (promotion.getStatus() == com.acm.cinema_ebkg_system.enums.PromotionStatus.active 
+                        && promotion.getExpirationDate().isAfter(java.time.LocalDateTime.now())) {
+                        // Verify the promotion ID matches what we're looking for
+                        if (promotion.getId().equals(promotionId)) {
+                            // Only set if valid and IDs match
+                            booking.setPromotion(promotion);
+                            System.out.println("Applied promotion " + promotionId + " (id=" + promotion.getId() + ") to booking " + bookingId);
+                        } else {
+                            System.err.println("Warning: Promotion ID mismatch. Expected " + promotionId + " but got " + promotion.getId());
+                        }
+                    } else {
+                        // Promotion exists but is not valid - keep as null
+                        System.err.println("Warning: Promotion with id " + promotionId + " is not active or expired. Proceeding without promotion.");
+                    }
+                } else {
+                    // Promotion doesn't exist - keep as null
+                    System.err.println("Warning: Promotion with id " + promotionId + " not found in database. Proceeding without promotion.");
+                }
+            } catch (Exception e) {
+                // If any error occurs, keep promotion as null
+                System.err.println("Error checking promotion " + promotionId + ": " + e.getMessage() + ". Proceeding without promotion.");
+            }
+        }
+        
+        // Calculate final total amount (includes tax, fees, and discount)
+        BigDecimal ticketSubtotal = booking.getTotalAmount(); // Start with ticket prices only
+        System.out.println("Payment completion - Starting with ticket subtotal: " + ticketSubtotal);
+        
+        // Add tax (8% of subtotal)
+        BigDecimal tax = ticketSubtotal.multiply(new BigDecimal("0.08"));
+        System.out.println("Tax (8%): " + tax);
+        
+        // Add online fees ($2.50 per ticket)
+        BigDecimal onlineFeePerTicket = new BigDecimal("2.50");
+        BigDecimal onlineFees = onlineFeePerTicket.multiply(new BigDecimal(booking.getNumTickets()));
+        System.out.println("Online fees ($2.50 x " + booking.getNumTickets() + " tickets): " + onlineFees);
+        
+        // Calculate total before discount
+        BigDecimal totalBeforeDiscount = ticketSubtotal.add(tax).add(onlineFees);
+        System.out.println("Total before discount: " + totalBeforeDiscount);
+        
+        // Apply promotion discount if promotion is set
+        if (booking.getPromotion() != null) {
+            Promotion promotion = booking.getPromotion();
+            BigDecimal discountAmount = BigDecimal.ZERO;
+            
+            if (promotion.getDiscountType() == com.acm.cinema_ebkg_system.enums.DiscountType.percentage) {
+                // Percentage discount on total (after tax and fees)
+                discountAmount = totalBeforeDiscount
+                    .multiply(promotion.getDiscountValue())
+                    .divide(new BigDecimal(100), 2, java.math.RoundingMode.HALF_UP);
+                System.out.println("Percentage discount (" + promotion.getDiscountValue() + "%): " + discountAmount);
+            } else {
+                // Fixed discount
+                discountAmount = promotion.getDiscountValue();
+                System.out.println("Fixed discount: " + discountAmount);
+            }
+            
+            // Subtract discount
+            totalBeforeDiscount = totalBeforeDiscount.subtract(discountAmount);
+            if (totalBeforeDiscount.compareTo(BigDecimal.ZERO) < 0) {
+                totalBeforeDiscount = BigDecimal.ZERO;
+            }
+            System.out.println("Total after discount: " + totalBeforeDiscount);
+        }
+        
+        // Use provided finalTotalAmount if available, otherwise use calculated total
+        BigDecimal finalTotalToSave;
+        if (finalTotalAmount != null && finalTotalAmount.compareTo(BigDecimal.ZERO) >= 0) {
+            finalTotalToSave = finalTotalAmount;
+            System.out.println("Using provided finalTotalAmount: " + finalTotalToSave);
+        } else {
+            // Use calculated total (ticket prices + tax + fees - discount)
+            finalTotalToSave = totalBeforeDiscount;
+            System.out.println("Using calculated finalTotalAmount: " + finalTotalToSave);
+        }
+        
+        // Always update the total amount in the database
+        booking.setTotalAmount(finalTotalToSave);
+        System.out.println("Final total saved to booking: " + booking.getTotalAmount());
+        
+        // Update payment_info
+        PaymentInfo paymentInfo = paymentInfoRepository.findById(booking.getPaymentId())
+            .orElseThrow(() -> new RuntimeException("Payment info not found"));
+        
+        // Parse expiration date (MM/YY format)
+        String[] expParts = expirationDate.split("/");
+        int month = Integer.parseInt(expParts[0]);
+        int year = 2000 + Integer.parseInt(expParts[1]);
+        LocalDate expDate = LocalDate.of(year, month, 1).withDayOfMonth(
+            LocalDate.of(year, month, 1).lengthOfMonth()
+        );
+        
+        paymentInfo.setCard_number(cardNumber);
+        paymentInfo.setExpiration_date(expDate);
+        paymentInfo.setCardholder_name(cardholderName);
+        paymentInfo.setBilling_address(billingAddress);
+        paymentInfo = paymentInfoRepository.save(paymentInfo);
+        
+        // Update booking status to "paid"
+        booking.setStatus("paid");
+        booking = bookingRepository.save(booking);
+        
+        return booking;
+    }
 }
 

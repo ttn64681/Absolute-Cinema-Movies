@@ -1,9 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState, Suspense, useRef } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useAuth } from '@/contexts/AuthContext';
+import { useReservation } from '@/contexts/ReservationContext';
+import { useToast } from '@/contexts/ToastContext';
 import NavBar from '@/components/common/navBar/NavBar';
 import CheckoutSections from '@/components/specific/booking/order/CheckoutSections';
 import OrderDetails from '@/components/specific/booking/order/OrderDetails';
+import api from '@/config/api';
 
 const checkoutSteps = [
   { number: 1, label: 'Billing Address' },
@@ -12,8 +17,100 @@ const checkoutSteps = [
   { number: 4, label: 'Review' },
 ];
 
-export default function CheckoutPage() {
+function CheckoutPageContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const { isAuthenticated, isLoading, user } = useAuth();
+  const { clearReservation } = useReservation();
+  const { showToast } = useToast();
+
   const [currentStep, setCurrentStep] = useState(1);
+  const [bookingId, setBookingId] = useState<number | null>(null);
+  const [appliedPromo, setAppliedPromo] = useState<{
+    discount: number;
+    type: 'percentage' | 'fixed';
+    promotionId: number;
+  } | null>(null);
+  const [finalTotal, setFinalTotal] = useState<number | null>(null);
+  const [isCreatingBooking, setIsCreatingBooking] = useState(false);
+  const bookingCreatedRef = useRef(false);
+
+  // Separate effect for authentication check
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      const currentPath = window.location.pathname + window.location.search;
+      showToast('Please log in to checkout', 'info');
+      router.push(`/auth/login?redirect=${encodeURIComponent(currentPath)}&message=${encodeURIComponent('Please log in to complete your booking')}`);
+    }
+  }, [isAuthenticated, isLoading, router, showToast]);
+
+  // Create booking on mount if details are available (only once)
+  useEffect(() => {
+    const showId = searchParams.get('showId');
+    const seatIds = searchParams.get('seatIds');
+    if (showId && seatIds && !bookingId && !isCreatingBooking && !bookingCreatedRef.current && isAuthenticated && !isLoading) {
+      bookingCreatedRef.current = true;
+      createBooking();
+    }
+  }, [searchParams, bookingId, isAuthenticated, isLoading, isCreatingBooking]);
+
+  const createBooking = async () => {
+    const showId = searchParams.get('showId') || '';
+    const seatIds = searchParams.get('seatIds') || '';
+    const adult = parseInt(searchParams.get('adult') || '0');
+    const child = parseInt(searchParams.get('child') || '0');
+    const senior = parseInt(searchParams.get('senior') || '0');
+
+    if (!showId || !seatIds || bookingId || isCreatingBooking) {
+      return;
+    }
+
+    setIsCreatingBooking(true);
+    try {
+      const selectedSeats = seatIds.split(',').filter((id) => id.trim().length > 0);
+      const seatSelections = selectedSeats.map((displayId) => {
+        const match = displayId.match(/^(\d+)([A-Z]+)$/);
+        if (match) {
+          return {
+            seatRow: match[1],
+            seatNumber: match[2],
+          };
+        } else {
+          throw new Error(`Invalid seat format: ${displayId}`);
+        }
+      });
+
+      const bookingRequest = {
+        showId: parseInt(showId),
+        seats: seatSelections,
+        ticketTypes: {
+          adult: adult,
+          child: child,
+          senior: senior,
+        },
+      };
+
+      const response = await api.post('/api/bookings/create', bookingRequest);
+      if (response.data.success) {
+        setBookingId(response.data.bookingId);
+      } else {
+        showToast(`Failed to create booking: ${response.data.error || 'Unknown error'}`, 'error');
+      }
+    } catch (error: any) {
+      console.error('Error creating booking:', error);
+      showToast('Failed to create booking. Please try again.', 'error');
+    } finally {
+      setIsCreatingBooking(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="text-white">Loading...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-black">
@@ -22,17 +119,35 @@ export default function CheckoutPage() {
       <div className="w-full flex flex-row gap-6 p-30 pt-28 items-stretch">
         <div className="flex-1 flex flex-col">
           <StepTracker steps={checkoutSteps} currentStep={currentStep} />
-          <CheckoutSections currentStep={currentStep} setCurrentStep={setCurrentStep} />
+          <CheckoutSections
+            currentStep={currentStep}
+            setCurrentStep={setCurrentStep}
+            bookingId={bookingId}
+            finalTotalAmount={finalTotal}
+            onPromoApplied={(discount, type, promotionId) => {
+              setAppliedPromo({ discount, type, promotionId });
+            }}
+            onPaymentComplete={() => {
+              clearReservation();
+              showToast('Payment completed! Redirecting...', 'success');
+              setTimeout(() => {
+                router.push(`/booking/confirmation?bookingId=${bookingId}&totalAmount=${finalTotal || 0}`);
+              }, 500);
+            }}
+          />
         </div>
 
         <div className="w-96 flex-shrink-0 flex flex-col">
-          {/* Spacer keeps OrderDetails aligned with the form column */}
           <div className="w-full pb-6">
             <div className="max-w-4xl mx-auto invisible pointer-events-none">
               <StepTracker steps={checkoutSteps} currentStep={currentStep} ghost />
             </div>
           </div>
-          <OrderDetails />
+          <OrderDetails
+            promoDiscount={appliedPromo?.discount || 0}
+            promoType={appliedPromo?.type}
+            onTotalCalculated={setFinalTotal}
+          />
         </div>
       </div>
     </div>
@@ -87,5 +202,17 @@ function StepTracker({ steps, currentStep, ghost = false }: StepTrackerProps) {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function CheckoutPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="text-white">Loading...</div>
+      </div>
+    }>
+      <CheckoutPageContent />
+    </Suspense>
   );
 }
