@@ -29,3 +29,6 @@ export function formatDiscountForSmallPromo(promotion: BackendPromotion): string
   return `$${promotion.discountValue} OFF`;
 }
 
+
+
+
