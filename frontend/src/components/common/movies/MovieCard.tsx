@@ -52,7 +52,7 @@ export default function MovieCard({ movie }: MovieCardProps) {
         onClick={handleDetailsPopup}
       >
         {/* Movie Poster Container */}
-        <div className="relative aspect-[2/3] w-full">
+        <div className="relative aspect-2/3 w-full">
           <Image
             src={movie.poster_link}
             alt={movie.title}
