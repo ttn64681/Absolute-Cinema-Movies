@@ -128,6 +128,22 @@ public class MovieShowService {
     public void deleteMovieShow(Long movieShowId) {
         movieShowRepository.deleteById(movieShowId);
     }
+    
+    /**
+     * Get auditorium (ShowRoom) by movie show ID
+     * @param movieShowId - Long: Movie show ID
+     * @return ShowRoom - Auditorium information (name, capacity)
+     */
+    public ShowRoom getAuditoriumByMovieShowId(Long movieShowId) {
+        MovieShow movieShow = movieShowRepository.findById(movieShowId)
+            .orElseThrow(() -> new RuntimeException("Movie show not found with id: " + movieShowId));
+        ShowRoom showRoom = movieShow.getShowRoom();
+        // Force initialization of lazy-loaded proxy to avoid serialization issues
+        if (showRoom != null) {
+            showRoom.getName(); // Access property to initialize proxy
+        }
+        return showRoom;
+    }
 
     
 }

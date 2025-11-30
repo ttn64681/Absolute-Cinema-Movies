@@ -2,6 +2,21 @@ import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useFilters } from '@/contexts/FiltersContext';
 
+/**
+ * Hook for search logic and filter management
+ *
+ * Responsibilities:
+ * - React state management (search query)
+ * - Prevent duplicate searches
+ * - Build search URL with filters
+ * - Navigate to movies page with search params
+ *
+ * Delegates to:
+ * - useFilters context: Global filter state
+ * - Next.js router: Navigation
+ *
+ * @returns Search query state and search handler function
+ */
 export function useSearchLogic() {
   const router = useRouter();
   // Get global filter state from context

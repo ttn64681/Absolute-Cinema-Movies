@@ -6,13 +6,15 @@ import { promotionClient } from "@/clients/promotionClient";
 
 /**
  * Hook for promotion operations
- * 
+ *
  * Responsibilities:
  * - React state management (promotions, loading, error)
  * - Fetch promotions from backend via promotionClient
- * 
+ *
  * Delegates to:
  * - promotionClient (Facade): API calls
+ *
+ * @returns Promotion state, loading status, and error state
  */
 export function usePromotions() {
     const [promotions, setPromotions] = useState<BackendPromotion[]>([]);

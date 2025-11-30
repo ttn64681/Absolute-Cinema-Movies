@@ -103,5 +103,28 @@ public class MovieShowController {
         movieShowService.deleteMovieShow(movieShowId);
         return ResponseEntity.ok().build();
     }
+    
+    /**
+     * GET /api/movie-shows/{movieShowId}/auditorium
+     * Input: movieShowId (Long) in URL path
+     * Returns: ShowRoom - Auditorium information for the movie show
+     * Used by booking flow to get correct seat layout
+     */
+    @GetMapping("/{movieShowId}/auditorium")
+    public ResponseEntity<ShowRoom> getAuditoriumByMovieShowId(@PathVariable Long movieShowId) {
+        try {
+            ShowRoom auditorium = movieShowService.getAuditoriumByMovieShowId(movieShowId);
+            if (auditorium == null) {
+                return ResponseEntity.notFound().build();
+            }
+            return ResponseEntity.ok(auditorium);
+        } catch (RuntimeException e) {
+            // Movie show not found or other runtime error
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            // Other unexpected errors
+            return ResponseEntity.status(org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
 }
 

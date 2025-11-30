@@ -3,8 +3,21 @@ import { useState, useEffect } from 'react';
 import { BackendUser } from '@/types/user';
 import { getUserInfo, updateUserInfo, changePassword } from '@/clients/userClient';
 
-// useUser: Hook that translates user data between the frontend and backend.
-
+/**
+ * Hook for user profile operations
+ *
+ * Responsibilities:
+ * - React state management (user data, loading, error)
+ * - Fetching user profile data from backend
+ * - Updating user profile information
+ * - Changing user password
+ *
+ * Delegates to:
+ * - userClient: API calls for user operations
+ *
+ * @param userId - User ID to fetch/update profile for
+ * @returns User state, loading status, error state, and update operations
+ */
 export function useUser(userId: number) {
   const [user, setUser] = useState<Partial<BackendUser> | null>(null);
   const [isLoading, setIsLoading] = useState(true);

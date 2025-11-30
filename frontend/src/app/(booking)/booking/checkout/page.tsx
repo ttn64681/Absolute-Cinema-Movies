@@ -33,25 +33,6 @@ export default function CheckoutPage() {
             </div>
           </div>
           <OrderDetails />
-          {/* Complete Booking Button */}
-          <div className="mt-6 flex justify-end">
-            <button
-              type="button"
-              onClick={handleCompleteBooking}
-              disabled={isProcessing}
-              className={`inline-flex items-center gap-2 px-8 py-4 rounded-lg font-bold text-lg transition-all ${
-                isProcessing
-                  ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                  : 'bg-gradient-to-r from-acm-pink to-acm-orange text-white hover:brightness-110 cursor-pointer'
-              }`}
-              title="Complete Booking"
-            >
-              <span>{isProcessing ? 'PROCESSING...' : 'COMPLETE BOOKING'}</span>
-              <span className="text-xl leading-none">
-                <RxDoubleArrowRight />
-              </span>
-            </button>
-          </div>
         </div>
       </div>
     </div>
@@ -76,9 +57,7 @@ function StepTracker({ steps, currentStep, ghost = false }: StepTrackerProps) {
               <div className="flex flex-col items-center">
                 <div
                   className={`w-12 h-12 rounded-full flex items-center justify-center font-semibold text-lg transition-colors relative z-10 ${
-                    currentStep >= step.number
-                      ? 'bg-white text-black'
-                      : 'bg-black border-2 border-white text-white'
+                    currentStep >= step.number ? 'bg-white text-black' : 'bg-black border-2 border-white text-white'
                   }`}
                 >
                   {step.number}

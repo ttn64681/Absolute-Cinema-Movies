@@ -46,7 +46,7 @@ export default function MoviesSearchSection({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyDown={onKeyPress}
-            className="w-full p-3 pl-4 text-lg border duration-200 border-white/30 hover:border-white/60 focus:border-white outline-none rounded-md backdrop-blur-sm backdrop-brightness-125 bg-white/10 text-white placeholder-white/70"
+            className="w-full p-3 pl-4 text-lg border duration-200 border-white/30 hover:border-white/60 focus:border-white outline-none rounded-md backdrop-blur-sm backdrop-brightness-125 bg-white/10 text-white placeholder-white/70 cursor-text"
           />
         </div>
         <button title="Filter" type="button" className="ml-5 cursor-pointer" onClick={() => setIsFiltersOpen(true)}>

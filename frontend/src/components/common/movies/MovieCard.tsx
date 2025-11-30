@@ -120,7 +120,7 @@ export default function MovieCard({ movie }: MovieCardProps) {
             <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-all duration-300">
               <button
                 onClick={handlePreviewClick}
-                className="flex items-center gap-2 bg-acm-pink hover:bg-acm-pink/80 text-white px-4 py-2 rounded-lg font-semibold text-sm transition-all duration-200 hover:scale-105"
+                className="flex items-center gap-2 bg-acm-pink hover:bg-acm-pink/80 text-white px-4 py-2 rounded-lg font-semibold text-sm transition-all duration-200 hover:scale-105 cursor-pointer"
                 title="Preview Trailer"
               >
                 <IoPlay className="text-lg" />

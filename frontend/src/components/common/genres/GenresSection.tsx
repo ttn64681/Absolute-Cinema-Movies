@@ -12,7 +12,7 @@ export default function GenresSection({ genres, isLoading = false }: GenresSecti
     <>
       <div className="text-4xl font-extrabold font-red-rose text-white mb-2 px-20">Genres</div>
       <div className="relative">
-        <div className="flex flex-row overflow-x-scroll scrollbar-hide py-4 gap-x-4 px-24">
+        <div className="flex flex-row overflow-x-scroll scrollbar-hide py-4 gap-x-4 px-28">
           {isLoading ? (
             <div className="text-white/60 text-lg px-4 py-8">
               Loading genres...

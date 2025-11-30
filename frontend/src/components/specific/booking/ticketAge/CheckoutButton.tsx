@@ -60,9 +60,9 @@ export default function CheckoutButton({ tickets, seats, ticketsByCategory }: pr
             title="Continue to Checkout"
             type="button"
             onClick={handleContinueToCheckout}
-            className={`${styles.checkoutButton} inline-flex items-center gap-2 text-sm`}
+            className={`${styles.checkoutButton} inline-flex items-center gap-2 text-sm cursor-pointer`}
           >
-            <span>CONTINUE TO CHECKOUT</span>
+            <span>CHECKOUT</span>
             <span className="text-lg leading-none">
               {' '}
               <RxDoubleArrowRight />{' '}
@@ -71,8 +71,8 @@ export default function CheckoutButton({ tickets, seats, ticketsByCategory }: pr
         </div>
       ) : (
         <div>
-          <button className={`${styles.checkoutButtonDisabled} inline-flex items-center gap-2 text-sm`} disabled>
-            <span>CONTINUE TO CHECKOUT</span>
+          <button className={`${styles.checkoutButtonDisabled} inline-flex items-center gap-2 text-sm cursor-not-allowed`} disabled>
+            <span>CHECKOUT</span>
             <span className="text-lg leading-none">
               {' '}
               <RxDoubleArrowRight />{' '}

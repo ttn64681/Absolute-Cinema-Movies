@@ -3,7 +3,19 @@ import { useState, useEffect, useCallback } from 'react';
 import { AdminMovie, PaginatedMovieResponse } from '@/types/admin';
 import { fetchMoviesPaginated } from '@/clients/adminMovieClient';
 
-
+/**
+ * Hook for admin movie list operations
+ *
+ * Responsibilities:
+ * - React state management (movies, pagination, loading, error)
+ * - Fetching paginated movie list for admin
+ * - Pagination navigation
+ *
+ * Delegates to:
+ * - adminMovieClient: API calls for movie list
+ *
+ * @returns Movie list state, pagination info, and navigation operations
+ */
 export function useAdminMoviesList() {
     const [page, setPage] = useState(0);
       const [adminMovies, setMovies] = useState<AdminMovie[]>([]);

@@ -21,7 +21,21 @@ const dummyMovie: AdminMovie = {
   duration: 0
 }
 
-// AdminSelectedMovie hook: Used to get ALL movie information when the admin selects a movie to edit.
+/**
+ * Hook for admin movie detail operations
+ *
+ * Responsibilities:
+ * - React state management (selected movie, loading, error)
+ * - Fetching full movie details when admin selects a movie to edit
+ * - Creating new movies
+ * - Updating existing movies
+ *
+ * Delegates to:
+ * - adminMovieClient: API calls for movie CRUD operations
+ *
+ * @param movieId - Movie ID to fetch/edit (0 means no movie selected)
+ * @returns Movie state, loading status, error state, and CRUD operations
+ */
 export function useAdminMovie(movieId: number) {
   const [selectedMovie, setMovie] = useState<AdminMovie>(dummyMovie);
   const [isLoading, setIsLoading] = useState(false);

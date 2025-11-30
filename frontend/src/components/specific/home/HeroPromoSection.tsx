@@ -152,8 +152,8 @@ export default function HeroPromoSection() {
                 type="button"
                 key={index}
                 onClick={() => goToIndex(index)}
-                className={`w-2 h-2 rounded-full transition-all duration-200 cursor-pointer ${
-                  index === currentPromoIndex ? 'bg-acm-pink scale-125' : 'bg-white/50 hover:bg-white/70'
+                className={`h-2 rounded-full transition-all duration-200 cursor-pointer ${
+                  index === currentPromoIndex ? 'bg-acm-pink w-8' : 'bg-white/50 hover:bg-white/70 w-2'
                 }`}
                 aria-label={`Go to promotion ${index + 1}`}
               />

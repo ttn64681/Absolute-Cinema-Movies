@@ -4,8 +4,20 @@ import { ShowTime, BackendMovieShow } from '@/types/admin';
 import { getMovieDetails, createNewMovie, editExistingMovie } from '@/clients/adminMovieClient';
 import { getMovieShowsForMovie, createMovieShow } from '@/clients/adminMovieShowClient';
 
-
-// AdminSelectedMovie hook: Used to get ALL movie information when the admin selects a movie to edit.
+/**
+ * Hook for admin movie show operations
+ *
+ * Responsibilities:
+ * - React state management (movie shows, loading, error)
+ * - Fetching movie shows for a specific movie
+ * - Creating new movie shows (scheduling)
+ *
+ * Delegates to:
+ * - adminMovieShowClient: API calls for movie show operations
+ *
+ * @param movieId - Movie ID to fetch/create shows for (0 means no movie selected)
+ * @returns Movie shows state, loading status, error state, and scheduling operations
+ */
 export function useAdminMovieShows(movieId: number) {
   const [movieShows, setMovieShows] = useState<ShowTime[]>([]);
   const [isLoading, setIsLoading] = useState(false);
