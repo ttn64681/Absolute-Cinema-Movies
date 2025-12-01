@@ -4,7 +4,9 @@ import com.acm.cinema_ebkg_system.dto.booking.ReserveSeatsRequest;
 import com.acm.cinema_ebkg_system.dto.booking.SeatAvailabilityResponse;
 import com.acm.cinema_ebkg_system.dto.booking.SeatDTO;
 import com.acm.cinema_ebkg_system.model.MovieShow;
+import com.acm.cinema_ebkg_system.model.ShowRoom;
 import com.acm.cinema_ebkg_system.model.ShowSeat;
+import com.acm.cinema_ebkg_system.service.MovieShowService;
 import com.acm.cinema_ebkg_system.repository.MovieShowRepository;
 import com.acm.cinema_ebkg_system.repository.ShowSeatRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,6 +43,9 @@ public class ShowSeatService {
     
     @Autowired
     private MovieShowRepository movieShowRepository;
+
+    @Autowired
+    private MovieShowService movieShowService;
     
     /**
      * Get all seats for a movie_show with availability status
@@ -65,9 +70,16 @@ public class ShowSeatService {
     @Transactional
     public SeatAvailabilityResponse getSeatsForShow(Long showId) {
         // Verify movie_show exists (showId = movie_show.id)
-        movieShowRepository.findById(showId)
+        MovieShow show = movieShowRepository.findById(showId)
             .orElseThrow(() -> new RuntimeException("Movie show not found with id: " + showId));
         
+        // Find capacity of the room of the show
+        int capacity = show.getShowRoom().getCapacity();
+
+        // Use capacity to calculate row sizes
+        int numFrontRows = capacity / 20;
+        int numBackRows = (capacity - (numFrontRows * 10)) / 10;
+
         // Release expired reservations (older than 10 minutes) before fetching seats
         // Note: Changed to @Transactional (not read-only) to allow releasing expired seats
         releaseExpiredReservations(showId);
@@ -84,12 +96,13 @@ public class ShowSeatService {
                 (existing, replacement) -> existing // If duplicate, keep first
             ));
         
-        // Generate FULL seat layout (67 seats total)
+        // Generate FULL seat layout (matches showroom capacity)
         List<SeatDTO> seatDTOs = new ArrayList<>();
+
         
-        // Front rows: 3 rows (1-3) with 9 seats each (A-I)
-        String[] frontSeatLetters = {"A", "B", "C", "D", "E", "F", "G", "H", "I"};
-        for (int row = 1; row <= 3; row++) {
+        // Front rows: 5 rows (1-5) with 8 seats each (A-H). First 40 seats.
+        String[] frontSeatLetters = {"A", "B", "C", "D", "E", "F", "G", "H", "I", "J"};
+        for (int row = 1; row <= numFrontRows; row++) {
             String rowLabel = String.valueOf(row);
             for (String seatLetter : frontSeatLetters) {
                 String seatKey = rowLabel + seatLetter;
@@ -128,10 +141,11 @@ public class ShowSeatService {
                 ));
             }
         }
-        
-        // Back rows: 4 rows (4-7) with 10 seats each (A-J)
+
+        // Back rows: Have 10 seats each (A-J).
+        // 2 to 5 rows depending on showroom capacity.
         String[] backSeatLetters = {"A", "B", "C", "D", "E", "F", "G", "H", "I", "J"};
-        for (int row = 4; row <= 7; row++) {
+        for (int row = numFrontRows+1; row <= numFrontRows+numBackRows; row++) {
             String rowLabel = String.valueOf(row);
             for (String seatLetter : backSeatLetters) {
                 String seatKey = rowLabel + seatLetter;
@@ -172,8 +186,13 @@ public class ShowSeatService {
         }
         
         // Calculate statistics
-        long totalSeats = seatDTOs.size(); // Always 67
+        long totalSeats = seatDTOs.size();
         long availableSeats = seatDTOs.stream().filter(SeatDTO::getIsAvailable).count();
+        
+        // Make available seats update in the database 
+        show.setAvailableSeats((int) availableSeats);
+        movieShowService.updateMovieShow(show);
+
         long reservedSeats = totalSeats - availableSeats;
         
         return new SeatAvailabilityResponse(showId, seatDTOs, totalSeats, availableSeats, reservedSeats);
