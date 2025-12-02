@@ -29,6 +29,19 @@ export function formatDiscountForSmallPromo(promotion: BackendPromotion): string
   return `$${promotion.discountValue} OFF`;
 }
 
+/**
+ * Format expiration date as MM/DD/YYYY
+ * @param dateString - ISO date string
+ * @returns Formatted date string (e.g., "12/30/2025")
+ */
+export function formatExpirationDate(dateString: string): string {
+  return new Date(dateString).toLocaleDateString('en-US', {
+    month: '2-digit',
+    day: '2-digit',
+    year: 'numeric',
+  });
+}
+
 
 
 
