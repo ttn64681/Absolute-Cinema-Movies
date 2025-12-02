@@ -17,36 +17,35 @@ import { getAuthToken } from '@/utils/auth';
 
 /**
  * Generic request helper - Standardizes all API calls
- *
- * Handles:
- * - URL building
- * - Authentication headers
- * - Content-Type headers
- * - Error handling
- * - JSON parsing
- *
- * @param path - API endpoint path
- * @param options - Fetch options (method, body, etc.)
- * @returns Parsed JSON response
- * @throws Error if response is not ok
  */
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const token = getAuthToken();
+  const url = buildUrl(path);
 
-  const response = await fetch(buildUrl(path), {
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token && { Authorization: `Bearer ${token}` }),
-      ...options.headers,
-    },
-    ...options,
-  });
+  try {
+    const response = await fetch(url, {
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token && { Authorization: `Bearer ${token}` }),
+        ...options.headers,
+      },
+      ...options,
+    });
 
-  if (!response.ok) {
-    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`[movieClient] API Error [${response.status}]:`, errorText);
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    return response.json();
+  } catch (error) {
+    console.error(`[movieClient] Request failed for ${url}:`, error);
+    if (error instanceof TypeError && error.message.includes('fetch')) {
+      throw new Error(`Network error: Unable to reach backend at ${url}.`);
+    }
+    throw error;
   }
-
-  return response.json();
 }
 
 /**

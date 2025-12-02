@@ -8,16 +8,16 @@ import { CACHE_DURATION, initialPaginationState, createPaginationState } from '@
 
 /**
  * Hook for movie search operations
- * 
+ *
  * Responsibilities:
  * - React state management for search results (Now Playing & Upcoming)
  * - Client-side caching (5min TTL, keyed by search query)
  * - Pagination navigation for both sections
- * 
+ *
  * Delegates to:
  * - movieClient (Facade): API calls
  * - pagination utils: Pagination helpers
- * 
+ *
  * @returns Search results state, pagination info & operations for both sections
  */
 
@@ -118,9 +118,10 @@ export function useMovieSearch() {
           year: searchParams.get('year') ? parseInt(searchParams.get('year')!) : undefined,
         };
 
-        const data = type === 'nowplaying'
-          ? await movieClient.searchNowPlaying(searchFilters, pageNum)
-          : await movieClient.searchUpcoming(searchFilters, pageNum);
+        const data =
+          type === 'nowplaying'
+            ? await movieClient.searchNowPlaying(searchFilters, pageNum)
+            : await movieClient.searchUpcoming(searchFilters, pageNum);
 
         // Update cache
         if (!searchCache[type]) searchCache[type] = {};

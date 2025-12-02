@@ -45,20 +45,11 @@ export function useHomePromotions() {
         setError(null);
         const allPromotions = await promotionClient.getAllPromotions();
 
-        console.log('Fetched promotions:', allPromotions);
-        console.log('First promotion sample:', allPromotions[0]);
-        console.log(
-          'Promotion status values:',
-          allPromotions.map((p) => ({ id: p.id, status: p.status, title: p.title }))
-        );
-
         // Filter active promotions - handle both string and enum values
         const activePromotions = allPromotions.filter((p) => {
           const status = p.status?.toLowerCase?.() || p.status;
           return status === 'active' || status === PromotionStatus.active;
         });
-
-        console.log('Active promotions after filter:', activePromotions);
 
         // Transform to HeroPromo format
         const heroPromosData = activePromotions.map((p: BackendPromotion) => ({
@@ -81,7 +72,8 @@ export function useHomePromotions() {
         setSmallPromos(smallPromosData);
       } catch (err) {
         console.error('Error fetching promotions:', err);
-        setError('Failed to load promotions. Please try again later.');
+        const errorMessage = err instanceof Error ? err.message : 'Failed to load promotions...';
+        setError(errorMessage);
         setHeroPromos([]);
         setSmallPromos([]);
       } finally {

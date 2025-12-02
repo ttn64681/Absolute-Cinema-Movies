@@ -352,6 +352,7 @@ public class MovieService {
      * Return: List<MovieSummary>
      * @deprecated Use getNowPlayingForBrowsingPaginated instead
      */
+    @Deprecated
     public List<MovieSummary> getNowPlayingForBrowsing() {
         List<Movie> movies = getNowPlayingOrdered();
         return movies.stream()
@@ -364,6 +365,7 @@ public class MovieService {
      * Return: List<MovieSummary>
      * @deprecated Use getUpcomingForBrowsingPaginated instead
      */
+    @Deprecated
     public List<MovieSummary> getUpcomingForBrowsing() {
         List<Movie> movies = getUpcomingOrdered();
         return movies.stream()
