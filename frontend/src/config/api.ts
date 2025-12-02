@@ -115,6 +115,7 @@ export const apiConfig = {
     // BOOKING ENDPOINTS
     bookings: {
       create: '/api/bookings/create',
+      getUserOrders: '/api/bookings/user/orders',
     },
 
     // MOVIE SHOW ENDPOINTS

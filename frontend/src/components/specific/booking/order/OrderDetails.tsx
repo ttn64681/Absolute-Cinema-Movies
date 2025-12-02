@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
+import Image from 'next/image';
 import { buildUrl } from '@/config/api';
+import { movieClient } from '@/clients/movieClient';
 
 interface TicketCategory {
   id: number;
@@ -20,12 +22,15 @@ export default function OrderDetails({ promoDiscount = 0, promoType, onTotalCalc
   const searchParams = useSearchParams();
   const [ticketPrices, setTicketPrices] = useState<{ [key: string]: number }>({});
   const [isLoadingPrices, setIsLoadingPrices] = useState(true);
+  const [posterUrl, setPosterUrl] = useState<string | null>(null);
+  const [isLoadingPoster, setIsLoadingPoster] = useState(false);
 
   // Get booking details from URL params
   const title = searchParams.get('title') || '';
   const date = searchParams.get('date') || '';
   const time = searchParams.get('time') || '';
   const seatIds = searchParams.get('seatIds') || '';
+  const movieId = searchParams.get('movieId');
   const adultCount = parseInt(searchParams.get('adult') || '0');
   const childCount = parseInt(searchParams.get('child') || '0');
   const seniorCount = parseInt(searchParams.get('senior') || '0');
@@ -75,6 +80,31 @@ export default function OrderDetails({ promoDiscount = 0, promoType, onTotalCalc
 
     fetchTicketPrices();
   }, []);
+
+  // Fetch movie poster
+  useEffect(() => {
+    const fetchMoviePoster = async () => {
+      if (!movieId) {
+        setIsLoadingPoster(false);
+        return;
+      }
+
+      setIsLoadingPoster(true);
+      try {
+        const movie = await movieClient.getMovieById(parseInt(movieId));
+        if (movie && movie.poster_link) {
+          setPosterUrl(movie.poster_link);
+        }
+      } catch (error) {
+        console.error('Error fetching movie poster:', error);
+        setPosterUrl(null);
+      } finally {
+        setIsLoadingPoster(false);
+      }
+    };
+
+    fetchMoviePoster();
+  }, [movieId]);
 
   // Calculate totals - use prices from API
   const adultPrice = ticketPrices.adult ?? 0;
@@ -150,8 +180,20 @@ export default function OrderDetails({ promoDiscount = 0, promoType, onTotalCalc
         <h2 className="text-2xl font-extrabold mb-4">Order Details</h2>
 
         <div className="flex items-start mb-4">
-          <div className="w-20 h-28 bg-gray-800 rounded-md border border-white flex items-center justify-center">
-            <span className="text-gray-400 text-xs">No Image</span>
+          <div className="w-20 h-28 bg-gray-800 rounded-md border border-white flex items-center justify-center overflow-hidden relative flex-shrink-0">
+            {isLoadingPoster ? (
+              <span className="text-gray-400 text-xs">Loading...</span>
+            ) : posterUrl ? (
+              <Image
+                src={posterUrl}
+                alt={title || 'Movie poster'}
+                fill
+                className="object-cover"
+                sizes="80px"
+              />
+            ) : (
+              <span className="text-gray-400 text-xs">No Image</span>
+            )}
           </div>
           <div className="ml-4">
             <h3 className="text-lg font-semibold">{title || 'Sample Movie'}</h3>

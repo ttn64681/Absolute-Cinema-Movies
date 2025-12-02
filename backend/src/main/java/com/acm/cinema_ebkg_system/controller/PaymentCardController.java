@@ -35,13 +35,16 @@ public class PaymentCardController {
     
     /**
      * GET /api/payment-cards/user/{userId}
-     * Input: userId (Long) in URL path
-     * Returns: List<PaymentCardResponseDTO> - all payment cards for user (default first) with masked card numbers
+     * Input: userId (Long) in URL path, optional query parameter: unmasked (boolean) - if true, returns full card numbers for checkout
+     * Returns: List<PaymentCardResponseDTO> - all payment cards for user (default first) with masked or unmasked card numbers
      * 
      * Returns DTOs instead of entities to control exposed data and prevent lazy loading issues
+     * Security: By default masks card numbers. Only returns unmasked when explicitly requested (for checkout auto-fill).
      */
     @GetMapping("/user/{userId}")
-    public ResponseEntity<?> getUserPaymentCards(@PathVariable Long userId) {
+    public ResponseEntity<?> getUserPaymentCards(
+            @PathVariable Long userId,
+            @RequestParam(required = false, defaultValue = "false") boolean unmasked) {
         try {
             List<PaymentCard> cards = paymentCardService.getUserPaymentCards(userId);
             // Load billing address for each card
@@ -51,9 +54,10 @@ public class PaymentCardController {
                     address.ifPresent(card::setAddress);
                 }
             }
-            // Convert to response DTOs with masked card numbers
+            // Convert to response DTOs (masked or unmasked based on query parameter)
+            boolean shouldMask = !unmasked;  // Mask if unmasked=false (default)
             List<PaymentCardResponseDTO> responseDTOs = cards.stream()
-                .map(PaymentCardMapper::toResponseDTO)
+                .map(card -> PaymentCardMapper.toResponseDTO(card, shouldMask))
                 .collect(Collectors.toList());
             return ResponseEntity.ok(responseDTOs);
         } catch (Exception e) {

@@ -1,6 +1,7 @@
 package com.acm.cinema_ebkg_system.controller;
 
 import com.acm.cinema_ebkg_system.dto.booking.CreateBookingRequest;
+import com.acm.cinema_ebkg_system.dto.booking.OrderResponseDTO;
 import com.acm.cinema_ebkg_system.model.Booking;
 import com.acm.cinema_ebkg_system.service.BookingService;
 import com.acm.cinema_ebkg_system.util.JwtUtil;
@@ -11,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -139,6 +141,28 @@ public class BookingController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(createErrorResponse("Failed to complete payment: " + e.getMessage()));
+        }
+    }
+    
+    /**
+     * Get all paid orders for the authenticated user
+     * GET /api/bookings/user/orders
+     * Returns list of orders ordered by creation date descending (most recent first)
+     */
+    @GetMapping("/user/orders")
+    public ResponseEntity<?> getUserOrders(HttpServletRequest httpRequest) {
+        try {
+            Long userId = getUserIdFromRequest(httpRequest);
+            if (userId == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(createErrorResponse("User not authenticated"));
+            }
+            
+            List<OrderResponseDTO> orders = bookingService.getUserOrders(userId);
+            return ResponseEntity.ok(orders);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(createErrorResponse("Failed to fetch orders: " + e.getMessage()));
         }
     }
     

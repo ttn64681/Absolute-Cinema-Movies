@@ -250,5 +250,60 @@ public class EmailService {
             System.err.println("Error: " + e.getMessage());
         }
     }
+
+    /**
+     * Send order confirmation email to user after successful payment
+     * 
+     * @param toEmail Recipient's email address
+     * @param userName User's first name
+     * @param bookingId Booking ID
+     * @param movieTitle Movie title
+     * @param showDateTime Show date and time
+     * @param seats List of seat identifiers (e.g., "A1, A2, B3")
+     * @param numTickets Number of tickets
+     * @param totalAmount Total amount paid
+     * @param promotionName Promotion name if applied (null if no promotion)
+     */
+    public void sendOrderConfirmationEmail(String toEmail, String userName, Long bookingId, 
+            String movieTitle, String showDateTime, String seats, Integer numTickets, 
+            java.math.BigDecimal totalAmount, String promotionName) {
+        try {
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setFrom(fromEmail);
+            message.setTo(toEmail);
+            message.setSubject("ACM Cinemas - Order Confirmation #" + bookingId);
+
+            StringBuilder emailBody = new StringBuilder();
+            emailBody.append("Hello ").append(userName).append(",\n\n");
+            emailBody.append("Thank you for your purchase! Your order has been confirmed.\n\n");
+            emailBody.append("ORDER DETAILS:\n");
+            emailBody.append("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
+            emailBody.append("Booking ID: #").append(bookingId).append("\n");
+            emailBody.append("Movie: ").append(movieTitle).append("\n");
+            emailBody.append("Show Date & Time: ").append(showDateTime).append("\n");
+            emailBody.append("Seats: ").append(seats).append("\n");
+            emailBody.append("Number of Tickets: ").append(numTickets).append("\n");
+            if (promotionName != null && !promotionName.isEmpty()) {
+                emailBody.append("Promotion Applied: ").append(promotionName).append("\n");
+            }
+            emailBody.append("Total Amount: $").append(totalAmount).append("\n");
+            emailBody.append("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n");
+            emailBody.append("Please arrive at least 15 minutes before the show time.\n");
+            emailBody.append("Present this confirmation email or your booking ID at the theater.\n\n");
+            emailBody.append("We look forward to seeing you at the movies!\n\n");
+            emailBody.append("Best regards,\n");
+            emailBody.append("ACM Cinema Team");
+
+            message.setText(emailBody.toString());
+            mailSender.send(message);
+
+            System.out.println("Order confirmation email sent successfully to: " + toEmail);
+            
+        } catch (Exception e) {
+            System.err.println("Failed to send order confirmation email to: " + toEmail);
+            System.err.println("Error: " + e.getMessage());
+            // Don't throw exception - email failure shouldn't block payment completion
+        }
+    }
 }
 

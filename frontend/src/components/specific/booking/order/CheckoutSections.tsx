@@ -1,9 +1,11 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useToast } from '@/contexts/ToastContext';
 import { buildUrl } from '@/config/api';
-import { getAuthToken } from '@/utils/auth';
+import { getAuthToken, getUserIdFromToken } from '@/utils/auth';
+import { paymentClient } from '@/clients/paymentClient';
+import { PaymentCard } from '@/types/payment';
 
 interface CheckoutSectionsProps {
   currentStep: number;
@@ -83,6 +85,9 @@ export default function CheckoutSections({
   const { showToast } = useToast();
   const [isProcessing, setIsProcessing] = useState(false);
   const [isValidatingPromo, setIsValidatingPromo] = useState(false);
+  const [savedPaymentCards, setSavedPaymentCards] = useState<PaymentCard[]>([]);
+  const [selectedCardId, setSelectedCardId] = useState<number | null>(null);
+  const [isLoadingCards, setIsLoadingCards] = useState(false);
 
   const [formData, setFormData] = useState<CheckoutFormData>({
     billingFirstName: '',
@@ -104,8 +109,73 @@ export default function CheckoutSections({
     appliedPromo: null,
   });
 
+  // Fetch saved payment cards on mount (with unmasked numbers for checkout auto-fill)
+  useEffect(() => {
+    const fetchSavedCards = async () => {
+      const userId = getUserIdFromToken();
+      if (!userId) return;
+
+      setIsLoadingCards(true);
+      try {
+        // Request unmasked card numbers for checkout auto-fill
+        const cards = await paymentClient.getCards(userId, true);
+        setSavedPaymentCards(cards);
+      } catch (error) {
+        console.error('Error fetching saved payment cards:', error);
+        // Don't show error toast - just silently fail (cards are optional)
+      } finally {
+        setIsLoadingCards(false);
+      }
+    };
+
+    fetchSavedCards();
+  }, []);
+
+  // Handle saved card selection
+  const handleSelectSavedCard = (cardId: number | null) => {
+    setSelectedCardId(cardId);
+    
+    if (cardId === null) {
+      // Clear form if "Enter new card" is selected
+      updateFormData('paymentFirstName', '');
+      updateFormData('paymentLastName', '');
+      updateFormData('cardType', '');
+      updateFormData('cardNumber', '');
+      updateFormData('expirationMonth', '');
+      updateFormData('expirationYear', '');
+      updateFormData('cvv', '');
+      return;
+    }
+
+    // Find selected card and populate form
+    const selectedCard = savedPaymentCards.find(card => card.id === cardId);
+    if (selectedCard) {
+      // Parse cardholder name
+      const nameParts = selectedCard.cardholderName?.split(' ') || [];
+      const firstName = nameParts[0] || '';
+      const lastName = nameParts.slice(1).join(' ') || '';
+
+      // Parse expiration date (MM/YY format)
+      const expParts = selectedCard.expirationDate?.split('/') || [];
+      const month = expParts[0] || '';
+      const year = expParts[1] ? `20${expParts[1]}` : '';
+
+      updateFormData('paymentFirstName', firstName);
+      updateFormData('paymentLastName', lastName);
+      updateFormData('cardType', selectedCard.paymentCardType || '');
+      updateFormData('cardNumber', selectedCard.cardNumber || '');
+      updateFormData('expirationMonth', month);
+      updateFormData('expirationYear', year);
+      // Note: CVV is not stored for security, so user must enter it
+    }
+  };
+
   const updateFormData = (key: keyof CheckoutFormData, value: string | CheckoutFormData['appliedPromo']) => {
     setFormData((prev) => ({ ...prev, [key]: value }));
+    // Clear selected card if user manually edits form
+    if (key.startsWith('payment') || key === 'cardNumber' || key === 'cardType' || key === 'expirationMonth' || key === 'expirationYear') {
+      setSelectedCardId(null);
+    }
   };
 
   const formattedCardNumber = useMemo(
@@ -365,6 +435,18 @@ export default function CheckoutSections({
 
       const data = await response.json();
       if (data.success) {
+        // Refresh saved payment cards to show the newly added card
+        const userId = getUserIdFromToken();
+        if (userId) {
+          try {
+            const cards = await paymentClient.getCards(userId);
+            setSavedPaymentCards(cards);
+          } catch (error) {
+            console.error('Error refreshing payment cards:', error);
+            // Don't block payment completion if refresh fails
+          }
+        }
+        
         if (onPaymentComplete) {
           onPaymentComplete();
         }
@@ -438,13 +520,71 @@ export default function CheckoutSections({
   );
 
   const renderPaymentForm = () => (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <div className="space-y-4">
-        <FormField
-          label="First Name"
-          value={formData.paymentFirstName}
-          onChange={(value) => updateFormData('paymentFirstName', value)}
-        />
+    <div className="space-y-6">
+      {/* Saved Payment Cards Selection */}
+      {savedPaymentCards.length > 0 && (
+        <div className="space-y-3">
+          <label className="block text-white text-sm font-semibold">Select a saved payment method</label>
+          <div className="space-y-2">
+            {savedPaymentCards.map((card) => {
+              const maskedCard = card.cardNumber ? `**** **** **** ${card.cardNumber.slice(-4)}` : '****';
+              return (
+                <button
+                  key={card.id}
+                  type="button"
+                  onClick={() => handleSelectSavedCard(card.id)}
+                  className={`w-full p-4 rounded-md border-2 transition-all text-left ${
+                    selectedCardId === card.id
+                      ? 'border-acm-pink bg-acm-pink/10'
+                      : 'border-white/20 bg-white/5 hover:border-white/40'
+                  }`}
+                  title={`Select ${card.cardholderName}'s ${card.paymentCardType} card`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-white font-semibold">{card.cardholderName}</p>
+                      <p className="text-white/70 text-sm">{maskedCard}</p>
+                      <p className="text-white/60 text-xs mt-1">
+                        {card.paymentCardType?.toUpperCase()} • Expires {card.expirationDate}
+                        {card.isDefault && ' • Default'}
+                      </p>
+                    </div>
+                    {selectedCardId === card.id && (
+                      <div className="text-acm-pink text-xl">✓</div>
+                    )}
+                  </div>
+                </button>
+              );
+            })}
+            <button
+              type="button"
+              onClick={() => handleSelectSavedCard(null)}
+              className={`w-full p-4 rounded-md border-2 transition-all text-left ${
+                selectedCardId === null
+                  ? 'border-acm-pink bg-acm-pink/10'
+                  : 'border-white/20 bg-white/5 hover:border-white/40'
+              }`}
+              title="Enter a new payment method"
+            >
+              <div className="flex items-center justify-between">
+                <p className="text-white font-semibold">Enter new payment method</p>
+                {selectedCardId === null && (
+                  <div className="text-acm-pink text-xl">✓</div>
+                )}
+              </div>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Payment Form Fields */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="space-y-4">
+          <FormField
+            label="First Name"
+            value={formData.paymentFirstName}
+            onChange={(value) => updateFormData('paymentFirstName', value)}
+          />
 
         <SelectField
           label="Card Type"
@@ -497,6 +637,7 @@ export default function CheckoutSections({
           </div>
         </div>
       </div>
+    </div>
     </div>
   );
 

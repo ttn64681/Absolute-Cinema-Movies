@@ -24,4 +24,6 @@ export interface OrderRow {
   tickets: OrderTickets;
   bookingFee: number;
   paymentMethod: string;
+  totalAmount?: number; // Final total amount from backend (includes discount)
+  promotionName?: string | null; // Promotion name if applied
 }

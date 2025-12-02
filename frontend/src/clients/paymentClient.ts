@@ -43,9 +43,14 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 export const paymentClient = {
   /**
    * Get all payment cards for a user
+   * @param userId - User ID
+   * @param unmasked - If true, returns full card numbers (for checkout auto-fill). Default: false (masked for security)
    */
-  async getCards(userId: number): Promise<PaymentCard[]> {
-    const cards = await request<PaymentCard[]>(endpoints.paymentCards.getUserPaymentCards(userId));
+  async getCards(userId: number, unmasked: boolean = false): Promise<PaymentCard[]> {
+    const url = unmasked 
+      ? `${endpoints.paymentCards.getUserPaymentCards(userId)}?unmasked=true`
+      : endpoints.paymentCards.getUserPaymentCards(userId);
+    const cards = await request<PaymentCard[]>(url);
     return Array.isArray(cards) ? cards : [];
   },
 
