@@ -1,4 +1,3 @@
-import { useMemo } from 'react';
 
 interface Ticket {
   name: string;
@@ -37,11 +36,7 @@ export default function OrderDetails({
   tickets?: Ticket[];
   seats?: string;
 }) {
-  const subtotal = useMemo(
-    () => tickets.reduce((sum, ticket) => sum + ticket.price * ticket.quantity, 0),
-    [tickets],
-  );
-
+  const subtotal = tickets.reduce((sum, ticket) => sum + ticket.price * ticket.quantity, 0);
   const tax = subtotal * 0.0875;
   const total = subtotal + tax;
 
@@ -52,11 +47,8 @@ export default function OrderDetails({
 
         <div className="flex items-start mb-4">
           <div className="w-20 h-28 bg-gray-800 rounded-md border border-white flex items-center justify-center flex-shrink-0 overflow-hidden">
-            {movie.imageUrl ? (
-              <img src={movie.imageUrl} alt={movie.title} className="w-full h-full object-cover" />
-            ) : (
-              <span className="text-gray-400 text-[10px] px-2 text-center">Poster pending</span>
-            )}
+            {/* TODO: Get poster from database */}
+            <img src="/poster_godzilla.jpg" alt={movie.title} className="w-full h-full object-cover" />
           </div>
           <div className="ml-4">
             <p className="text-sm text-white font-semibold">{movie.title}</p>
@@ -65,14 +57,14 @@ export default function OrderDetails({
           </div>
         </div>
 
-        <Divider />
+        <hr className="border-t border-white/20 my-4" />
 
         <div className="mb-4 text-sm">
           <span className="text-white/70">Seats:</span>{' '}
           <span className="font-semibold">{seats}</span>
         </div>
 
-        <Divider />
+        <hr className="border-t border-white/20 my-4" />
 
         <div className="space-y-2 mb-4 text-sm">
           {tickets.map((ticket) => (
@@ -85,28 +77,24 @@ export default function OrderDetails({
           ))}
         </div>
 
-        <Divider />
+        <hr className="border-t border-white/20 my-4" />
 
         <div className="space-y-2 text-sm">
-          <Row label="Subtotal" value={subtotal} />
-          <Row label="Tax" value={tax} />
-          <Divider />
-          <Row label="Total" value={total} large />
+          <div className="flex justify-between">
+            <span>Subtotal</span>
+            <span>${subtotal.toFixed(2)}</span>
+          </div>
+          <div className="flex justify-between">
+            <span>Tax</span>
+            <span>${tax.toFixed(2)}</span>
+          </div>
+          <hr className="border-t border-white/20 my-4" />
+          <div className="flex justify-between text-lg font-semibold">
+            <span>Total</span>
+            <span>${total.toFixed(2)}</span>
+          </div>
         </div>
       </div>
     </div>
   );
-}
-
-function Row({ label, value, large = false }: { label: string; value: number; large?: boolean }) {
-  return (
-    <div className={`flex justify-between ${large ? 'text-lg font-semibold' : ''}`}>
-      <span>{label}</span>
-      <span>${value.toFixed(2)}</span>
-    </div>
-  );
-}
-
-function Divider() {
-  return <hr className="border-t border-white/20 my-4" />;
 }

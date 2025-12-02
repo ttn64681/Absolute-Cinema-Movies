@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import NavBar from '@/components/common/navBar/NavBar';
 import CheckoutSections from '@/components/specific/booking/order/CheckoutSections';
 import OrderDetails from '@/components/specific/booking/order/OrderDetails';
@@ -19,39 +19,18 @@ export default function CheckoutPage() {
     <div className="min-h-screen bg-black">
       <NavBar />
 
-      <div className="w-full flex flex-row gap-6 p-30 pt-28 items-stretch">
+      <div className="w-full flex flex-row gap-6 px-8 pt-28 items-start">
         <div className="flex-1 flex flex-col">
           <StepTracker steps={checkoutSteps} currentStep={currentStep} />
-          <CheckoutSections currentStep={currentStep} setCurrentStep={setCurrentStep} />
+          <Suspense fallback={<div className="text-white p-8">Loading checkout form...</div>}>
+            <CheckoutSections currentStep={currentStep} setCurrentStep={setCurrentStep} />
+          </Suspense>
         </div>
 
-        <div className="w-96 flex-shrink-0 flex flex-col">
-          {/* Spacer keeps OrderDetails aligned with the form column */}
-          <div className="w-full pb-6">
-            <div className="max-w-4xl mx-auto invisible pointer-events-none">
-              <StepTracker steps={checkoutSteps} currentStep={currentStep} ghost />
-            </div>
-          </div>
-          <OrderDetails />
-          {/* Complete Booking Button */}
-          <div className="mt-6 flex justify-end">
-            <button
-              type="button"
-              onClick={handleCompleteBooking}
-              disabled={isProcessing}
-              className={`inline-flex items-center gap-2 px-8 py-4 rounded-lg font-bold text-lg transition-all ${
-                isProcessing
-                  ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                  : 'bg-gradient-to-r from-acm-pink to-acm-orange text-white hover:brightness-110 cursor-pointer'
-              }`}
-              title="Complete Booking"
-            >
-              <span>{isProcessing ? 'PROCESSING...' : 'COMPLETE BOOKING'}</span>
-              <span className="text-xl leading-none">
-                <RxDoubleArrowRight />
-              </span>
-            </button>
-          </div>
+        <div className="w-96 flex-shrink-0 pt-6">
+          <Suspense fallback={<div className="text-white p-8">Loading order details...</div>}>
+            <OrderDetails />
+          </Suspense>
         </div>
       </div>
     </div>
@@ -63,12 +42,11 @@ type Step = { number: number; label: string };
 interface StepTrackerProps {
   steps: Step[];
   currentStep: number;
-  ghost?: boolean;
 }
 
-function StepTracker({ steps, currentStep, ghost = false }: StepTrackerProps) {
+function StepTracker({ steps, currentStep }: StepTrackerProps) {
   return (
-    <div className={ghost ? 'opacity-0' : 'w-full pb-6'}>
+    <div className="w-full pb-6">
       <div className="max-w-4xl mx-auto">
         <div className="grid grid-cols-4 items-center gap-0">
           {steps.map((step, index) => (

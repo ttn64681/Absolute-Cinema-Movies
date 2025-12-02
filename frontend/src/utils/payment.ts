@@ -30,6 +30,21 @@ export function formatExpirationDate(dateString: string | undefined): string {
   }
 }
 
+/**
+ * Format payment method display string from card type and number
+ * @param cardType - Card type (e.g., "mastercard", "visa")
+ * @param cardNumber - Last 4 digits of card number
+ * @returns Formatted payment method string (e.g., "Mastercard **** **** **** 1234")
+ */
+export function formatPaymentMethod(cardType: string | null, cardNumber: string | null): string {
+  if (!cardType) return '';
+  const formattedType = cardType.charAt(0).toUpperCase() + cardType.slice(1).toLowerCase();
+  if (cardNumber && cardNumber.length >= 4) {
+    return `${formattedType} **** **** **** ${cardNumber.slice(-4)}`;
+  }
+  return formattedType;
+}
+
 
 
 

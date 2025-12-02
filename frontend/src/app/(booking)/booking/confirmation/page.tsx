@@ -3,85 +3,156 @@
 import React, { Suspense, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import NavBar from '@/components/common/navBar/NavBar';
-import Link from 'next/link';
+import OrderConfirm from '@/components/specific/booking/order/OrderConfirm';
 import { useReservation } from '@/contexts/ReservationContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { movieClient } from '@/clients/movieClient';
+import { formatPaymentMethod } from '@/utils/payment';
+import { TICKET_PRICES, TAX_RATE, BOOKING_FEE, generateTicketIds } from '@/utils/booking';
 
 function ConfirmationPageContent() {
   const searchParams = useSearchParams();
-  const [bookingId, setBookingId] = useState<string | null>(null);
-  const [totalAmount, setTotalAmount] = useState<string | null>(null);
   const { clearReservation } = useReservation();
+  const { user } = useAuth();
+  const [bookingData, setBookingData] = useState<{
+    bookingId: string;
+    totalAmount: number;
+    movieTitle: string;
+    moviePoster?: string;
+    adultCount: number;
+    childCount: number;
+    seniorCount: number;
+    paymentMethod: string;
+    billingEmail: string;
+    totalTickets: number;
+    ticketIds: string[];
+  } | null>(null);
 
+  // Parse URL params at top level
+  const bookingId = searchParams.get('bookingId');
+  
+  // TODO: When GET /api/bookings/{bookingId} endpoint is created, fetch booking data from backend
+  // For now, fallback to URL params for backward compatibility during transition
+  const totalAmountParam = searchParams.get('totalAmount');
+  const titleParam = searchParams.get('title');
+  const timeParam = searchParams.get('time');
+  const adultParam = searchParams.get('adult');
+  const childParam = searchParams.get('child');
+  const seniorParam = searchParams.get('senior');
+  const seatsParam = searchParams.get('seats');
+  const totalTicketsParam = searchParams.get('totalTickets');
+  const ticketIdsParam = searchParams.get('ticketIds');
+  const cardTypeParam = searchParams.get('cardType');
+  const cardNumberParam = searchParams.get('cardNumber');
+  const billingEmailParam = searchParams.get('billingEmail');
+  const movieIdParam = searchParams.get('movieId');
+
+  // Clear reservation on mount
   useEffect(() => {
-    const bookingIdParam = searchParams.get('bookingId');
-    const totalAmountParam = searchParams.get('totalAmount');
-    
-    if (bookingIdParam) setBookingId(bookingIdParam);
-    if (totalAmountParam) setTotalAmount(totalAmountParam);
-    
-    // Clear any remaining reservation when confirmation page loads
-    // Booking is complete, so reservation timer should stop
     clearReservation();
-  }, [searchParams, clearReservation]);
+  }, [clearReservation]);
+
+  // Load booking data
+  useEffect(() => {
+    if (!bookingId) return;
+    
+    // TODO: Replace with backend API call when GET /api/bookings/{bookingId} is available
+    // const booking = await bookingClient.getBookingById(bookingId);
+    // For now, use URL params as fallback
+    if (!totalAmountParam) {
+      console.warn('Missing booking data in URL. Backend GET endpoint needed.');
+      return;
+    }
+
+    const adultCount = parseInt(adultParam || '0', 10) || 0;
+    const childCount = parseInt(childParam || '0', 10) || 0;
+    const seniorCount = parseInt(seniorParam || '0', 10) || 0;
+    
+    const totalTickets = parseInt(seatsParam || '0', 10) || 
+      parseInt(totalTicketsParam || '0', 10) || 
+      (adultCount + childCount + seniorCount) || 
+      0;
+    
+    const ticketIds = ticketIdsParam
+      ? ticketIdsParam.split(',').filter(id => id.trim().length > 0)
+      : generateTicketIds(totalTickets);
+
+    setBookingData({
+      bookingId,
+      totalAmount: parseFloat(totalAmountParam),
+      movieTitle: titleParam || 'Movie Title',
+      adultCount,
+      childCount,
+      seniorCount,
+      paymentMethod: formatPaymentMethod(cardTypeParam, cardNumberParam),
+      billingEmail: billingEmailParam || user?.email || '',
+      totalTickets,
+      ticketIds,
+    });
+  }, [bookingId, totalAmountParam, titleParam, adultParam, childParam, seniorParam, seatsParam, 
+    totalTicketsParam, ticketIdsParam, cardTypeParam, cardNumberParam, billingEmailParam, user?.email]);
+
+  // Fetch movie poster separately
+  useEffect(() => {
+    if (!movieIdParam || !bookingData) return;
+    
+    movieClient
+      .getMovieById(parseInt(movieIdParam, 10))
+      .then((movie) => {
+        setBookingData((prev) => (prev ? { ...prev, moviePoster: movie.poster_link } : null));
+      })
+      .catch((error) => {
+        console.error('Error fetching movie poster:', error);
+      });
+  }, [movieIdParam, bookingData?.bookingId]);
+
+  if (!bookingData) {
+    return (
+      <div className="min-h-screen bg-black">
+        <NavBar />
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-white text-xl">Loading...</div>
+        </div>
+      </div>
+    );
+  }
+
+  // Build tickets array
+  const tickets: Array<{ name: string; quantity: number; price: number }> = [];
+  if (bookingData.adultCount > 0) {
+    tickets.push({ name: 'Adult ticket', quantity: bookingData.adultCount, price: TICKET_PRICES.adult });
+  }
+  if (bookingData.childCount > 0) {
+    tickets.push({ name: 'Child ticket', quantity: bookingData.childCount, price: TICKET_PRICES.child });
+  }
+  if (bookingData.seniorCount > 0) {
+    tickets.push({ name: 'Senior ticket', quantity: bookingData.seniorCount, price: TICKET_PRICES.senior });
+  }
+
+  // Calculate breakdown from ticket data
+  const subtotal = tickets.reduce((sum, ticket) => sum + ticket.price * ticket.quantity, 0);
+  const tax = subtotal * TAX_RATE;
+
+  // Format showtime during render (derived data, not state)
+  const showtime = timeParam ? `Sat · Oct 1 ${timeParam}` : 'Sat · Oct 1';
 
   return (
     <div className="min-h-screen bg-black">
       <NavBar />
-      
-      <div className="pt-20 px-6">
-        <div className="max-w-3xl mx-auto">
-          {/* Success Message */}
-          <div className="bg-white/5 backdrop-blur-md border border-green-500/30 rounded-xl p-8 text-center">
-            <div className="mb-6">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-500/20 mb-4">
-                <svg className="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-              </div>
-              <h1 className="text-3xl font-bold text-green-400 mb-2">Booking Confirmed!</h1>
-              <p className="text-white/80">Your tickets have been successfully booked.</p>
-            </div>
-
-            {/* Booking Details */}
-            {bookingId && (
-              <div className="mt-6 p-6 bg-white/5 rounded-lg border border-white/10">
-                <div className="space-y-3 text-left">
-                  <div className="flex justify-between items-center">
-                    <span className="text-white/60">Booking ID:</span>
-                    <span className="text-white font-semibold">#{bookingId}</span>
-                  </div>
-                  {totalAmount && (
-                    <div className="flex justify-between items-center">
-                      <span className="text-white/60">Total Amount:</span>
-                      <span className="text-acm-pink font-bold text-xl">${parseFloat(totalAmount).toFixed(2)}</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Action Buttons */}
-            <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
-              <Link href="/movies">
-                <button className="px-6 py-3 bg-acm-pink hover:bg-acm-pink/80 text-white rounded-lg font-semibold transition-colors">
-                  Browse More Movies
-                </button>
-              </Link>
-              <Link href="/user/orders">
-                <button className="px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-lg font-semibold transition-colors border border-white/20">
-                  View My Orders
-                </button>
-              </Link>
-            </div>
-
-            {/* Info Message */}
-            <div className="mt-6 text-sm text-white/60">
-              <p>A confirmation email has been sent to your registered email address.</p>
-              <p className="mt-2">Please arrive at least 15 minutes before the show time.</p>
-            </div>
-          </div>
-        </div>
-      </div>
+      <OrderConfirm
+        email={bookingData.billingEmail}
+        bookingNumber={bookingData.bookingId}
+        ticketNumbers={bookingData.ticketIds.join(', ')}
+        movieTitle={bookingData.movieTitle}
+        showtime={showtime}
+        moviePoster={bookingData.moviePoster}
+        tickets={tickets}
+        subtotal={subtotal}
+        tax={tax}
+        bookingFee={BOOKING_FEE}
+        paymentMethod={bookingData.paymentMethod}
+        orderTotal={bookingData.totalAmount}
+      />
     </div>
   );
 }
