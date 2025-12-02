@@ -71,7 +71,7 @@ export default function SmallPromoSection({ promotions: propPromotions }: SmallP
         {isLoading ? (
           <div className="text-white/60 text-center py-8">Loading promotions...</div>
         ) : (
-          <div className="relative flex flex-row overflow-x-scroll scrollbar-hide gap-x-4 px-1 py-4" ref={scrollRef}>
+          <div className="relative flex flex-row overflow-x-scroll scrollbar-hide gap-x-4 px-4 py-4" ref={scrollRef}>
             {displayPromotions.map((promotion, index) => (
               <Promotion
                 key={index}

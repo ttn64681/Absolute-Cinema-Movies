@@ -7,11 +7,10 @@ export function useGenres() {
   const [genres, setGenres] = useState<string[]>([]);
   const [isLoadingGenres, setIsLoadingGenres] = useState(false);
 
-  // Memoize fetch function to prevent recreation on every render
-  // When would this recreate? Never (empty dependency array)
-  // When would it recreate without this? Every time useGenres hook runs
-  // (which happens on every component re-render, state changes, etc.)
-  // Performance impact: Prevents unnecessary function recreation and potential re-fetching
+  // CACHES: Function reference - persists across hook re-renders
+  // CHANGES: Never (empty deps) - BUT recreates if component unmounts/remounts
+  // WITHOUT useCallback: New reference every re-render → potential re-fetching
+  // WHY MATTERS: Prevents unnecessary function recreation and API calls
   const fetchGenres = useCallback(async () => {
     setIsLoadingGenres(true);
     try {

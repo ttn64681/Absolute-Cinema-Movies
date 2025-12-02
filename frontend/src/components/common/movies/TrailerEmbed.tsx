@@ -17,7 +17,7 @@ export default function TrailerEmbed({ name, trailerUrl, isClosed, setIsClosed }
           <button
             title="Close"
             type="button"
-            className="absolute top-2 right-2 text-white hover:text-acm-pink duration-200 active:text-acm-pink/80 text-6xl hover:cursor-pointer"
+            className="absolute top-5 right-6 z-60 bg-black/50 hover:bg-black/70 backdrop-blur-sm rounded-full p-2 text-white hover:text-acm-pink duration-200 text-2xl cursor-pointer border border-white/20 hover:border-acm-pink/50"
             onClick={() => setIsClosed(true)}
           >
             <IoClose />

@@ -29,7 +29,7 @@ function SeatingPageContent() {
   const { startReservation, clearReservation, isExpired: reservationExpired, showId: reservationShowId, selectedSeats: reservationSeats } = useReservation();
   
   // Custom hook for seat management (needs reservation context to know which seats are user's reserved seats)
-  const { selectedSeats:selectedSeats, selectedSeatIds, rows, toggleSeat, resetSeats, reserveSelectedSeats, loading, error } = useSeats(showId);
+  const { selectedSeats:selectedSeats, selectedSeatIds, rows, toggleSeat, resetSeats, reserveSelectedSeats, loading, error, auditorium } = useSeats(showId);
 
   const goBack = () => {
     router.back();
@@ -170,7 +170,12 @@ function SeatingPageContent() {
             {/* Movie Info Card */}
             <div className="mt-4 bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-4">
               <h1 className="text-2xl sm:text-3xl font-bold text-acm-pink">{movieTitle}</h1>
-              <p className="text-sm sm:text-base text-white/80 mt-1">{date} • {time}</p>
+              <div className="flex flex-wrap items-center gap-2 mt-1">
+                {auditorium && (
+                  <p className="text-sm sm:text-base text-white/80 font-semibold">{auditorium.name}</p>
+                )}
+                <p className="text-sm sm:text-base text-white/80">{date} • {time}</p>
+              </div>
             </div>
           </div>
         </div>

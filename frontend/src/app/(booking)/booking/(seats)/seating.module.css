@@ -133,18 +133,27 @@
 }
 
 /* Occupied state */
+.occupied {
+  cursor: not-allowed !important;
+  pointer-events: auto; /* Allow cursor to show, but prevent interactions */
+}
+
 .occupied .seatBody,
 .occupied .seatBackrest {
   background-color: var(--seat-occupied);
 }
 
 .occupied .seatId {
-  color: #999;
+  color: #666;
+  text-shadow: 0 0 2px rgba(0, 0, 0, 0.9); /* Darker shadow for better contrast */
 }
 
+/* Remove hover effects for occupied seats */
 .occupied:hover .seatBody,
 .occupied:hover .seatBackrest {
-  box-shadow: var(--seat-shadow) rgba(62, 59, 59, 0.6);
+  transform: none; /* No scale on hover */
+  background-color: var(--seat-occupied); /* Keep occupied color */
+  box-shadow: none; /* No hover shadow */
 }
 
 /* Row layouts */

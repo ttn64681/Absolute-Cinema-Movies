@@ -1,11 +1,16 @@
 'use client';
 
 import { Suspense } from 'react';
+import dynamic from 'next/dynamic';
 import NavBar from '@/components/common/navBar/NavBar';
 import MoviesSearchSection from '@/components/specific/movies/MoviesSearchSection';
 import MovieSection from '@/components/specific/movies/MovieSection';
 import { useMovieSearch } from '@/hooks/useMovieSearch';
 import { useSearchLogic } from '@/hooks/useSearchLogic';
+
+const Footer = dynamic(() => import('@/components/common/Footer'), {
+  loading: () => <div className="h-32 bg-black" />,
+});
 
 function MoviesPageContent() {
   // Custom hooks for clean separation of concerns
@@ -58,6 +63,8 @@ function MoviesPageContent() {
         goToPreviousPage={goToPreviousPageUpcoming}
         goToPage={goToPageUpcoming}
       />
+
+      <Footer />
     </div>
   );
 }

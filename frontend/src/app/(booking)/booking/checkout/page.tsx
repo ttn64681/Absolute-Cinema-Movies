@@ -54,9 +54,7 @@ function StepTracker({ steps, currentStep }: StepTrackerProps) {
               <div className="flex flex-col items-center">
                 <div
                   className={`w-12 h-12 rounded-full flex items-center justify-center font-semibold text-lg transition-colors relative z-10 ${
-                    currentStep >= step.number
-                      ? 'bg-white text-black'
-                      : 'bg-black border-2 border-white text-white'
+                    currentStep >= step.number ? 'bg-white text-black' : 'bg-black border-2 border-white text-white'
                   }`}
                 >
                   {step.number}

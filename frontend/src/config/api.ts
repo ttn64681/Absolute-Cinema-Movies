@@ -84,13 +84,13 @@ export const apiConfig = {
 
     // PROMOTION ENDPOINTS
     promotions: {
-      getPromotions: () => '/api/promotion/' ,
+      getPromotions: () => '/api/promotion/',
       addPromotion: () => '/api/promotion/',
       updatePromotion: (promotionId: number) => `/api/promotion/${promotionId}`,
       deletePromotion: (promotionId: number) => `/api/promotion/${promotionId}`,
     },
 
-    // 🔐 AUTH ENDPOINTS
+    // AUTH ENDPOINTS
     auth: {
       login: '/api/auth/login',
       register: '/api/auth/register',
@@ -116,6 +116,11 @@ export const apiConfig = {
     bookings: {
       create: '/api/bookings/create',
     },
+
+    // MOVIE SHOW ENDPOINTS
+    movieShows: {
+      getAuditorium: (movieShowId: number) => `/api/movie-shows/${movieShowId}/auditorium`,
+    },
   },
 
   // Helper function to build full URLs
@@ -139,7 +144,7 @@ function isValidJWT(token: string | null): boolean {
   }
   // JWT should have 3 parts separated by periods: header.payload.signature
   const parts = token.split('.');
-  return parts.length === 3 && parts.every(part => part.length > 0);
+  return parts.length === 3 && parts.every((part) => part.length > 0);
 }
 
 // Add request interceptor for JWT tokens
@@ -149,7 +154,7 @@ api.interceptors.request.use(
     const localToken = localStorage.getItem('token');
     const sessionToken = sessionStorage.getItem('token');
     const token = localToken || sessionToken;
-    
+
     if (token) {
       // Validate token format before sending
       if (isValidJWT(token)) {
@@ -179,7 +184,7 @@ api.interceptors.response.use(
     // Enhance error object with better error message extraction
     if (error.response) {
       const responseData = error.response.data;
-      
+
       // If response has error message in data, attach it to error object for easier access
       if (responseData && typeof responseData === 'object') {
         if (responseData.error) {
@@ -188,7 +193,7 @@ api.interceptors.response.use(
           error.userMessage = responseData.message;
         }
       }
-      
+
       // Set default user-friendly messages for common status codes
       if (!error.userMessage) {
         if (error.response.status === 401 || error.response.status === 403) {
@@ -204,7 +209,7 @@ api.interceptors.response.use(
         }
       }
     }
-    
+
     return Promise.reject(error);
   }
 );

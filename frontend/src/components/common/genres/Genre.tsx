@@ -30,7 +30,7 @@ export default function Genre({ text, imageUrl }: GenreProps) {
   return (
     <a href={`/movies?=${text}`}>
       <button
-        className="relative w-64 h-32 border-2 border-white/60 text-white overflow-hidden rounded-lg duration-200 group hover:cursor-pointer transition-all hover:scale-105"
+        className="relative w-64 h-32 border-2 border-white/60 hover:border-acm-pink text-white overflow-hidden rounded-lg duration-200 group hover:cursor-pointer transition-all hover:scale-105"
         title={text}
         type="button"
       >
@@ -44,8 +44,8 @@ export default function Genre({ text, imageUrl }: GenreProps) {
         />
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/40 via-black/60 to-black group-hover:bg-black/60" />
         <div className="absolute inset-0 flex items-center justify-center z-10 group-hover:scale-102 transition-all">
-          <div className="backdrop-blur-md bg-white/20 px-4 py-2 rounded-lg">
-            <h3 className="text-xl font-bold text-white drop-shadow-lg">{text}</h3>
+          <div className="backdrop-blur-md bg-white/20 group-hover:bg-acm-pink/20 px-4 py-2 rounded-lg transition-colors duration-200">
+            <h3 className="text-xl font-bold text-white group-hover:text-acm-pink drop-shadow-lg transition-colors duration-200">{text}</h3>
           </div>
         </div>
       </button>

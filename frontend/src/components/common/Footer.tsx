@@ -1,10 +1,36 @@
+'use client';
+
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
+import { movieClient } from '@/clients/movieClient';
+import { MovieSummary } from '@/types/movie';
 
 export default function Footer() {
   const year = new Date().getFullYear();
+  const [firstNowPlayingMovie, setFirstNowPlayingMovie] = useState<MovieSummary | null>(null);
+
+  // Fetch first now playing movie
+  useEffect(() => {
+    movieClient
+      .getNowPlaying(0)
+      .then((data) => {
+        if (data.movies && data.movies.length > 0) {
+          setFirstNowPlayingMovie(data.movies[0]);
+        }
+      })
+      .catch((err) => {
+        console.error('Error fetching first now playing movie:', err);
+      });
+  }, []);
+
+  // Build booking link - use first now playing movie if available, otherwise fallback to /booking
+  const bookingHref = firstNowPlayingMovie
+    ? `/booking?movieId=${encodeURIComponent(firstNowPlayingMovie.movie_id)}&title=${encodeURIComponent(firstNowPlayingMovie.title)}`
+    : '/booking';
+
   return (
     <footer className="mt-12 border-t border-white/10 bg-black/60 backdrop-blur-sm">
-      <div className="max-w-6xl mx-auto px-6 py-8 text-white/90">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 text-white/90">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
           {/* Brand */}
           <div className="flex items-center gap-3">
@@ -20,7 +46,7 @@ export default function Footer() {
             <Link href="/promos" className="hover:text-acm-pink transition-colors">
               Promotions
             </Link>
-            <Link href="/booking" className="hover:text-acm-pink transition-colors">
+            <Link href={bookingHref} className="hover:text-acm-pink transition-colors">
               Book Tickets
             </Link>
             <Link href="/auth/register" className="hover:text-acm-pink transition-colors">

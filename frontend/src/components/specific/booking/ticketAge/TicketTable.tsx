@@ -109,7 +109,7 @@ export default function TicketTable({ reservedSeats }: props) {
 
         {/* Footer / totals */}
         <div className="px-4 py-4 border-t border-white/10">
-          <div className="grid grid-cols-4 items-center gap-2">
+          <div className="grid grid-cols-4 items-center gap-2 mb-4">
             <div className="text-lg sm:text-xl font-semibold text-acm-pink">Total</div>
             <div className="text-center text-lg sm:text-xl text-acm-pink">
               {totalTickets} / {reservedSeats}
@@ -118,9 +118,10 @@ export default function TicketTable({ reservedSeats }: props) {
               <span className="invisible">{padString(calculatePrice())}</span>
               <span>{formatPriceString(calculatePrice())}</span>
             </div>
-            <div className="flex justify-end items-center">
-              <CheckoutButtonWrapper tickets={totalTickets} seats={reservedSeats} ticketsByCategory={ticketsByCategory} />
-            </div>
+            <div></div>
+          </div>
+          <div className="flex justify-end">
+            <CheckoutButtonWrapper tickets={totalTickets} seats={reservedSeats} ticketsByCategory={ticketsByCategory} />
           </div>
         </div>
       </div>

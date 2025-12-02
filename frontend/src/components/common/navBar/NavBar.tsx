@@ -58,7 +58,7 @@ export default function NavBar() {
             <div className="flex-shrink-0 flex items-center">
               <Link
                 href="/"
-                className="text-2xl sm:text-3xl lg:text-4xl acm-gradient font-pacifico leading-none transform -translate-y-1"
+                className="text-2xl sm:text-3xl lg:text-4xl acm-gradient font-pacifico leading-none transform -translate-y-1 transition-all duration-200 hover:drop-shadow-[0_0_25px_rgba(255,71,139,1)] hover:-translate-y-1.5 cursor-pointer"
               >
                 acm
               </Link>
@@ -74,7 +74,7 @@ export default function NavBar() {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onKeyPress={handleKeyPress}
-                  className="w-full bg-white/10 backdrop-blur-md border border-gray-500 text-white placeholder-gray-400 px-3 py-1.5 sm:px-4 sm:py-2 pl-8 sm:pl-10 rounded-lg focus:outline-none focus:ring-1 focus:ring-white/70 focus:border-transparent transition-all text-sm sm:text-base"
+                  className="w-full bg-white/10 backdrop-blur-md border border-gray-500 hover:border-gray-400 text-white placeholder-gray-400 px-3 py-1.5 sm:px-4 sm:py-2 pl-8 sm:pl-10 rounded-lg focus:outline-none focus:ring-1 focus:ring-white/70 focus:border-transparent transition-all text-sm sm:text-base cursor-text"
                 />
                 {/* Clickable search button */}
                 <button
