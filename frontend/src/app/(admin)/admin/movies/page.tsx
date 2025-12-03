@@ -60,7 +60,7 @@ export default function AdminMoviesPage() {
   }, [adminMovies, updatedMovies]);
 
   // Delete movie function
-  /*const remove = (movie_id: number) => {
+  const remove = (movie_id: number) => {
     const movieToDelete = movies.find((movie) => movie.movie_id === movie_id);
     const deleteMovieStatus = movieToDelete?.status;
     
@@ -76,7 +76,7 @@ export default function AdminMoviesPage() {
     if (typeof window !== 'undefined') {
       sessionStorage.setItem('movies', JSON.stringify(nonInitialMovies));
     }
-  };*/
+  };
 
   // Function to open add movie menu
   const openAddModal = () => {
@@ -109,6 +109,25 @@ export default function AdminMoviesPage() {
       return updated;
     });
   };
+
+  // Function to update the movie's status when an upcoming movie gets scheduled
+  const updateMovieStatus = (movieId: number) => {
+    setMovies((prevMovies) => {
+      const index = prevMovies.findIndex((m) => m.movie_id === movieId);
+      const scheduledMovie = prevMovies[index];
+
+      let updated: AdminMovie[];
+      updated = [...prevMovies];
+
+      if (scheduledMovie) {
+        scheduledMovie.status = "now_playing";
+        updated[index] = scheduledMovie;
+      }
+      // Use setUpdatedMovies to trigger a re-render
+      setUpdatedMovies(updated);  
+      return updated;
+    });
+  }
 
   // Function to open menu for scheduling movie shows
   const openScheduleModal = (movie: Movie) => {
@@ -342,6 +361,7 @@ export default function AdminMoviesPage() {
           }}
           movieId={schedulingMovie.movie_id}
           movieTitle={schedulingMovie.title}
+          onSchedule={updateMovieStatus}
         />
       )}
     </div>

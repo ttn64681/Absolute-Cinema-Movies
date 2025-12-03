@@ -39,6 +39,7 @@ export function useAdminMovie(movieId: number) {
   const [selectedMovie, setMovie] = useState<AdminMovie>(dummyMovie);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [refreshFlag, setRefreshFlag] = useState(0); 
 
   // get ALL movie information when the admin selects a movie to edit
   const fetchMovieInfo = async (movieId: number) => {
@@ -71,10 +72,10 @@ export function useAdminMovie(movieId: number) {
 
     if (createdMovie) {
       console.log('Movie created successfully.');
-      return true;
+      return createdMovie.movie_id;
     } else {
       console.log('Failed to create new movie.');
-      return false;
+      return null;
     }
   };
 
@@ -84,17 +85,22 @@ export function useAdminMovie(movieId: number) {
 
     if (updatedMovie) {
       console.log('Movie created successfully.');
-      return true;
+      return updatedMovie.movie_id;
     } else {
       console.log('Failed to create new movie.');
-      return false;
+      return null;
     }
   };
+
+  // Set a flag to fetch the movie data for the same selected movie after it has changed
+  const refreshMovie = () => {
+    setRefreshFlag(prev => prev + 1);
+  }
 
   // Fetch a movie when movieId changes
   useEffect(() => {
     fetchMovieInfo(movieId);
-  }, [movieId]);
+  }, [movieId, refreshFlag]);
 
-  return { selectedMovie, isLoading, error, addMovie, editMovie };
+  return { selectedMovie, isLoading, error, addMovie, editMovie, refreshMovie };
 }

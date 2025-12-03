@@ -37,7 +37,7 @@ interface MovieFormModalProps {
 // Add/edit movie form
 export default function AddMovieFormModal({ isOpen, onClose, onSaved }: MovieFormModalProps) {
 
-  const {selectedMovie, isLoading, error, addMovie} = useAdminMovie(0);
+  const {selectedMovie, isLoading, error, addMovie, refreshMovie} = useAdminMovie(0);
 
   //const [editingMovie, setEditingMovie] = useState(dummyMovie);
   const [saving, setSaving] = useState(false);
@@ -153,9 +153,12 @@ export default function AddMovieFormModal({ isOpen, onClose, onSaved }: MovieFor
           score
         };
   
+      //sessionStorage.setItem("movies", JSON.stringify(updated));
+      const newMovieId = await addMovie(backendMovieRequest);
+      if (newMovieId) {
         // Full movie object to return to the movies list
         const updatedMovie: AdminMovie = {
-          movie_id: 0,
+          movie_id: newMovieId,
           status,
           title,
           genres,
@@ -170,26 +173,8 @@ export default function AddMovieFormModal({ isOpen, onClose, onSaved }: MovieFor
           duration,
           score
         };
-  
-      /*let updated: AdminMovie[];
-      if (editingId) {
-        const exists = parsed.some((m) => m.movie_id === editingId);
-        if (exists) {
-          updated = parsed.map((m) => {
-            if (m.movie_id === editingId) return movieData;
-            return m;
-          });
-        } else {
-          updated = [...parsed, movieData];
-        }
-      } else {
-        updated = [...parsed, movieData];
-      }*/
-  
-      //sessionStorage.setItem("movies", JSON.stringify(updated));
-      const editingStatus = await addMovie(backendMovieRequest);
-      if (editingStatus) {
         onSaved(updatedMovie);
+        refreshMovie();
         alert("New movie successfully created.");
       } else {
         alert("Error creating movie.");

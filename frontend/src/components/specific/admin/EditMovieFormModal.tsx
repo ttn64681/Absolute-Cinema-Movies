@@ -4,13 +4,6 @@ import { useEffect, useState } from "react";
 import { formatDateInput, formatTimeInput, parseScore } from "@/components/specific/admin/movieFormUtils";
 import { useAdminMovie } from '@/hooks/useAdminMovie';
 
-type Showtime = {
-  date: string;
-  time: string;
-  ampm: string;
-  room?: string;
-};
-
 export type AdminMovie = {
   movie_id: number;
   title: string;
@@ -38,7 +31,7 @@ interface MovieFormModalProps {
 // Add/edit movie form
 export default function EditMovieFormModal({ isOpen, onClose, onSaved, initialMovieId }: MovieFormModalProps) {
   //console.log("Movie ID retrieved: " + initialMovieId);
-  const {selectedMovie, isLoading, error, addMovie, editMovie} = useAdminMovie(initialMovieId);
+  const {selectedMovie, isLoading, error, editMovie, refreshMovie} = useAdminMovie(initialMovieId);
   //console.log(selectedMovie);
 
   //const [editingMovie, setEditingMovie] = useState(dummyMovie);
@@ -53,12 +46,10 @@ export default function EditMovieFormModal({ isOpen, onClose, onSaved, initialMo
   const [directors, setDirectors] = useState("");
   const [producers, setProducers] = useState("");
   const [cast_names, setCastNames] = useState("");
-  //const [reviews, setReviews] = useState("");
   const [rating, setRating] = useState("");
   const [duration, setDuration] = useState(0);
   const [score, setScore] = useState(0);
   const [release_date, setReleaseDate] = useState("");
-  //const [showtimes, setShowtimes] = useState<Showtime[]>([{ date: "", time: "", ampm: "AM" }]);
   const [editingId, setEditingId] = useState(0);
 
 
@@ -81,25 +72,7 @@ export default function EditMovieFormModal({ isOpen, onClose, onSaved, initialMo
       setRating(selectedMovie.rating || "");
       setScore(selectedMovie.score || 0);
       setDuration(selectedMovie.duration || 0);
-      //console.log("Selected movie data was set");
-
-      /*if (initialMovie._meta?.showtimes && initialMovie._meta.showtimes.length > 0) {
-        setShowtimes(initialMovie._meta.showtimes);
-      } else {
-        let ampmValue: "AM" | "PM" = "AM";
-        if (initialMovie.time.includes("AM")) {
-          ampmValue = "AM";
-        } else {
-          ampmValue = "PM";
-        }
-        setShowtimes([
-          {
-            date: initialMovie.date,
-            time: initialMovie.time.split(":").slice(0, 2).join(":"),
-            ampm: ampmValue,
-          },
-        ]);
-      }*/
+  
     } else {
       // reset for new
       //setEditingMovie(dummyMovie);
@@ -119,15 +92,7 @@ export default function EditMovieFormModal({ isOpen, onClose, onSaved, initialMo
       setDuration(0);
       console.log("Selected movie data was not set");
     }
-  }, [isOpen, selectedMovie]);
-
-  /*const handleAddShowtime = () => setShowtimes((prev) => [...prev, { date: "", time: "", ampm: "AM" }]);
-  const handleRemoveShowtime = (index: number) => setShowtimes((prev) => prev.filter((_, i) => i !== index));
-  const updateShowtime = (index: number, field: keyof Showtime, value: string) => {
-    setShowtimes((previousShowtimes) =>
-      previousShowtimes.map((showtime, i) => (i === index ? { ...showtime, [field]: value } : showtime))
-    );
-  };*/
+  }, [isOpen, selectedMovie, initialMovieId]);
 
   // Display helpers 
   const getHeaderTitle = () => {
@@ -166,18 +131,12 @@ export default function EditMovieFormModal({ isOpen, onClose, onSaved, initialMo
   const formValid = () => {
     if (!title || !genres || !synopsis || !cast_names || !directors || !producers || !score || !rating || !release_date || !trailer_link || !poster_link ) 
       return false;
-    //if (!showtimes.length || !showtimes[0].date || !showtimes[0].time) return false;
     return true;
   };
 
   const onSave = async () => {
     if (!formValid()) return;
     setSaving(true);
-
-    /*const existing = typeof window !== "undefined" ? sessionStorage.getItem("movies") : null;
-    const parsed: AdminMovie[] = existing ? JSON.parse(existing) : [];
-
-      const primary = showtimes[0];*/
 
       // Partial movie object to send to backend
       const backendMovieRequest: Partial<AdminMovie> = {
@@ -213,25 +172,10 @@ export default function EditMovieFormModal({ isOpen, onClose, onSaved, initialMo
         score
       };
 
-    /*let updated: AdminMovie[];
-    if (editingId) {
-      const exists = parsed.some((m) => m.movie_id === editingId);
-      if (exists) {
-        updated = parsed.map((m) => {
-          if (m.movie_id === editingId) return movieData;
-          return m;
-        });
-      } else {
-        updated = [...parsed, movieData];
-      }
-    } else {
-      updated = [...parsed, movieData];
-    }*/
-
-    //sessionStorage.setItem("movies", JSON.stringify(updated));
     const editingStatus = await editMovie(backendMovieRequest, editingId);
     if (editingStatus) {
       onSaved(updatedMovie);
+      refreshMovie();
       alert("Movie data successfully saved.");
     } else {
       alert("Error saving movie data.");
