@@ -12,26 +12,6 @@ import ScheduleModal from '@/components/specific/admin/ScheduleModal';
 import { useAdminMoviesList } from '@/hooks/useAdminMoviesList';
 import { useAdminMovie } from '@/hooks/useAdminMovie';
 
-
-// Note: Will need to make a backend endpoint to return a movieshow with 
-
-// Function to convert a time into minutes
-function parseTime(time: string, ampm: string) {
-  const [hours, minutes] = time.split(':').map(Number);
-  let totalMinutes = hours * 60 + minutes;
-  if (ampm === 'PM' && hours !== 12) totalMinutes += 12 * 60;
-  if (ampm === 'AM' && hours === 12) totalMinutes -= 12 * 60;
-  return totalMinutes;
-}
-
-// Function to check if a time string is in AM or PM
-function getAmpmFromTime(time: string): 'AM' | 'PM' {
-  if (time.toUpperCase().includes('AM')) {
-    return 'AM';
-  }
-  return 'PM';
-}
-
 export default function AdminMoviesPage() {
 
   // Paged movies and pagination controls from useAdminMovies hook
@@ -46,10 +26,11 @@ export default function AdminMoviesPage() {
 
   // Use adminMovies if available; otherwise, fall back to fallbackMoviesList
   const moviesList = adminMovies && adminMovies.length > 0 ? adminMovies : [];
-  console.log(moviesList);
+  /*console.log(moviesList);
   console.log(pagination.currentPage);
   console.log("HasPreviousPage is " + pagination.hasNext );
-  console.log("HasNextPage is " + pagination.hasNext );
+  console.log("HasNextPage is " + pagination.hasNext );*/
+
 
   const [movies, setMovies] = useState(moviesList); // movies list
   const [showAddModal, setShowAddModal] = useState(false); // add movie popup visibility
@@ -61,36 +42,25 @@ export default function AdminMoviesPage() {
   const [currentPage, setCurrentPage] = useState(1); // current page of movies to show
   const moviesPerPage = 10; // # of movies to display on one page
 
+  const [updatedMovies, setUpdatedMovies] = useState<AdminMovie[]>([]); // updated movies list- used when a movie gets added/changed
+
   // Retrieve in session storage?
   useEffect(() => {
+    console.log("updated movies list");
+    console.log(updatedMovies);
     if (typeof window === 'undefined') return;
-
-    /*const savedMovies = sessionStorage.getItem('movies');
-    if (savedMovies) {
-      try {
-        const parsedMovies = JSON.parse(savedMovies);
-        const baselineBymovie_id = new Map(moviesList.map(m => [m.movie_id, m]));
-        parsedMovies.forEach((savedMovie: Movie) => {
-          baselineBymovie_id.set(savedMovie.movie_id, savedMovie as AdminMovie);
-        });
-        const merged = Array.from(baselineBymovie_id.values());
-        const savedOnly = parsedMovies.filter((s: Movie) => !moviesList.some(b => b.movie_id === s.movie_id));
-        const result = [...merged, ...savedOnly];
-        setMovies(result);
-      } catch (error) {
-        console.log('error parsing movies:', error);
-      } 
-    } else { */
-      // Use adminMovies if available; otherwise, show an empty list
-      console.log("isLoading is " + isLoading );
-      setMovies(adminMovies && adminMovies.length > 0 ? adminMovies : []);
-      console.log(movies);
-      console.log("isLoading is " + isLoading );
-    //}
-  }, [adminMovies]);
+      if (updatedMovies.length == 0) {
+        setMovies(adminMovies && adminMovies.length > 0 ? adminMovies : []);
+      } else {
+        setMovies(updatedMovies);
+        console.log("after updating movies");
+        console.log(movies);
+      }
+      
+  }, [adminMovies, updatedMovies]);
 
   // Delete movie function
-  const remove = (movie_id: number) => {
+  /*const remove = (movie_id: number) => {
     const movieToDelete = movies.find((movie) => movie.movie_id === movie_id);
     const deleteMovieStatus = movieToDelete?.status;
     
@@ -106,7 +76,7 @@ export default function AdminMoviesPage() {
     if (typeof window !== 'undefined') {
       sessionStorage.setItem('movies', JSON.stringify(nonInitialMovies));
     }
-  };
+  };*/
 
   // Function to open add movie menu
   const openAddModal = () => {
@@ -122,6 +92,7 @@ export default function AdminMoviesPage() {
 
   // Function to update movies list with a new or edited movie
   const onMovieSaved = (savedMovie: AdminMovie) => {
+
     setMovies((prevMovies) => {
       const existingIndex = prevMovies.findIndex((m) => m.movie_id === savedMovie.movie_id);
       let updated: AdminMovie[];
@@ -133,13 +104,8 @@ export default function AdminMoviesPage() {
         updated = [...prevMovies, savedMovie];
       }
       
-      if (typeof window !== 'undefined') {
-        const nonInitialMovies = updated.filter(
-          (movie) => !moviesList.some((initialMovie) => initialMovie.movie_id === movie.movie_id)
-        );
-        sessionStorage.setItem('movies', JSON.stringify(nonInitialMovies));
-      }
-      
+      // Use setUpdatedMovies to trigger a re-render
+      setUpdatedMovies(updated);  
       return updated;
     });
   };
@@ -150,61 +116,10 @@ export default function AdminMoviesPage() {
     setShowScheduleModal(true);
   };
 
-  // Add and save a new movie show
-  /*const handleSchedule = (date: string, time: string, showRoomId: number) => {
-    if (!schedulingMovie) return;
-
-    const timeParts = time.trim().split(/\s+/);
-    const timeValue = timeParts[0];
-    const ampm = timeParts[1] || 'PM';
-
-    const roomNames: { [key: number]: string } = { 1: 'A', 2: 'B', 3: 'C' };
-    const roomName = roomNames[showRoomId] || '';
-
-    const newShowtime = {
-      date,
-      time: timeValue,
-      ampm,
-      room: roomName,
-    };
-    setMovies((prevMovies) => {
-      const movieIndex = prevMovies.findIndex((m) => m.movie_id === schedulingMovie.movie_id);
-      if (movieIndex === -1) return prevMovies;
-
-      const updatedMovies = [...prevMovies];
-      const movie = updatedMovies[movieIndex];
-      const existingShowtimes = movie._meta?.showtimes || [
-        {
-          date: movie.date || '',
-          time: movie.time.replace(/\s?(AM|PM)$/i, '').trim() || '',
-          ampm: /*getAmpmFromTime(movie.time) || 'AM',
-        },
-      ];
-
-      const updatedShowtimes = [...existingShowtimes, newShowtime];
-      updatedMovies[movieIndex] = {
-        ...movie,
-        _meta: {
-          ...movie._meta,
-          showtimes: updatedShowtimes,
-        },
-      } as AdminMovie;
-      if (typeof window !== 'undefined') {
-        const nonInitialMovies = updatedMovies.filter(
-          (movie) => !moviesList.some((initialMovie) => initialMovie.movie_id === movie.movie_id)
-        );
-        sessionStorage.setItem('movies', JSON.stringify(nonInitialMovies));
-      }
-
-      return updatedMovies;
-    });
-  };*/
-
   const totalPages = Math.ceil(movies.length / moviesPerPage);
   const startIndex = 0;
   const endIndex = moviesPerPage;
   const paginatedMovies = movies.slice(startIndex, endIndex);
-  // console.log(startIndex, endIndex);
 
   const goToPage = (page: number) => {
     if (page >= 0 && page <= totalPages) {
@@ -305,29 +220,6 @@ export default function AdminMoviesPage() {
               </li>
             ) : (
               paginatedMovies.map((movie) => {
-              /*
-              const allShowtimes = movie._meta?.showtimes || [
-                { date: movie.date, time: movie.time, ampm: /*getAmpmFromTime(movie.time) || 'AM', room: undefined },
-              ];
-              const hasShowtimes = movie._meta?.showtimes && movie._meta.showtimes.length > 0;
-
-              if (allShowtimes.length === 0) return null;
-              
-              const sorted = [...allShowtimes].sort((a, b) => {
-                const dateA = new Date(a.date.split('/').reverse().join('-'));
-                const dateB = new Date(b.date.split('/').reverse().join('-'));
-                
-                if (dateA.getTime() !== dateB.getTime()) {
-                  return dateA.getTime() - dateB.getTime();
-                }
-                
-                const timeA = parseTime(a.time, a.ampm) || 50;
-                const timeB = parseTime(b.time, b.ampm) || 30;
-                return timeA - timeB;
-              });
-              
-              const nextShowtime = sorted[0];
-              if (!nextShowtime) return null;*/
               
               const hasShowtimes = movie.status == "now_playing";
 
@@ -347,8 +239,6 @@ export default function AdminMoviesPage() {
                     className="absolute left-1/2 transform -translate-x-1/2 text-gray-300 hmovie_idden sm:block font-afacad"
                     style={{ textAlign: 'center' }}
                   >
-                    {/*{nextShowtime.date} {nextShowtime.time} {nextShowtime.ampm}
-                    {nextShowtime.room && ` - Room ${nextShowtime.room}`}*/}
                     {getStatusLabel(movie.status)}
                   </div>
                   <div className="flex items-center gap-3 text-gray-300 px-25 ml-auto min-w-[4rem]">
@@ -391,7 +281,6 @@ export default function AdminMoviesPage() {
           <button
             type="button"
             onClick={() => goToPreviousPage()}
-            //disabled={!pagination.hasPrevious}
             className={!pagination.hasPrevious 
               ? 'px-4 py-2 rounded-md font-afacad transition-colors bg-white/5 text-white/30'
               : 'px-4 py-2 rounded-md font-afacad transition-colors bg-white/10 text-white hover:bg-white/20 cursor-pointer'
@@ -451,10 +340,8 @@ export default function AdminMoviesPage() {
             setShowScheduleModal(false);
             setSchedulingMovie(null);
           }}
-          //onSchedule={handleSchedule}
           movieId={schedulingMovie.movie_id}
           movieTitle={schedulingMovie.title}
-          //existingShowtimes={schedulingMovie._meta?.showtimes || []}
         />
       )}
     </div>

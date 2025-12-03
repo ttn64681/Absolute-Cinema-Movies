@@ -32,7 +32,7 @@ export function useAdminMoviesList() {
       // Fetch movies for current page
       const fetchMovies = async (pageNum: number) => {
             setIsLoading(true);
-            console.log("isLoading is " + isLoading );
+            //console.log("isLoading is " + isLoading );
             try {
                 const data = await fetchMoviesPaginated(pageNum);    
                 if (data) {
@@ -52,7 +52,7 @@ export function useAdminMoviesList() {
                 setMovies([]);
             } finally {
                 setIsLoading(false);
-                console.log("isLoading is " + isLoading );
+                //console.log("isLoading is " + isLoading );
             }
         }
     
