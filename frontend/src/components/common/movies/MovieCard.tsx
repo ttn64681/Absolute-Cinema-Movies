@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import Image from 'next/image';
 import SelectedMovie from './selectedMovie/SelectedMovie';
 import TrailerEmbed from './TrailerEmbed';
-import { MovieSummary, BackendMovie } from '@/types/movie';
+import { MovieSummary } from '@/types/movie';
 import { IoPlay } from 'react-icons/io5';
 
 interface MovieCardProps {
@@ -64,54 +64,53 @@ export default function MovieCard({ movie }: MovieCardProps) {
             blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCdABmX/9k=" // Base64 blur placeholder
           />
 
-          {/* Top Right Badges - Rating and Score */}
-          <div className="absolute top-3 right-3 z-10 flex flex-col gap-1.5 items-end">
-            <div className="rounded-full bg-white/90 backdrop-blur-sm px-2 py-1 text-xs font-bold text-gray-800 shadow-sm">
-            {movie.rating}
-          </div>
+          {/* Top Badge Row - Rating, Duration, Score (cohesive pill styling) */}
+          <div className="absolute top-3 left-3 right-3 z-10 flex items-center justify-between gap-2">
+            <div className="flex items-center gap-1.5">
+              <div className="rounded-full bg-black/70 backdrop-blur-sm px-2 py-1 text-[10px] font-bold text-white shadow-sm">
+                {movie.rating}
+              </div>
+              {movie.duration > 0 && (
+                <div className="rounded-full bg-black/70 backdrop-blur-sm px-2 py-1 text-[10px] font-semibold text-white shadow-sm">
+                  {Math.floor(movie.duration / 60)}h {movie.duration % 60}m
+                </div>
+              )}
+            </div>
+
             {movie.score > 0 && (
-              <div className="rounded-full bg-acm-pink/90 backdrop-blur-sm px-2 py-1 text-xs font-bold text-white shadow-sm flex items-center gap-1">
+              <div className="rounded-full bg-acm-pink/80 backdrop-blur-sm px-2 py-1 text-[10px] font-bold text-white shadow-sm flex items-center gap-1">
                 <span>★</span>
                 <span>{movie.score}/100</span>
               </div>
             )}
           </div>
 
-          {/* Bottom Left Badge - Duration */}
-          {movie.duration > 0 && (
-            <div className="absolute bottom-3 left-3 z-10 rounded-full bg-black/70 backdrop-blur-sm px-2 py-1 text-xs font-semibold text-white shadow-sm">
-              {Math.floor(movie.duration / 60)}h {movie.duration % 60}m
-            </div>
-          )}
-
           {/* Hover Overlay */}
           <div className="absolute inset-0 bg-black/0 group-hover:bg-black/60 transition-all duration-300 z-0">
             {/* Movie Info - Only show on hover, positioned at top */}
-            <div className="absolute inset-0 pt-9 flex flex-col justify-start p-4 opacity-0 group-hover:opacity-100 transition-all duration-300">
+            <div className="absolute inset-0 pt-12 flex flex-col justify-start p-4 opacity-0 group-hover:opacity-100 transition-all duration-300">
               <div className="text-white">
                 <h3 className="text-lg font-bold mb-2 line-clamp-2">{movie.title}</h3>
-                <p className="text-sm text-white/90 mb-3 line-clamp-2">{movie.synopsis}</p>
+                <p className="text-sm text-white/90 mb-2 line-clamp-2">{movie.synopsis}</p>
+                {movie.release_date && <p className="text-xs text-white/60 mb-2">{movie.release_date}</p>}
                 {/* Genres */}
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex flex-wrap gap-1 flex-1 min-w-0">
-                    {genresArray.slice(0, 4).map((genre, index) => (
-                      <span
-                        key={index}
-                        className="text-xs bg-white/20 backdrop-blur-sm px-2 py-1 rounded-full flex-shrink-0"
-                      >
-                        {genre}
-                      </span>
-                    ))}
-                    {genresArray.length > 4 && (
-                      <span
-                        className="text-xs bg-white/15 backdrop-blur-sm px-2 py-1 rounded-full flex-shrink-0"
-                        title={genresArray.slice(4).join(', ')}
-                      >
-                        +{genresArray.length - 4}
-                      </span>
-                    )}
-                  </div>
-                  <span className="text-sm font-semibold whitespace-nowrap flex-shrink-0">{movie.release_date}</span>
+                <div className="flex flex-wrap gap-1">
+                  {genresArray.slice(0, 4).map((genre, index) => (
+                    <span
+                      key={index}
+                      className="text-xs bg-white/20 backdrop-blur-sm px-2 py-1 rounded-full flex-shrink-0"
+                    >
+                      {genre}
+                    </span>
+                  ))}
+                  {genresArray.length > 4 && (
+                    <span
+                      className="text-xs bg-white/15 backdrop-blur-sm px-2 py-1 rounded-full flex-shrink-0"
+                      title={genresArray.slice(4).join(', ')}
+                    >
+                      +{genresArray.length - 4}
+                    </span>
+                  )}
                 </div>
               </div>
             </div>

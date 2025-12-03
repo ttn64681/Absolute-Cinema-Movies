@@ -47,7 +47,11 @@
 
 /* Enhanced button styles for better UX */
 
-/* Primary button - Active state: seats page "Continue with X seats" (when seats selected), ticket-age page "CHECKOUT" (when tickets match seats), hero promo "Claim Offer" */
+/*** 
+  Primary button - Active state: seats page "Continue with X seats" (when seats selected), 
+  ticket-age page "CHECKOUT" (when tickets match seats), 
+  hero promo "Claim Offer" 
+ ***/
 .btn-primary {
   background: linear-gradient(135deg, #ff478b 0%, #ff5c33 100%);
   color: white;
@@ -93,7 +97,10 @@
   background: #6b7280;
 }
 
-/* Secondary button - Disabled state: seats page "Continue with X seats" (when no seats selected), ticket-age page "CHECKOUT" (when not enough tickets) */
+/*** 
+  Secondary button - Disabled state: seats page "Continue with X seats" (when no seats selected), 
+  ticket-age page "CHECKOUT" (when not enough tickets) 
+ ***/
 .btn-secondary {
   background: transparent;
   color: white;
@@ -140,7 +147,7 @@
   box-shadow: none;
 }
 
-/* Note: Counter button styles moved to ticket-age.module.css for better organization */
+/* Note: Counter button styles moved to ticket-age.module.css */
 
 body {
   background: var(--background);

@@ -24,7 +24,7 @@ export default function AuthButton({
 }: AuthButtonProps) {
   // Base styling applied to all button variants
   const baseClasses =
-    'w-full py-3 px-6 rounded-lg font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer';
+    'w-full inline-flex items-center justify-center gap-2 py-3 px-6 rounded-lg font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer';
 
   // Button style variants for different UI contexts
   const variantClasses = {

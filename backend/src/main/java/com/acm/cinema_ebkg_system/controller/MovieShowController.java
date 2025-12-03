@@ -12,6 +12,7 @@ import com.acm.cinema_ebkg_system.service.MovieService;
 import com.acm.cinema_ebkg_system.service.ShowRoomService;
 import com.acm.cinema_ebkg_system.service.ShowTimeService;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -123,7 +124,7 @@ public class MovieShowController {
             return ResponseEntity.notFound().build();
         } catch (Exception e) {
             // Other unexpected errors
-            return ResponseEntity.status(org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR).build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 }

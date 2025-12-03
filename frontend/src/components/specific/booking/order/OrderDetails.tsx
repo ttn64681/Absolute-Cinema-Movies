@@ -202,14 +202,15 @@ export default function OrderDetails({ promoDiscount = 0, promoType, onTotalCalc
           </div>
         </div>
 
-        <hr className="border-t border-1 border-gray-200 mb-4" />
+<<<<<<< HEAD
+        <hr className="border-t border-white/20 my-4" />
 
         <div className="mb-4 px-6">
           <span className="text-white">Seatings: </span>
           <span className="text-white font-bold">{seatIds || 'N/A'}</span>
         </div>
 
-        <hr className="border-t border-1 border-gray-200 mb-4" />
+        <hr className="border-t border-white/20 my-4" />
 
         <div className="space-y-2 mb-4 px-6">
           {tickets.map((ticket, index) => (
@@ -220,7 +221,8 @@ export default function OrderDetails({ promoDiscount = 0, promoType, onTotalCalc
           ))}
         </div>
 
-        <hr className="border-t border-1 border-gray-200 mb-4" />
+<<<<<<< HEAD
+        <hr className="border-t border-white/20 my-4" />
 
         <div className="flex justify-between text-white text-sm mb-2 px-6">
           <span>Subtotal</span>
@@ -241,7 +243,7 @@ export default function OrderDetails({ promoDiscount = 0, promoType, onTotalCalc
           </div>
         )}
 
-        <hr className="border-t border-1 border-gray-200 mb-4" />
+        <hr className="border-t border-white/20 my-4" />
 
         <div className="flex justify-between text-lg font-semibold text-white px-6">
           <span>Total</span>

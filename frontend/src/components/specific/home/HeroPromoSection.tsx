@@ -2,12 +2,13 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { RxDoubleArrowRight } from 'react-icons/rx';
 import { IoChevronBack, IoChevronForward } from 'react-icons/io5';
 import WhiteSeparator from '@/components/common/WhiteSeparator';
+import SkeletonBlock from '@/components/common/skeletons/SkeletonBlock';
 import { useHomePromotions } from '@/hooks/useHomePromotions';
+import { useCarousel } from '@/hooks/useCarousel';
 import { heroPromotions } from '@/constants/movieData';
 
 /**
@@ -15,61 +16,38 @@ import { heroPromotions } from '@/constants/movieData';
  * Displays featured promotions in a carousel format
  *
  * Responsibilities:
- * - Carousel navigation and animations
  * - Display hero promotions from hook / fallback to placeholders
+ * - Render carousel UI with animations
  *
  * Delegates to:
  * - useHomePromotions hook: Data fetching and transformation
+ * - useCarousel hook: Carousel navigation and state management
  */
 export default function HeroPromoSection() {
   const { heroPromos, isLoading } = useHomePromotions();
   // Use backend promotions if available, otherwise use placeholder promotions
   const displayPromos = heroPromos.length > 0 ? heroPromos : heroPromotions;
-  const [currentPromoIndex, setCurrentPromoIndex] = useState(0);
-  const currentPromo = displayPromos[currentPromoIndex];
-  const [direction, setDirection] = useState<1 | -1>(1);
 
-  const goToPrevious = useCallback(() => {
-    setDirection(-1);
-    setCurrentPromoIndex((prev) => (prev === 0 ? displayPromos.length - 1 : prev - 1));
-  }, [displayPromos.length]);
-
-  const goToNext = useCallback(() => {
-    setDirection(1);
-    setCurrentPromoIndex((prev) => (prev === displayPromos.length - 1 ? 0 : prev + 1));
-  }, [displayPromos.length]);
-
-  // Handle indicator clicks - set direction based on click
-  const goToIndex = useCallback(
-    (index: number) => {
-      if (index > currentPromoIndex) {
-        setDirection(1);
-      } else if (index < currentPromoIndex) {
-        setDirection(-1);
-      } else {
-        return; // Same index, do nothing
-      }
-      setCurrentPromoIndex(index);
-    },
-    [currentPromoIndex]
-  );
-
-  // Auto-advance carousel every 5 seconds
-  useEffect(() => {
-    const interval = setInterval(goToNext, 5000);
-    return () => clearInterval(interval);
-  }, [goToNext]);
+  // Carousel logic extracted to custom hook
+  const {
+    currentIndex,
+    currentItem: currentPromo,
+    direction,
+    goToPrevious,
+    goToNext,
+    goToIndex,
+  } = useCarousel(displayPromos, 5000);
 
   // Show loading skeleton while fetching (only if no placeholders to show)
   if (isLoading && displayPromos.length === 0) {
     return (
       <section className="relative -mt-40 z-20 px-4">
-        <div className="mx-auto flex flex-row w-[100%] max-w-5xl grid-cols-1 gap-10 rounded-xl p-5 md:grid-cols-2">
-          <div className="relative aspect-[16/10] w-full overflow-hidden rounded-lg border-1 bg-gray-800 animate-pulse"></div>
+        <div className="mx-auto flex flex-row w-full max-w-5xl grid-cols-1 gap-10 rounded-xl p-5 md:grid-cols-2">
+          <SkeletonBlock className="relative aspect-[16/10] w-full overflow-hidden rounded-lg" />
           <div className="flex flex-col w-[80vw] justify-center content-start gap-3 text-white">
-            <div className="h-8 bg-gray-700 rounded animate-pulse"></div>
-            <div className="h-4 bg-gray-700 rounded animate-pulse"></div>
-            <div className="h-6 bg-gray-700 rounded animate-pulse"></div>
+            <SkeletonBlock className="h-8 w-3/4 rounded-lg" />
+            <SkeletonBlock className="h-4 w-2/3 rounded-lg" />
+            <SkeletonBlock className="h-6 w-1/2 rounded-lg" />
           </div>
         </div>
       </section>
@@ -77,7 +55,7 @@ export default function HeroPromoSection() {
   }
 
   // Always render - use placeholders if no backend promotions
-  if (displayPromos.length === 0) {
+  if (displayPromos.length === 0 || !currentPromo) {
     return null; // Should never happen due to fallback, but safety check
   }
 
@@ -153,7 +131,7 @@ export default function HeroPromoSection() {
                 key={index}
                 onClick={() => goToIndex(index)}
                 className={`h-2 rounded-full transition-all duration-200 cursor-pointer ${
-                  index === currentPromoIndex ? 'bg-acm-pink w-8' : 'bg-white/50 hover:bg-white/70 w-2'
+                  index === currentIndex ? 'bg-acm-pink w-8' : 'bg-white/50 hover:bg-white/70 w-2'
                 }`}
                 aria-label={`Go to promotion ${index + 1}`}
               />

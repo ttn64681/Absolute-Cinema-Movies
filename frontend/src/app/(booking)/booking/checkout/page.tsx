@@ -116,7 +116,7 @@ function CheckoutPageContent() {
     <div className="min-h-screen bg-black">
       <NavBar />
 
-      <div className="w-full flex flex-row gap-6 p-30 pt-28 items-stretch">
+      <div className="w-full flex flex-row gap-6 px-8 pt-28 items-start">
         <div className="flex-1 flex flex-col">
           <StepTracker steps={checkoutSteps} currentStep={currentStep} />
           <CheckoutSections
@@ -159,12 +159,11 @@ type Step = { number: number; label: string };
 interface StepTrackerProps {
   steps: Step[];
   currentStep: number;
-  ghost?: boolean;
 }
 
-function StepTracker({ steps, currentStep, ghost = false }: StepTrackerProps) {
+function StepTracker({ steps, currentStep }: StepTrackerProps) {
   return (
-    <div className={ghost ? 'opacity-0' : 'w-full pb-6'}>
+    <div className="w-full pb-6">
       <div className="max-w-4xl mx-auto">
         <div className="grid grid-cols-4 items-center gap-0">
           {steps.map((step, index) => (

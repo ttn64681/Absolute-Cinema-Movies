@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, useMemo, useCallback, useRef, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo, useCallback, ReactNode } from 'react';
 import { authClient, AuthResponse } from '@/clients/authClient';
 import { getAuthToken } from '@/utils/auth';
 
@@ -26,7 +26,6 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   // CACHES: Function reference (not behavior) - persists across AuthProvider re-renders
   // CHANGES: Never (empty deps) - BUT will recreate if AuthProvider component unmounts/remounts
@@ -139,7 +138,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Check if user is logged in on app start
   useEffect(() => {
     checkAuthStatus();
-  }, []); // Empty dependency array - only run once on mount
+  }, [checkAuthStatus]);
 
   // Removed cross-tab communication to fix logout issues
   // CACHES: Function reference (not behavior) - persists across AuthProvider re-renders
@@ -162,6 +161,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (response.refreshToken) {
           localStorage.setItem('refreshToken', response.refreshToken);
         }
+        // Also set cookie for potential middleware-based protection
+        document.cookie = `token=${response.token}; path=/; SameSite=Lax`;
         console.log('Stored tokens in localStorage for remember me');
         console.log('localStorage token after storage:', localStorage.getItem('token') ? 'exists' : 'null');
         console.log('localStorage rememberMe after storage:', localStorage.getItem('rememberMe'));
@@ -173,12 +174,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (response.refreshToken) {
           sessionStorage.setItem('refreshToken', response.refreshToken);
         }
+        // Also set cookie for potential middleware-based protection
+        document.cookie = `token=${response.token}; path=/; SameSite=Lax`;
         console.log('Stored tokens in sessionStorage for session only');
         console.log('sessionStorage token after storage:', sessionStorage.getItem('token') ? 'exists' : 'null');
         console.log('sessionStorage rememberMe after storage:', sessionStorage.getItem('rememberMe'));
 
         // Removed cross-tab communication
       }
+
+      // Ensure no stale admin markers remain when logging in as a regular user
+      localStorage.removeItem('adminToken');
+      sessionStorage.removeItem('adminToken');
+      document.cookie = `adminToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax`;
     } else {
       console.log('Login failed:', response.message);
     }
@@ -203,6 +211,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (response.refreshToken) {
           localStorage.setItem('refreshToken', response.refreshToken);
         }
+        // Also set cookies for potential middleware-based admin protection
+        document.cookie = `token=${response.token}; path=/; SameSite=Lax`;
+        document.cookie = `adminToken=${response.token}; path=/; SameSite=Lax`;
         console.log('Stored admin tokens in localStorage for remember me');
       } else {
         sessionStorage.setItem('token', response.token);
@@ -211,6 +222,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (response.refreshToken) {
           sessionStorage.setItem('refreshToken', response.refreshToken);
         }
+        // Also set cookies for potential middleware-based admin protection
+        document.cookie = `token=${response.token}; path=/; SameSite=Lax`;
+        document.cookie = `adminToken=${response.token}; path=/; SameSite=Lax`;
         console.log('Stored admin tokens in sessionStorage for session only');
       }
     } else {

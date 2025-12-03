@@ -4,7 +4,6 @@ import { IoChevronBack, IoChevronForward } from 'react-icons/io5';
 
 interface MovieTabsSectionProps {
   movies: MovieSummary[];
-  sampleMovies: MovieSummary[];
   activeTab: 'nowplaying' | 'upcoming';
   setActiveTab: (tab: 'nowplaying' | 'upcoming') => void;
   pagination: {
@@ -16,17 +15,18 @@ interface MovieTabsSectionProps {
   goToNextPage: () => void;
   goToPreviousPage: () => void;
   goToPage: (page: number) => void;
+  isLoading: boolean;
 }
 
 export default function MovieTabsSection({
   movies,
-  sampleMovies,
   activeTab,
   setActiveTab,
   pagination,
   goToNextPage,
   goToPreviousPage,
   goToPage,
+  isLoading,
 }: MovieTabsSectionProps) {
   // TabButton component - setActiveTab function comes from parent
   // This function is stable thanks to useCallback in the parent component
@@ -70,7 +70,7 @@ export default function MovieTabsSection({
 
         {/* Movie cards grid */}
         <div className="flex-1">
-          <MovieCardsGrid movies={movies.length > 0 ? movies : sampleMovies} />
+          <MovieCardsGrid movies={movies} isLoading={isLoading} />
         </div>
 
         {/* Right navigation button */}

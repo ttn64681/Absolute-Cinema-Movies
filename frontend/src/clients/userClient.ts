@@ -3,7 +3,7 @@ import { buildUrl } from '../config/api';
 import { BackendUser } from '@/types/user';
 
 /* FACADE FOR USER PROFILE DATA.
-* Only purpose is to handle API requests and return the responses. */
+ * Only purpose is to handle API requests and return the responses. */
 
 // Helper function to get userId from JWT token
 function getUserIdFromToken(): number {
@@ -23,86 +23,85 @@ function getUserIdFromToken(): number {
 
 // Function to fetch user data from backend (calls getUserProfile endpoint)
 async function getUserInfo(userId: number) {
-    try {
-        // Get token from storage
-        const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-    
-        // Get userId from token if not provided
-        const actualUserId = userId || getUserIdFromToken();
-        if (!actualUserId) {
-          console.error('No user ID available');
-          return null;
-        }
-    
-        // Single API call to get all user profile data (user info + home address + payment cards)
-        const response = await fetch(buildUrl(`/api/user/profile?userId=${actualUserId}`), {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: token ? `Bearer ${token}` : '',
-          },
-        });
+  try {
+    // Get token from storage
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
 
-        if (!response.ok) {
-            console.error('Failed to fetch user profile:', response.status, response.statusText);
-            return null;
-        }
-
-        // Process the JSON data
-        const profileData = (await response.json()) as {
-          user: {
-            id: number;
-            email: string;
-            firstName: string;
-            lastName: string;
-            phoneNumber: string;
-            enrolledForPromotions: boolean;
-            profileImageLink?: string;
-          };
-          homeAddress: {
-            street: string;
-            city: string;
-            state: string;
-            zip: string;
-            country: string;
-          } | null;
-        };
-
-        // Combine user data with home address
-
-        // User
-        const userData: Partial<BackendUser> & {
-          id: number;
-          email: string;
-          firstName: string;
-          lastName: string;
-          phoneNumber: string;
-          enrolledForPromotions: boolean;
-          homeStreet?: string;
-          homeCity?: string;
-          homeState?: string;
-          homeZip?: string;
-          homeCountry?: string;
-          profileImageLink?: string;
-        } = { ...profileData.user };
-        
-        // Address
-        if (profileData.homeAddress) {
-          userData.homeStreet = profileData.homeAddress.street;
-          userData.homeCity = profileData.homeAddress.city;
-          userData.homeState = profileData.homeAddress.state;
-          userData.homeZip = profileData.homeAddress.zip;
-          userData.homeCountry = profileData.homeAddress.country || 'US';
-        }
-
-        // Return the combined user and address data
-        console.log('Successfully retrieved user profile from backend');
-        return userData;
-
-    } catch (error) {
-        console.error('Fetch error:', error);
-        return null;
+    // Get userId from token if not provided
+    const actualUserId = userId || getUserIdFromToken();
+    if (!actualUserId) {
+      console.error('No user ID available');
+      return null;
     }
+
+    // Single API call to get all user profile data (user info + home address + payment cards)
+    const response = await fetch(buildUrl(`/api/user/profile?userId=${actualUserId}`), {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: token ? `Bearer ${token}` : '',
+      },
+    });
+
+    if (!response.ok) {
+      console.error('Failed to fetch user profile:', response.status, response.statusText);
+      return null;
+    }
+
+    // Process the JSON data
+    const profileData = (await response.json()) as {
+      user: {
+        id: number;
+        email: string;
+        firstName: string;
+        lastName: string;
+        phoneNumber: string;
+        enrolledForPromotions: boolean;
+        profileImageLink?: string;
+      };
+      homeAddress: {
+        street: string;
+        city: string;
+        state: string;
+        zip: string;
+        country: string;
+      } | null;
+    };
+
+    // Combine user data with home address
+
+    // User
+    const userData: Partial<BackendUser> & {
+      id: number;
+      email: string;
+      firstName: string;
+      lastName: string;
+      phoneNumber: string;
+      enrolledForPromotions: boolean;
+      homeStreet?: string;
+      homeCity?: string;
+      homeState?: string;
+      homeZip?: string;
+      homeCountry?: string;
+      profileImageLink?: string;
+    } = { ...profileData.user };
+
+    // Address
+    if (profileData.homeAddress) {
+      userData.homeStreet = profileData.homeAddress.street;
+      userData.homeCity = profileData.homeAddress.city;
+      userData.homeState = profileData.homeAddress.state;
+      userData.homeZip = profileData.homeAddress.zip;
+      userData.homeCountry = profileData.homeAddress.country || 'US';
+    }
+
+    // Return the combined user and address data
+    console.log('Successfully retrieved user profile from backend');
+    return userData;
+  } catch (error) {
+    console.error('Fetch error:', error);
+    return null;
+  }
 }
 
 // Function to send updated user information to the backend (calls updateCurrentUserInfo endpoint)
@@ -181,4 +180,4 @@ async function changePassword(userId: number, passwordInfo: Partial<BackendUser>
 }
 
 // Exports the functions that call the API, so they can be called from other files
-export { getUserInfo, updateUserInfo, changePassword }; 
+export { getUserInfo, updateUserInfo, changePassword };

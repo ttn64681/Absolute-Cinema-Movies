@@ -119,7 +119,10 @@ function LoginPageContent() {
             onChange={setRememberMe}
             disabled={isLoading}
           />
-          <Link href="/auth/forgot-password" className="text-sm text-acm-pink hover:text-acm-pink/80 transition-colors">
+          <Link
+            href="/auth/forgot-password"
+            className="text-sm text-acm-pink hover:text-acm-pink/80 transition-colors cursor-pointer"
+          >
             Forgot Password?
           </Link>
         </div>
@@ -127,7 +130,8 @@ function LoginPageContent() {
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full inline-flex justify-center bg-gradient-to-r from-acm-pink to-acm-orange text-white px-5 py-2.5 rounded-lg font-semibold hover:brightness-110 transition-all disabled:opacity-50 disabled:cursor-not-allowed drop-shadow-lg"
+          title={isLoading ? 'Logging in...' : 'Login'}
+          className="w-full inline-flex justify-center items-center gap-2 bg-linear-to-r from-acm-pink to-acm-orange text-white px-5 py-3 rounded-lg font-semibold hover:brightness-110 transition-all disabled:opacity-50 disabled:cursor-not-allowed drop-shadow-lg cursor-pointer"
         >
           {isLoading ? 'Logging in...' : 'Login'}
         </button>
@@ -141,11 +145,11 @@ function LoginPageContent() {
           </Link>
         </p>
 
-        <div className="border-t border-white/10 pt-3">
-          <p className="text-white/60 text-sm mb-2">Administrator Access</p>
+        <div className="border-t border-white/10 pt-4">
+          <p className="text-white/60 text-sm mb-3">Administrator Access</p>
           <Link
             href="/auth/admin-login"
-            className="text-acm-orange hover:text-acm-orange/80 transition-colors text-sm font-medium"
+            className="inline-flex items-center justify-center px-4 py-2 rounded-lg border border-acm-orange/60 text-acm-orange text-sm font-semibold hover:bg-acm-orange/10 hover:border-acm-orange transition-all cursor-pointer"
           >
             Login as Admin
           </Link>

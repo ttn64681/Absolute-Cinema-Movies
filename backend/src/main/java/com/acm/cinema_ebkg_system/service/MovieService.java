@@ -18,7 +18,7 @@ import java.util.stream.Collectors; // For converting List<Movie> to List<MovieS
 public class MovieService {
 
     // ===== CONSTANTS ===== //
-    private static final int MOVIES_PER_PAGE = 5; // 10 movies/page
+    private static final int MOVIES_PER_PAGE = 10; // 10 movies/page
 
     private final MovieRepository movieRepository;
 
@@ -352,6 +352,7 @@ public class MovieService {
      * Return: List<MovieSummary>
      * @deprecated Use getNowPlayingForBrowsingPaginated instead
      */
+    @Deprecated
     public List<MovieSummary> getNowPlayingForBrowsing() {
         List<Movie> movies = getNowPlayingOrdered();
         return movies.stream()
@@ -364,6 +365,7 @@ public class MovieService {
      * Return: List<MovieSummary>
      * @deprecated Use getUpcomingForBrowsingPaginated instead
      */
+    @Deprecated
     public List<MovieSummary> getUpcomingForBrowsing() {
         List<Movie> movies = getUpcomingOrdered();
         return movies.stream()

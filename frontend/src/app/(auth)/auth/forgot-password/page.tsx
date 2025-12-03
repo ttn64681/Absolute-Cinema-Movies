@@ -2,8 +2,8 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import NavBar from '@/components/common/navBar/NavBar';
+import AuthFormContainer from '@/components/common/auth/AuthFormContainer';
 import { useToast } from '@/contexts/ToastContext';
 import { validateEmail } from '@/clients/authClient';
 import { buildUrl, endpoints } from '@/config/api';
@@ -13,7 +13,6 @@ export default function ForgotPasswordPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
-  const router = useRouter();
   const { showToast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -59,15 +58,9 @@ export default function ForgotPasswordPage() {
   return (
     <div className="min-h-screen bg-black">
       <NavBar />
-      
-      <div className="flex items-center justify-center min-h-[calc(100vh-80px)] px-4">
+      <div className="flex items-center justify-center min-h-[calc(100vh-80px)] px-4 py-8">
         <div className="w-full max-w-md">
-          <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-6 shadow-xl">
-            <div className="text-center mb-6">
-              <h1 className="text-3xl font-bold text-white">Forgot Password</h1>
-              <p className="text-white/70 text-sm mt-1">Enter your email to reset your password</p>
-            </div>
-
+          <AuthFormContainer title="Forgot Password" subtitle="Enter your email to reset your password">
             {error && (
               <div className="mb-4 p-3 bg-red-900/40 border border-red-500/60 rounded-md">
                 <p className="text-red-200 text-sm">{error}</p>
@@ -91,7 +84,7 @@ export default function ForgotPasswordPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full px-4 py-3 rounded-md bg-white/10 border border-white/20 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-acm-pink focus:border-transparent"
-                  placeholder="Enter your email address"
+                  placeholder="you@example.com"
                   required
                   disabled={isLoading}
                 />
@@ -100,7 +93,7 @@ export default function ForgotPasswordPage() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full inline-flex justify-center bg-gradient-to-r from-acm-pink to-acm-orange text-white px-5 py-2.5 rounded-lg font-semibold hover:brightness-110 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full inline-flex justify-center items-center gap-2 bg-linear-to-r from-acm-pink to-acm-orange text-white px-5 py-3 rounded-lg font-semibold hover:brightness-110 transition-all disabled:opacity-50 disabled:cursor-not-allowed drop-shadow-lg cursor-pointer"
               >
                 {isLoading ? 'Sending...' : 'Send Reset Link'}
               </button>
@@ -109,12 +102,15 @@ export default function ForgotPasswordPage() {
             <div className="mt-6 text-center">
               <p className="text-white/70 text-sm">
                 Remember your password?{' '}
-                <Link href="/auth/login" className="text-acm-pink hover:text-acm-pink/80 transition-colors">
+                <Link
+                  href="/auth/login"
+                  className="text-acm-pink hover:text-acm-pink/80 transition-colors cursor-pointer"
+                >
                   Sign in
                 </Link>
               </p>
             </div>
-          </div>
+          </AuthFormContainer>
         </div>
       </div>
     </div>
