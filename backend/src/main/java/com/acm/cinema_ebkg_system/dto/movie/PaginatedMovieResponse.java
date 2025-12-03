@@ -31,6 +31,7 @@ public class PaginatedMovieResponse {
         this.hasPrevious = hasPrevious;
         this.pageSize = pageSize;
 
+        System.out.println("Paginated Movie Response: ");
         System.out.println("currentPage: " + currentPage);
         System.out.println("totalPages: " + totalPages);
         System.out.println("totalElements: " + totalElements);

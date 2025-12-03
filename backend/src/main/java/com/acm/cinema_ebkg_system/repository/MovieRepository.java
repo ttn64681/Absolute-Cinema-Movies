@@ -152,7 +152,6 @@ public interface MovieRepository extends JpaRepository<Movie, Long> {
     """, 
     countQuery = """
       SELECT COUNT(DISTINCT m.movie_id) FROM movie m
-      WHERE m.status = 'upcoming'
     """,
     nativeQuery = true)
     Page<Movie> findAllMovies(Pageable pageable);
