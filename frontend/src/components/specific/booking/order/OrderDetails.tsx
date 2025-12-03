@@ -202,7 +202,6 @@ export default function OrderDetails({ promoDiscount = 0, promoType, onTotalCalc
           </div>
         </div>
 
-<<<<<<< HEAD
         <hr className="border-t border-white/20 my-4" />
 
         <div className="mb-4 px-6">
@@ -221,7 +220,6 @@ export default function OrderDetails({ promoDiscount = 0, promoType, onTotalCalc
           ))}
         </div>
 
-<<<<<<< HEAD
         <hr className="border-t border-white/20 my-4" />
 
         <div className="flex justify-between text-white text-sm mb-2 px-6">

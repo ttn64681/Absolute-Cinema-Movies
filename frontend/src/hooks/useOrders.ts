@@ -69,13 +69,24 @@ export function useOrders(userId: number | null) {
           ? order.totalAmount 
           : parseFloat(order.totalAmount || '0');
         
+        // Format ticket numbers - show individual ticket IDs
+        const ticketNumbers = order.ticketIds && order.ticketIds.length > 0
+          ? order.ticketIds.map(id => id.toString()).join(', ')
+          : order.bookingId.toString(); // Fallback to booking ID if ticket IDs not available
+        
+        // Get seats from backend (list of seat identifiers like ["A1", "A2", "B3"])
+        const seats = order.seats && order.seats.length > 0
+          ? order.seats
+          : []; // Empty array if no seats available
+        
         return {
           id: order.bookingId.toString(),
           date: order.showDate,
           time: order.showTime,
           movie: order.movieTitle,
           bookingNumber: order.bookingId.toString(),
-          ticketNumbers: order.bookingId.toString(),
+          ticketNumbers: ticketNumbers,
+          seats: seats,
           showtime: showtime,
           orderDate: orderDate,
           posterUrl: order.moviePosterUrl || '/poster_placeholder.jpg',

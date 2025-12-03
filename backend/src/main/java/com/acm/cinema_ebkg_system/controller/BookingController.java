@@ -82,7 +82,7 @@ public class BookingController {
     
     /**
      * Complete payment for a booking
-     * Updates booking status to "paid" and payment_info with actual card details
+     * Updates payment_info with actual card details
      * POST /api/bookings/{bookingId}/complete-payment
      */
     @PostMapping("/{bookingId}/complete-payment")
@@ -132,7 +132,6 @@ public class BookingController {
             response.put("message", "Payment completed successfully");
             response.put("bookingId", booking.getBookingId());
             response.put("totalAmount", booking.getTotalAmount());
-            response.put("status", booking.getStatus());
             
             return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
@@ -141,6 +140,33 @@ public class BookingController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(createErrorResponse("Failed to complete payment: " + e.getMessage()));
+        }
+    }
+    
+    /**
+     * Get booking details by booking ID
+     * GET /api/bookings/{bookingId}
+     * Used for order confirmation page
+     */
+    @GetMapping("/{bookingId}")
+    public ResponseEntity<?> getBookingById(
+            @PathVariable Long bookingId,
+            HttpServletRequest httpRequest) {
+        try {
+            Long userId = getUserIdFromRequest(httpRequest);
+            if (userId == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(createErrorResponse("User not authenticated"));
+            }
+            
+            OrderResponseDTO booking = bookingService.getBookingById(bookingId, userId);
+            return ResponseEntity.ok(booking);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(createErrorResponse(e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(createErrorResponse("Failed to fetch booking: " + e.getMessage()));
         }
     }
     

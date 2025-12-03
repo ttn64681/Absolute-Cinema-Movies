@@ -62,6 +62,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     if (token && refreshToken) {
       console.log('Attempting to refresh token...');
+      // Check if this is an admin token before refresh
+      const isAdmin = !!(localStorage.getItem('adminToken') || sessionStorage.getItem('adminToken'));
+      console.log('checkAuthStatus - isAdmin before refresh:', isAdmin);
+      
       // Try to refresh token to validate it
       authClient
         .refreshToken()
@@ -77,11 +81,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 if (response.refreshToken) {
                   localStorage.setItem('refreshToken', response.refreshToken);
                 }
+                // If it was an admin token, also update adminToken
+                if (isAdmin) {
+                  localStorage.setItem('adminToken', response.token);
+                  document.cookie = `adminToken=${response.token}; path=/; SameSite=Lax`;
+                }
                 console.log('Updated tokens in localStorage');
               } else {
                 sessionStorage.setItem('token', response.token);
                 if (response.refreshToken) {
                   sessionStorage.setItem('refreshToken', response.refreshToken);
+                }
+                // If it was an admin token, also update adminToken
+                if (isAdmin) {
+                  sessionStorage.setItem('adminToken', response.token);
+                  document.cookie = `adminToken=${response.token}; path=/; SameSite=Lax`;
                 }
                 console.log('Updated tokens in sessionStorage');
               }
@@ -99,10 +113,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             // Token is invalid, clear it
             localStorage.removeItem('token');
             localStorage.removeItem('refreshToken');
+            localStorage.removeItem('adminToken');
             localStorage.removeItem('rememberMe');
             sessionStorage.removeItem('token');
             sessionStorage.removeItem('refreshToken');
+            sessionStorage.removeItem('adminToken');
             sessionStorage.removeItem('rememberMe');
+            document.cookie = `adminToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax`;
             setUser(null);
           }
           setIsLoading(false);
@@ -111,10 +128,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           console.error('refreshToken error:', error);
           localStorage.removeItem('token');
           localStorage.removeItem('refreshToken');
+          localStorage.removeItem('adminToken');
           localStorage.removeItem('rememberMe');
           sessionStorage.removeItem('token');
           sessionStorage.removeItem('refreshToken');
+          sessionStorage.removeItem('adminToken');
           sessionStorage.removeItem('rememberMe');
+          document.cookie = `adminToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax`;
           setUser(null);
           setIsLoading(false);
         });

@@ -25,27 +25,74 @@ function AdminUsersPage() {
   // Fetch admins and users from backend
   useEffect(() => {
     const fetchData = async () => {
+      setIsLoading(true);
+      setError(null);
+      
+      let adminsSuccess = false;
+      let usersSuccess = false;
+      
+      // Fetch admins
       try {
-        setIsLoading(true);
-        setError(null);
-        
-        // Fetch admins
         const adminsResponse = await api.get<Admin[]>(endpoints.admin.getAllAdmins);
+        console.log('Admins response:', adminsResponse.data);
         setAdminList(adminsResponse.data);
-        
-        // Fetch users
+        adminsSuccess = true;
+      } catch (adminErr: any) {
+        console.error('Error fetching admins:', adminErr);
+        console.error('Admin error details:', {
+          status: adminErr.response?.status,
+          statusText: adminErr.response?.statusText,
+          data: adminErr.response?.data,
+          message: adminErr.message,
+          userMessage: adminErr.userMessage,
+        });
+        setAdminList([]);
+      }
+      
+      // Fetch users
+      try {
         const usersResponse = await api.get<BackendUser[]>(endpoints.users.getAllUsers);
+        console.log('Users response:', usersResponse.data);
         const users = usersResponse.data.map((user) => ({
           ...user,
           accountStatus: (user.accountStatus || 'inactive') as 'active' | 'inactive' | 'suspended',
         }));
         setMemberList(users);
-      } catch (err: any) {
-        console.error('Error fetching data:', err);
-        setError('Failed to load data. Please try again.');
-      } finally {
-        setIsLoading(false);
+        usersSuccess = true;
+      } catch (userErr: any) {
+        console.error('Error fetching users:', userErr);
+        console.error('User error details:', {
+          status: userErr.response?.status,
+          statusText: userErr.response?.statusText,
+          data: userErr.response?.data,
+          message: userErr.message,
+          userMessage: userErr.userMessage,
+        });
+        
+        // Check if it's an authentication/authorization error
+        if (userErr.response?.status === 401 || userErr.response?.status === 403) {
+          console.error('Authentication/Authorization error - Admin token may be missing or invalid');
+          console.error('Checking for adminToken:', {
+            localAdminToken: typeof window !== 'undefined' ? localStorage.getItem('adminToken') : 'N/A',
+            sessionAdminToken: typeof window !== 'undefined' ? sessionStorage.getItem('adminToken') : 'N/A',
+          });
+        }
+        
+        setMemberList([]);
       }
+      
+      // Set error only if both failed
+      if (!adminsSuccess && !usersSuccess) {
+        setError('Failed to load data. Please check your connection and try again.');
+      } else if (!adminsSuccess) {
+        setError('Failed to load administrators. Users loaded successfully.');
+      } else if (!usersSuccess) {
+        const errorMsg = 'Failed to load users. Administrators loaded successfully.';
+        setError(errorMsg);
+        console.error(errorMsg);
+      }
+      
+      setIsLoading(false);
     };
 
     fetchData();

@@ -92,6 +92,16 @@ public class SecurityConfig {
                 // Admin endpoints - require ADMIN role
                 .requestMatchers("/api/admin/**").hasAuthority("ROLE_ADMIN")
                 
+                // User management endpoints - GET all users requires ADMIN role
+                // Exact path match must come before wildcard patterns
+                .requestMatchers("/api/users").hasAuthority("ROLE_ADMIN") // GET all users (admin only - exact path)
+                
+                // Individual user endpoints - require USER or ADMIN role (users can access their own, admins can access any)
+                // Use pattern that requires at least one path segment (won't match /api/users exactly)
+                .requestMatchers("/api/users/*").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN") // /api/users/{userId}
+                .requestMatchers("/api/users/*/*").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN") // /api/users/{userId}/info
+                .requestMatchers("/api/users/*/*/*").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN") // /api/users/{userId}/change-password
+                
                 // User profile/payment/booking endpoints - require USER or ADMIN role (admins can access all APIs)
                 .requestMatchers("/api/user/**").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")
                 .requestMatchers("/api/payment-card/**").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")

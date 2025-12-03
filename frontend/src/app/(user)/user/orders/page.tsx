@@ -145,6 +145,13 @@ export default function OrdersPage() {
                 <div className="text-white">
                   Ticket Numbers: <span className="text-[#FF478B]">{selectedOrder.ticketNumbers}</span>
                 </div>
+                <div className="text-white">
+                  Seats: <span className="text-[#FF478B]">
+                    {selectedOrder.seats && selectedOrder.seats.length > 0
+                      ? selectedOrder.seats.join(', ')
+                      : 'N/A'}
+                  </span>
+                </div>
               </div>
             </div>
 

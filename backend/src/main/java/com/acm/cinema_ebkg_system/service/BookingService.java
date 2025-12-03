@@ -144,13 +144,12 @@ public class BookingService {
         Long movieId = show.getMovie().getMovie_id();
         
         // Create booking with user_id, movie_id, and num_tickets
-        // Payment card will be linked when payment is completed (payment_id can be null initially)
+        // Payment card will be linked when payment is completed (payment_card_id can be null initially)
         Booking booking = new Booking();
         booking.setUser(user);
         booking.setMovieId(movieId); // Set movie_id from movie_show
         booking.setNumTickets(totalTickets); // Set number of tickets (total seats)
         booking.setTotalAmount(totalAmount);
-        booking.setStatus("confirmed");
         booking.setPaymentId(null); // Will be set when payment is completed
         booking = bookingRepository.save(booking);
         
@@ -236,7 +235,7 @@ public class BookingService {
     
     /**
      * Complete payment for a booking
-     * Updates booking status to "paid", updates payment_info, and applies promotion if provided
+     * Updates payment_info and applies promotion if provided
      * @param finalTotalAmount - Final total amount including tax, fees, and discount (calculated on frontend)
      */
     @Transactional
@@ -250,11 +249,6 @@ public class BookingService {
         // Verify booking belongs to user
         if (!booking.getUser().getId().equals(userId)) {
             throw new RuntimeException("Booking does not belong to user");
-        }
-        
-        // Verify booking is not already paid
-        if ("paid".equals(booking.getStatus())) {
-            throw new RuntimeException("Booking is already paid");
         }
         
         // Handle promotion - only set if valid, otherwise ensure it's null
@@ -501,9 +495,6 @@ public class BookingService {
         
         // Link booking to payment card
         booking.setPaymentId(paymentCard.getId());
-        
-        // Update booking status to "paid"
-        booking.setStatus("paid");
         booking = bookingRepository.save(booking);
         
         // Send order confirmation email
@@ -597,15 +588,15 @@ public class BookingService {
     }
     
     /**
-     * Get all paid orders for a user
+     * Get all orders for a user
      * Returns orders ordered by creation date descending (most recent first)
      * 
      * @param userId User ID
      * @return List of OrderResponseDTO with order details
      */
     public List<OrderResponseDTO> getUserOrders(Long userId) {
-        // Get all paid bookings for user
-        List<Booking> bookings = bookingRepository.findByUserIdAndStatusOrderByCreatedAtDesc(userId, "paid");
+        // Get all bookings for user
+        List<Booking> bookings = bookingRepository.findByUserIdOrderByCreatedAtDesc(userId);
         
         return bookings.stream().map(booking -> {
             OrderResponseDTO dto = new OrderResponseDTO();
@@ -633,6 +624,7 @@ public class BookingService {
             // Get show date/time and seats from tickets
             LocalDateTime showDateTime = null;
             List<String> seatList = new ArrayList<>();
+            List<Long> ticketIdList = new ArrayList<>();
             int adultCount = 0;
             int childCount = 0;
             int seniorCount = 0;
@@ -650,8 +642,13 @@ public class BookingService {
                     }
                 }
                 
-                // Collect seats and count ticket types
+                // Collect seats, ticket IDs, and count ticket types
                 for (com.acm.cinema_ebkg_system.model.Ticket ticket : booking.getTickets()) {
+                    // Collect ticket ID
+                    if (ticket.getId() != null) {
+                        ticketIdList.add(ticket.getId());
+                    }
+                    
                     if (ticket.getShowSeat() != null) {
                         com.acm.cinema_ebkg_system.model.ShowSeat seat = ticket.getShowSeat();
                         String seatIdentifier = seat.getSeatRow() + seat.getSeatNumber();
@@ -670,6 +667,7 @@ public class BookingService {
             }
             
             dto.setSeats(seatList);
+            dto.setTicketIds(ticketIdList);
             dto.setShowDateTime(showDateTime);
             
             // Format date and time
@@ -726,6 +724,151 @@ public class BookingService {
             
             return dto;
         }).collect(Collectors.toList());
+    }
+    
+    /**
+     * Get booking details by booking ID
+     * Used for order confirmation page
+     * 
+     * @param bookingId Booking ID
+     * @param userId User ID (for security - verify booking belongs to user)
+     * @return OrderResponseDTO with booking details
+     */
+    public OrderResponseDTO getBookingById(Long bookingId, Long userId) {
+        // Get booking
+        Booking booking = bookingRepository.findById(bookingId)
+            .orElseThrow(() -> new RuntimeException("Booking not found"));
+        
+        // Verify booking belongs to user
+        if (!booking.getUser().getId().equals(userId)) {
+            throw new RuntimeException("Unauthorized: Booking does not belong to user");
+        }
+        
+        // Build DTO (reuse logic from getUserOrders)
+        OrderResponseDTO dto = new OrderResponseDTO();
+        dto.setBookingId(booking.getBookingId());
+        dto.setNumTickets(booking.getNumTickets());
+        dto.setTotalAmount(booking.getTotalAmount());
+        dto.setOrderDate(booking.getCreatedAt());
+        
+        // Get movie title and poster
+        try {
+            java.util.Optional<com.acm.cinema_ebkg_system.model.Movie> movieOpt = movieRepository.findById(booking.getMovieId());
+            if (movieOpt.isPresent()) {
+                com.acm.cinema_ebkg_system.model.Movie movie = movieOpt.get();
+                dto.setMovieTitle(movie.getTitle());
+                dto.setMoviePosterUrl(movie.getPoster_link() != null ? movie.getPoster_link() : "");
+            } else {
+                dto.setMovieTitle("Unknown Movie");
+                dto.setMoviePosterUrl("");
+            }
+        } catch (Exception e) {
+            dto.setMovieTitle("Unknown Movie");
+            dto.setMoviePosterUrl("");
+        }
+        
+        // Get show date/time and seats from tickets
+        LocalDateTime showDateTime = null;
+        List<String> seatList = new ArrayList<>();
+        List<Long> ticketIdList = new ArrayList<>();
+        int adultCount = 0;
+        int childCount = 0;
+        int seniorCount = 0;
+        
+        if (booking.getTickets() != null && !booking.getTickets().isEmpty()) {
+            // Get show time from first ticket
+            com.acm.cinema_ebkg_system.model.Ticket firstTicket = booking.getTickets().get(0);
+            if (firstTicket.getShowSeat() != null) {
+                com.acm.cinema_ebkg_system.model.ShowSeat firstSeat = firstTicket.getShowSeat();
+                if (firstSeat.getMovieShow() != null) {
+                    com.acm.cinema_ebkg_system.model.MovieShow movieShow = firstSeat.getMovieShow();
+                    if (movieShow.getShowTime() != null) {
+                        showDateTime = movieShow.getShowTime().getShowTime();
+                    }
+                }
+            }
+            
+            // Collect seats, ticket IDs, and count ticket types
+            for (com.acm.cinema_ebkg_system.model.Ticket ticket : booking.getTickets()) {
+                // Collect ticket ID
+                if (ticket.getId() != null) {
+                    ticketIdList.add(ticket.getId());
+                }
+                
+                if (ticket.getShowSeat() != null) {
+                    com.acm.cinema_ebkg_system.model.ShowSeat seat = ticket.getShowSeat();
+                    String seatIdentifier = seat.getSeatRow() + seat.getSeatNumber();
+                    seatList.add(seatIdentifier);
+                }
+                
+                // Count ticket types
+                if (ticket.getTicType() == TicketType.adult) {
+                    adultCount++;
+                } else if (ticket.getTicType() == TicketType.child) {
+                    childCount++;
+                } else if (ticket.getTicType() == TicketType.senior) {
+                    seniorCount++;
+                }
+            }
+        }
+        
+        dto.setSeats(seatList);
+        dto.setTicketIds(ticketIdList);
+        dto.setShowDateTime(showDateTime);
+        
+        // Format date and time
+        if (showDateTime != null) {
+            DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("M/d/yy");
+            DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("h:mma");
+            dto.setShowDate(showDateTime.format(dateFormatter));
+            dto.setShowTime(showDateTime.format(timeFormatter));
+        } else {
+            dto.setShowDate("TBD");
+            dto.setShowTime("TBD");
+        }
+        
+        // Set ticket counts
+        OrderResponseDTO.TicketCounts ticketCounts = new OrderResponseDTO.TicketCounts(adultCount, childCount, seniorCount);
+        dto.setTicketCounts(ticketCounts);
+        
+        // Get payment method (masked card)
+        if (booking.getPaymentId() != null) {
+            try {
+                java.util.Optional<PaymentCard> paymentCardOpt = paymentCardRepository.findById(booking.getPaymentId());
+                if (paymentCardOpt.isPresent()) {
+                    PaymentCard card = paymentCardOpt.get();
+                    // Decrypt and mask card number
+                    try {
+                        String decrypted = PaymentEncryptionUtil.decryptCardNumber(card.getCardNumber());
+                        String cardDigits = decrypted.replaceAll("[^0-9]", "");
+                        if (cardDigits.length() >= 4) {
+                            String last4 = cardDigits.substring(cardDigits.length() - 4);
+                            String cardType = card.getPaymentCardType() != null ? card.getPaymentCardType().name().toUpperCase() : "CARD";
+                            dto.setPaymentMethod(cardType + " **** **** **** " + last4);
+                        } else {
+                            dto.setPaymentMethod("CARD");
+                        }
+                    } catch (Exception e) {
+                        dto.setPaymentMethod("CARD");
+                    }
+                } else {
+                    dto.setPaymentMethod("CARD");
+                }
+            } catch (Exception e) {
+                dto.setPaymentMethod("CARD");
+            }
+        } else {
+            dto.setPaymentMethod("CARD");
+        }
+        
+        // Get promotion name if applied
+        if (booking.getPromotion() != null) {
+            dto.setPromotionName(booking.getPromotion().getTitle());
+        } else {
+            dto.setPromotionName(null);
+        }
+        
+        return dto;
     }
 }
 

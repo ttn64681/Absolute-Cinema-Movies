@@ -17,14 +17,13 @@ import java.util.List;
 public interface BookingRepository extends JpaRepository<Booking, Long> {
     
     /**
-     * Find all bookings for a user with a specific status
+     * Find all bookings for a user
      * Ordered by creation date descending (most recent first)
      * 
      * @param userId User ID
-     * @param status Booking status (e.g., "paid", "confirmed")
      * @return List of bookings ordered by created_at DESC
      */
-    @Query("SELECT b FROM Booking b WHERE b.user.id = :userId AND b.status = :status ORDER BY b.createdAt DESC")
-    List<Booking> findByUserIdAndStatusOrderByCreatedAtDesc(@Param("userId") Long userId, @Param("status") String status);
+    @Query("SELECT b FROM Booking b WHERE b.user.id = :userId ORDER BY b.createdAt DESC")
+    List<Booking> findByUserIdOrderByCreatedAtDesc(@Param("userId") Long userId);
 }
 

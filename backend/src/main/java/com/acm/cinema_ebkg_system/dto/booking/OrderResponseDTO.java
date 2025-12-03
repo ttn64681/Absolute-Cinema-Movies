@@ -23,6 +23,7 @@ public class OrderResponseDTO {
     private String showDate; // Formatted date string (e.g., "9/9/25")
     private String showTime; // Formatted time string (e.g., "9:00PM")
     private List<String> seats; // List of seat identifiers (e.g., ["A1", "A2", "B3"])
+    private List<Long> ticketIds; // List of ticket IDs (e.g., [1, 2, 3])
     private Integer numTickets;
     private TicketCounts ticketCounts; // Adult, child, senior counts
     private BigDecimal totalAmount;

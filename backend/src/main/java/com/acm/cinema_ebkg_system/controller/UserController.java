@@ -10,6 +10,7 @@ import com.acm.cinema_ebkg_system.dto.user.UserProfileDTO;
 import com.acm.cinema_ebkg_system.dto.auth.AuthResponse;
 import com.acm.cinema_ebkg_system.mapper.UserDtoFactory;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -87,9 +88,20 @@ public class UserController {
 
     // GET /api/users - Return list of all users (for admin use)
     @GetMapping("/users")
-    public List<User> getAllUsers() {
-        System.out.println("Getting all users");
-        return userService.getAllUsers();
+    public ResponseEntity<?> getAllUsers() {
+        try {
+            System.out.println("Getting all users");
+            List<User> users = userService.getAllUsers();
+            System.out.println("Found " + users.size() + " users");
+            return ResponseEntity.ok(users);
+        } catch (Exception e) {
+            System.err.println("Error fetching users: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(new java.util.HashMap<String, Object>() {{
+                    put("error", "Failed to fetch users: " + e.getMessage());
+                }});
+        }
     }
 
     // GET /api/users/{userId} - Return user by ID
