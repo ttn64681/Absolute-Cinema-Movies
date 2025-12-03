@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { RxDoubleArrowRight } from 'react-icons/rx';
 import { IoChevronBack, IoChevronForward } from 'react-icons/io5';
 import WhiteSeparator from '@/components/common/WhiteSeparator';
+import SkeletonBlock from '@/components/common/skeletons/SkeletonBlock';
 import { useHomePromotions } from '@/hooks/useHomePromotions';
 import { useCarousel } from '@/hooks/useCarousel';
 import { heroPromotions } from '@/constants/movieData';
@@ -42,11 +43,11 @@ export default function HeroPromoSection() {
     return (
       <section className="relative -mt-40 z-20 px-4">
         <div className="mx-auto flex flex-row w-full max-w-5xl grid-cols-1 gap-10 rounded-xl p-5 md:grid-cols-2">
-          <div className="relative aspect-[16/10] w-full overflow-hidden rounded-lg border bg-gray-800 animate-pulse"></div>
+          <SkeletonBlock className="relative aspect-[16/10] w-full overflow-hidden rounded-lg" />
           <div className="flex flex-col w-[80vw] justify-center content-start gap-3 text-white">
-            <div className="h-8 bg-gray-700 rounded animate-pulse"></div>
-            <div className="h-4 bg-gray-700 rounded animate-pulse"></div>
-            <div className="h-6 bg-gray-700 rounded animate-pulse"></div>
+            <SkeletonBlock className="h-8 w-3/4 rounded-lg" />
+            <SkeletonBlock className="h-4 w-2/3 rounded-lg" />
+            <SkeletonBlock className="h-6 w-1/2 rounded-lg" />
           </div>
         </div>
       </section>
@@ -98,27 +99,27 @@ export default function HeroPromoSection() {
           {isLoading ? (
             <div className="w-full h-full bg-gray-800 animate-pulse rounded-lg"></div>
           ) : (
-            <AnimatePresence initial={false} mode="wait" custom={direction}>
-              <motion.div
-                key={currentPromo.id}
-                custom={direction}
-                variants={slideVariants}
-                initial="enter"
-                animate="center"
-                exit="exit"
-                transition={{ duration: 0.4, ease: 'easeOut' }}
-                whileHover={{ borderColor: 'rgba(236, 72, 153, 1)' }}
-                className="absolute inset-0 rounded-lg border-[0.5px] border-white/60 overflow-hidden"
-              >
-                <Image
-                  src={currentPromo.image}
-                  alt={currentPromo.title}
-                  fill
-                  className="object-cover"
-                  sizes="(max-width: 1024px) 100vw, 50vw"
-                />
-              </motion.div>
-            </AnimatePresence>
+          <AnimatePresence initial={false} mode="wait" custom={direction}>
+            <motion.div
+              key={currentPromo.id}
+              custom={direction}
+              variants={slideVariants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{ duration: 0.4, ease: 'easeOut' }}
+              whileHover={{ borderColor: 'rgba(236, 72, 153, 1)' }}
+              className="absolute inset-0 rounded-lg border-[0.5px] border-white/60 overflow-hidden"
+            >
+              <Image
+                src={currentPromo.image}
+                alt={currentPromo.title}
+                fill
+                className="object-cover"
+                sizes="(max-width: 1024px) 100vw, 50vw"
+              />
+            </motion.div>
+          </AnimatePresence>
           )}
 
           {/* Carousel Indicators */}

@@ -5,7 +5,7 @@ interface RouteProtectionProps {
   requiredRole: 'admin' | 'user';
 }
 
-export default function RouteProtection({ children, requiredRole }: RouteProtectionProps) {
-  // TEMPORARILY DISABLED: Authentication bypassed for testing
+// Temporarily disabled: route protection handled elsewhere / not enforced
+export default function RouteProtection({ children }: RouteProtectionProps) {
   return <>{children}</>;
 }

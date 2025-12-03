@@ -29,6 +29,7 @@ export function useCarousel<T>(
 } {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [direction, setDirection] = useState<1 | -1>(1);
+  const [resetToken, setResetToken] = useState(0);
 
   // reset index when items array changes to prevent out-of-bounds access
   useEffect(() => {
@@ -44,11 +45,13 @@ export function useCarousel<T>(
   const goToPrevious = useCallback(() => {
     setDirection(-1);
     setCurrentIndex((prev) => (prev === 0 ? items.length - 1 : prev - 1));
+    setResetToken((prev) => prev + 1);
   }, [items.length]);
 
   const goToNext = useCallback(() => {
     setDirection(1);
     setCurrentIndex((prev) => (prev === items.length - 1 ? 0 : prev + 1));
+    setResetToken((prev) => prev + 1);
   }, [items.length]);
 
   // Handle indicator clicks - set direction based on click
@@ -63,6 +66,7 @@ export function useCarousel<T>(
         return; // Same index, do nothing
       }
       setCurrentIndex(index);
+      setResetToken((prev) => prev + 1);
     },
     [currentIndex, items.length]
   );
@@ -73,7 +77,7 @@ export function useCarousel<T>(
       const interval = setInterval(goToNext, autoAdvanceInterval);
       return () => clearInterval(interval);
     }
-  }, [goToNext, autoAdvanceInterval, items.length]);
+  }, [goToNext, autoAdvanceInterval, items.length, resetToken]);
 
   return {
     currentIndex: safeIndex,

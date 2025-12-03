@@ -2,8 +2,8 @@
 
 import React, { useRef, useEffect, useState } from 'react';
 import Promotion from './SmallPromo';
+import SkeletonBlock from '@/components/common/skeletons/SkeletonBlock';
 import { useHomePromotions } from '@/hooks/useHomePromotions';
-import { promotions } from '@/constants/movieData';
 
 interface PromotionData {
   discount: string;
@@ -30,17 +30,16 @@ export default function SmallPromoSection({ promotions: propPromotions }: SmallP
   const { smallPromos, isLoading } = useHomePromotions();
   const [displayPromotions, setDisplayPromotions] = useState<PromotionData[]>([]);
 
-  // Use prop promotions if provided, otherwise use hook data, fallback to placeholders
+  // Use prop promotions if provided, otherwise use hook data
   useEffect(() => {
     if (propPromotions) {
       setDisplayPromotions(propPromotions);
-    } else if (smallPromos.length > 0) {
+    } else if (!isLoading && smallPromos.length > 0) {
       setDisplayPromotions(smallPromos);
-    } else {
-      // Fallback to placeholder promotions
-      setDisplayPromotions(promotions);
+    } else if (!isLoading) {
+      setDisplayPromotions([]);
     }
-  }, [propPromotions, smallPromos]);
+  }, [propPromotions, smallPromos, isLoading]);
   // Scroll state
   const scrollRef = useRef<HTMLDivElement>(null);
   const [atStart, setAtStart] = useState(true);
@@ -69,8 +68,12 @@ export default function SmallPromoSection({ promotions: propPromotions }: SmallP
       <div className="text-4xl font-extrabold font-red-rose text-white mb-2 px-20">Promotions</div>
       <div className="relative px-20 py-4 pt-6 pb-4 overflow-visible">
         {isLoading ? (
-          <div className="text-white/60 text-center py-8">Loading promotions...</div>
-        ) : (
+          <div className="relative flex flex-row overflow-x-hidden gap-x-4 px-4 py-4">
+            {Array.from({ length: 3 }).map((_, idx) => (
+              <SkeletonBlock key={idx} className="w-[400px] h-40 rounded-xl" />
+            ))}
+          </div>
+        ) : displayPromotions.length > 0 ? (
           <div className="relative flex flex-row overflow-x-scroll scrollbar-hide gap-x-4 px-4 py-4" ref={scrollRef}>
             {displayPromotions.map((promotion, index) => (
               <Promotion
@@ -81,18 +84,20 @@ export default function SmallPromoSection({ promotions: propPromotions }: SmallP
               />
             ))}
           </div>
+        ) : (
+          <div className="px-4 py-6 text-white/60 text-sm">No promotions available at the moment.</div>
         )}
 
         {/* Gradient overlays */}
         {!isLoading && (
           <>
             <div
-              className={`pointer-events-none absolute top-0 left-0 h-full w-1/3 bg-gradient-to-r from-[#0a0a0a] to-transparent z-20 transition-opacity duration-500 ${
+              className={`pointer-events-none absolute top-0 left-0 h-full w-1/3 bg-linear-to-r from-[#0a0a0a] to-transparent z-20 transition-opacity duration-500 ${
                 atStart ? 'opacity-0' : 'opacity-100'
               }`}
             />
             <div
-              className={`pointer-events-none absolute top-0 right-0 h-full w-1/3 bg-gradient-to-l from-[#0a0a0a] to-transparent z-20 transition-opacity duration-500 ${
+              className={`pointer-events-none absolute top-0 right-0 h-full w-1/3 bg-linear-to-l from-[#0a0a0a] to-transparent z-20 transition-opacity duration-500 ${
                 atEnd ? 'opacity-0' : 'opacity-100'
               }`}
             />

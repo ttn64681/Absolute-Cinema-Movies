@@ -4,7 +4,7 @@ import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import NavBar from '@/components/common/navBar/NavBar';
-import { useToast } from '@/contexts/ToastContext';
+import AuthFormContainer from '@/components/common/auth/AuthFormContainer';
 import { buildUrl, endpoints } from '@/config/api';
 
 function ResetPasswordContent() {
@@ -16,7 +16,6 @@ function ResetPasswordContent() {
   const [token, setToken] = useState<string | null>(null);
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { showToast } = useToast();
 
   useEffect(() => {
     // Get token from URL parameters
@@ -70,8 +69,7 @@ function ResetPasswordContent() {
         setMessage('Password reset successfully! You can now log in with your new password.');
         setPassword('');
         setConfirmPassword('');
-        // Show toast notification and redirect to login page
-        showToast('Password reset successful! You can now log in.', 'success');
+        // Redirect to login page after brief delay
         setTimeout(() => {
           router.push('/auth/login');
         }, 2000);
@@ -90,18 +88,21 @@ function ResetPasswordContent() {
     return (
       <div className="min-h-screen bg-black">
         <NavBar />
-        <div className="flex items-center justify-center min-h-[calc(100vh-80px)] px-4">
+        <div className="flex items-center justify-center min-h-[calc(100vh-80px)] px-4 py-16">
           <div className="w-full max-w-md">
-            <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-6 shadow-xl text-center">
-              <h1 className="text-3xl font-bold text-white mb-4">Invalid Reset Link</h1>
-              <p className="text-white/70 mb-6">This password reset link is invalid or has expired.</p>
-              <Link 
-                href="/auth/forgot-password" 
-                className="text-acm-pink hover:text-acm-pink/80 transition-colors"
-              >
-                Request a new password reset
-              </Link>
-            </div>
+            <AuthFormContainer title="Invalid Reset Link" subtitle="This password reset link is invalid or has expired.">
+              <div className="text-center space-y-4">
+                <p className="text-white/70">
+                  Please request a new password reset link and try again.
+                </p>
+                <Link
+                  href="/auth/forgot-password"
+                  className="text-acm-pink hover:text-acm-pink/80 transition-colors cursor-pointer"
+                >
+                  Request a new password reset
+                </Link>
+              </div>
+            </AuthFormContainer>
           </div>
         </div>
       </div>
@@ -111,15 +112,10 @@ function ResetPasswordContent() {
   return (
     <div className="min-h-screen bg-black">
       <NavBar />
-      
-      <div className="flex items-center justify-center min-h-[calc(100vh-80px)] px-4">
-        <div className="w-full max-w-md">
-          <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-6 shadow-xl">
-            <div className="text-center mb-6">
-              <h1 className="text-3xl font-bold text-white">Reset Password</h1>
-              <p className="text-white/70 text-sm mt-1">Enter your new password</p>
-            </div>
 
+      <div className="flex items-center justify-center min-h-[calc(100vh-80px)] px-4 py-16">
+        <div className="w-full max-w-md">
+          <AuthFormContainer title="Reset Password" subtitle="Enter and confirm your new password">
             {error && (
               <div className="mb-4 p-3 bg-red-900/40 border border-red-500/60 rounded-md">
                 <p className="text-red-200 text-sm">{error}</p>
@@ -170,7 +166,7 @@ function ResetPasswordContent() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full inline-flex justify-center bg-gradient-to-r from-acm-pink to-acm-orange text-white px-5 py-2.5 rounded-lg font-semibold hover:brightness-110 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full inline-flex justify-center items-center gap-2 bg-linear-to-r from-acm-pink to-acm-orange text-white px-5 py-3 rounded-lg font-semibold hover:brightness-110 transition-all disabled:opacity-50 disabled:cursor-not-allowed drop-shadow-lg cursor-pointer"
               >
                 {isLoading ? 'Resetting...' : 'Reset Password'}
               </button>
@@ -179,12 +175,15 @@ function ResetPasswordContent() {
             <div className="mt-6 text-center">
               <p className="text-white/70 text-sm">
                 Remember your password?{' '}
-                <Link href="/auth/login" className="text-acm-pink hover:text-acm-pink/80 transition-colors">
+                <Link
+                  href="/auth/login"
+                  className="text-acm-pink hover:text-acm-pink/80 transition-colors cursor-pointer"
+                >
                   Sign in
                 </Link>
               </p>
             </div>
-          </div>
+          </AuthFormContainer>
         </div>
       </div>
     </div>

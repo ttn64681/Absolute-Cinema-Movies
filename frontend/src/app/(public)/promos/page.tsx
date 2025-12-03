@@ -4,6 +4,7 @@ import PromoCard from '@/components/common/promos/PromoCard';
 import { BackendPromotion, DiscountType, PromotionStatus } from '@/types/promotion';
 import NavBar from '@/components/common/navBar/NavBar';
 import dynamic from 'next/dynamic';
+import PromosHero from '@/components/specific/promos/PromosHero';
 
 const Footer = dynamic(() => import('@/components/common/Footer'), {
   loading: () => <div className="h-32 bg-black" />,
@@ -46,24 +47,21 @@ const mockPromotions: BackendPromotion[] = [
 ];
 
 export default function PromosPage() {
-
   return (
-    <div>
+    <div className="min-h-screen bg-[#0a0a0a] flex flex-col">
       <NavBar />
-      <div className="min-h-screen bg-[#1C1C1C]">
-        <div className="max-w-7xl mx-auto px-8 pt-28 pb-12">
-          <div className="mb-12 text-center">
-            <h1 className="text-4xl font-bold font-red-rose text-white pb-4">Promotions</h1>
-            <div className="mx-auto w-[250px] border-b border-white"></div>
-          </div>
+      <PromosHero />
 
-          <div className="flex flex-col gap-6 max-w-5xl mx-auto">
+      <main className="relative flex-1">
+        <div className="max-w-6xl mx-auto px-8 pb-16 -mt-20 relative z-10">
+          <section className="flex flex-col gap-6">
             {mockPromotions.map((promotion) => (
               <PromoCard key={promotion.id} promotion={promotion} />
             ))}
-          </div>
+          </section>
         </div>
-      </div>
+      </main>
+
       <Footer />
     </div>
   );

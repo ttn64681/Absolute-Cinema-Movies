@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/contexts/ToastContext';
 import AuthFormContainer from '@/components/common/auth/AuthFormContainer';
 import AuthButtonGroup from '@/components/common/auth/AuthButtonGroup';
 
@@ -14,6 +15,7 @@ export default function AdminLoginPage() {
 
   const router = useRouter();
   const { adminLogin } = useAuth();
+  const { showToast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,6 +26,7 @@ export default function AdminLoginPage() {
       const response = await adminLogin(email, password, false);
 
       if (response.success) {
+        showToast('Admin login successful', 'success');
         // Redirect to admin home page
         router.push('/admin/');
       } else {

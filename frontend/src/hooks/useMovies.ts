@@ -35,7 +35,7 @@ export function useMovies(activeTab: 'nowplaying' | 'upcoming') {
   const [page, setPage] = useState(0);
   const [movies, setMovies] = useState<MovieSummary[]>([]);
   const [pagination, setPagination] = useState(initialPaginationState);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   // Fetch movies for current page
@@ -48,10 +48,10 @@ export function useMovies(activeTab: 'nowplaying' | 'upcoming') {
 
       // Check cache
       if (now - lastFetchTime < CACHE_DURATION && cached) {
-        console.log(`Using cached ${activeTab} movies page ${pageNum}`);
         setMovies(cached.movies);
         setPagination(createPaginationState(cached));
         setError(null);
+        setIsLoading(false);
         return;
       }
 

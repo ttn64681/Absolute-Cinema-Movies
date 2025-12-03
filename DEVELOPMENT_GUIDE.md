@@ -73,23 +73,37 @@
 
 #### `POST /api/auth/logout`
 
-**Returns**: `AuthResponse` - `{ success: boolean, message: string }`
-**Called by**: Logout button click
+**Returns**: `AuthResponse` - `{ success: boolean, message: string }`  
+**Called by**: Logout button click  
 **Consumed by**: `AuthContext.logout()`
+
+#### `POST /api/admin/login`
+
+**Returns**: `AuthResponse` - `{ success: boolean, message: string, token: string, refreshToken: string, user: UserDto }`  
+**Called by**: Admin login form (`/auth/admin-login`)  
+**Consumed by**: `AuthContext.adminLogin()`
+
+#### `POST /api/admin/create`
+
+**Returns**: `AuthResponse` - `{ success: boolean, message: string }`  
+**Body**: `{ email: string, password: string, profileImageLink?: string }`  
+**Called by**: Admin creation tooling (dev/testing)
 
 ### Movie Endpoints
 
-#### `GET /api/movies/now-playing`
+#### `GET /api/movies/browse/now-playing`
 
-**Returns**: `BackendMovie[]` - Currently showing movies
-**Called by**: Homepage load, "Now Playing" tab
-**Consumed by**: `useMovies('nowplaying')`
+**Returns**: `PaginatedMovieResponse` - `{ content: MovieSummary[], totalPages, totalElements, number }`  
+**Query Params**: `page` (0‑indexed)  
+**Called by**: Homepage load, "Now Playing" tab  
+**Consumed by**: `useMovies('nowplaying')` → `movieClient.getNowPlaying(page)`
 
-#### `GET /api/movies/upcoming`
+#### `GET /api/movies/browse/upcoming`
 
-**Returns**: `BackendMovie[]` - Upcoming releases
-**Called by**: "Upcoming" tab click
-**Consumed by**: `useMovies('upcoming')`
+**Returns**: `PaginatedMovieResponse` - `{ content: MovieSummary[], totalPages, totalElements, number }`  
+**Query Params**: `page` (0‑indexed)  
+**Called by**: "Upcoming" tab click  
+**Consumed by**: `useMovies('upcoming')` → `movieClient.getUpcoming(page)`
 
 #### `GET /api/movies/genres`
 
@@ -99,29 +113,43 @@
 
 #### `GET /api/movies/search-now-playing`
 
-**Returns**: `BackendMovie[]` - Filtered now-playing movies
+**Returns**: `PaginatedMovieResponse` - Filtered now‑playing movies (paged)  
 **Query Params**: `title`, `genres`, `month`, `day`, `year`
 **Called by**: Search form submission
-**Consumed by**: `useMovieSearch()`
+**Consumed by**: `useMovieSearch()` → `movieClient.searchNowPlaying(params, page)`
+
+#### `GET /api/movies/search-upcoming`
+
+**Returns**: `PaginatedMovieResponse` - Filtered upcoming movies (paged)  
+**Query Params**: `title`, `genres`, `month`, `day`, `year`  
+**Called by**: Search form submission  
+**Consumed by**: `useMovieSearch()` → `movieClient.searchUpcoming(params, page)`
 
 #### `GET /api/movies/{movieId}`
 
-**Returns**: `BackendMovie` - Single movie details
-**Called by**: Movie detail popup open
-**Consumed by**: `SelectedMovie` component
+**Returns**: `BackendMovie` - Full movie entity  
+**Called by**: Selected movie modal open  
+**Consumed by**: `useSelectedMovie()` / `SelectedMovie` component → `movieClient.getMovieById(movieId)`
 
 #### `GET /api/movies/{movieId}/dates`
 
-**Returns**: `ShowDate[]` - Available show dates
-**Called by**: Date selection in movie popup
-**Consumed by**: React Query in `SelectedMovie`
+**Returns**: `string[]` (YYYY‑MM‑DD) - Available show dates  
+**Called by**: Date dropdown in `SelectedMovieShowtimes`  
+**Consumed by**: React Query in `SelectedMovieShowtimes` → `movieClient.getDates(movieId)`
 
 #### `GET /api/movies/{movieId}/times`
 
-**Returns**: `ShowTime[]` - Showtimes for selected date
-**Query Params**: `date` - Selected show date
-**Called by**: Time selection after date selection
-**Consumed by**: React Query with `movie.movie_id` + `selectedDate` dependencies
+**Returns**: `string[]` (HH:MM) - Showtimes for selected date  
+**Query Params**: `date` (YYYY‑MM‑DD)  
+**Called by**: Time grid after date selection  
+**Consumed by**: React Query in `SelectedMovieShowtimes` → `movieClient.getTimes(movieId, date)`
+
+#### `GET /api/movies/{movieId}/show-id`
+
+**Returns**: `number | { showId: number }` - Internal `movie_show.id` for booking  
+**Query Params**: `date` (YYYY‑MM‑DD), `time` (HH:MM:SS, 24h)  
+**Called by**: Booking flow when user clicks "Book Tickets" from selected movie  
+**Consumed by**: `useSeats` / booking seats page → `movieClient.getShowId(movieId, date, time)`
 
 ### User Endpoints
 
@@ -186,11 +214,132 @@
 
 #### `PUT /api/users/{userId}/change-password`
 
-**Parameters**: `userId` (path param), `PasswordChangeRequest` (request body)
-**Request Body**: Same as `PUT /api/user/change-password`
-**Returns**: `User` - Updated user entity
+**Parameters**: `userId` (path param), `PasswordChangeRequest` (request body)  
+**Request Body**: Same as `PUT /api/user/change-password`  
+**Returns**: `User` - Updated user entity  
 **Called by**: Admin or user changing password
 
+### Admin & Promotion Endpoints
+
+#### `GET /api/admin/all`
+
+**Returns**: `Admin[]` - All admin users  
+**Called by**: Admin "Manage Users" page (admin list)  
+**Consumed by**: `/admin/users` via axios `api` + `endpoints.admin.getAllAdmins`
+
+#### `PUT /api/admin/users/{userId}/suspend`
+
+**Returns**: Updated `User` with `accountStatus = 'suspended'`  
+**Called by**: Suspend button in `/admin/users`  
+**Consumed by**: Admin users page → updates local `memberList`
+
+#### `PUT /api/admin/users/{userId}/unsuspend`
+
+**Returns**: Updated `User` with `accountStatus = 'active'`  
+**Called by**: Unsuspend button in `/admin/users`  
+**Consumed by**: Admin users page
+
+#### `GET /api/promotion/`
+
+**Returns**: `BackendPromotion[]` - All promotions  
+**Called by**: Admin pricing/promotions page, homepage promo hooks  
+**Consumed by**: `usePromotions()` → `promotionClient.getPromotions()`
+
+#### `POST /api/promotion/`
+
+**Returns**: Created `BackendPromotion`  
+**Body**: `PromotionDTO` (title, description, promoCode, discountValue, discountType, status, expirationDate, imageLink)  
+**Called by**: "Add Promotion" form in `/admin/pricing`  
+**Consumed by**: `usePromotions()` → `promotionClient.addPromotion()`
+
+#### `PUT /api/promotion/{id}`
+
+**Returns**: Updated `BackendPromotion`  
+**Called by**: "Edit Promotion" modal in `/admin/pricing`  
+**Consumed by**: `usePromotions()` → `promotionClient.updatePromotion(id, dto)`
+
+#### `DELETE /api/promotion/{id}`
+
+**Returns**: 204 on success  
+**Called by**: Delete button in `/admin/pricing`  
+**Consumed by**: `usePromotions()` → `promotionClient.deletePromotion(id)`
+
+### Payment Card Endpoints
+
+#### `GET /api/payment-card/user/{userId}`
+
+**Returns**: `PaymentCardResponseDTO[]` - All cards for a user  
+**Called by**: User payments page  
+**Consumed by**: `usePaymentCards(userId)` → `paymentClient.getCards(userId)`
+
+#### `GET /api/payment-card/user/{userId}/default`
+
+**Returns**: `PaymentCardResponseDTO | null` - Default card  
+**Called by**: Booking checkout  
+**Consumed by**: `paymentClient.getDefaultCard(userId)`
+
+#### `POST /api/payment-card`
+
+**Returns**: Created `PaymentCardResponseDTO`  
+**Body**: `PaymentCardRequestDTO`  
+**Called by**: Add card flow (registration step 3, payments page)  
+**Consumed by**: `paymentClient.createCard(userId, dto)`
+
+#### `PUT /api/payment-card/{cardId}`
+
+**Returns**: Updated `PaymentCardResponseDTO`  
+**Called by**: Edit card flow  
+**Consumed by**: `paymentClient.updateCard(userId, cardId, dto)`
+
+#### `DELETE /api/payment-card/{cardId}`
+
+**Returns**: 204 on success  
+**Called by**: Delete card action  
+**Consumed by**: `paymentClient.deleteCard(cardId)`
+
+#### `PUT /api/payment-card/user/{userId}/set-default/{cardId}`
+
+**Returns**: Updated default card  
+**Called by**: "Make Default" button  
+**Consumed by**: `paymentClient.setDefaultCard(userId, cardId)`
+
+### Seat & Booking Endpoints
+
+#### `GET /api/seats/show/{showId}`
+
+**Returns**: Seat grid with statuses (available/reserved/booked)  
+**Called by**: Booking seats page load  
+**Consumed by**: `useSeats(showId)` → axios `api` with `endpoints.seats.getSeatsForShow(showId)`
+
+#### `POST /api/seats/check-availability`
+
+**Returns**: `{ available: boolean, conflictingSeats?: Seat[] }`  
+**Called by**: Before finalizing booking  
+**Consumed by**: `useSeats.checkAvailability()`
+
+#### `POST /api/seats/reserve`
+
+**Returns**: 200 on success, holds seats temporarily  
+**Called by**: When user selects seats and starts checkout  
+**Consumed by**: `useSeats.reserveSeats()`
+
+#### `POST /api/seats/release` and `POST /api/seats/release-by-selection`
+
+**Returns**: 200 on success  
+**Called by**: On timeout, cancel, or logout  
+**Consumed by**: `useSeats.releaseSeats()`, `ReservationContext` cleanup
+
+#### `POST /api/bookings/create`
+
+**Returns**: `BookingResponseDTO` (booking id, summary)  
+**Called by**: Final "Confirm Booking" action  
+**Consumed by**: `bookingClient.createBooking(payload)` from checkout page
+
+#### `GET /api/movie-shows/{movieShowId}/auditorium`
+
+**Returns**: Auditorium information for a show (rows, columns, etc.)  
+**Called by**: Booking seats page (to shape seat grid)  
+**Consumed by**: `movieShowClient.getAuditorium(movieShowId)`
 ---
 
 ## Data Models
@@ -533,11 +682,25 @@ This eliminates constructor overloading ambiguity and encapsulates creation logi
 
 **How login works**:
 
-1. User enters email/password
-2. Calls `authAPI.login()` to send credentials to backend
-3. Backend returns JWT token and user info
-4. Stores token in browser storage (localStorage or sessionStorage)
-5. Updates `user` and `isAuthenticated` state
+1. User enters email/password (+ optional "Remember me").  
+2. Calls `authClient.login()` (or `authClient.adminLogin()` for admins) to send credentials to backend.  
+3. Backend returns an `AuthResponse` with JWT access/refresh tokens and `UserDto`.  
+4. `AuthContext` stores:
+   - Access/refresh tokens in **localStorage** when `rememberMe = true`.  
+   - Access/refresh tokens in **sessionStorage** when `rememberMe = false`.  
+   - A `token` cookie for convenience / potential middleware use.  
+   - An `adminToken` cookie **only for admin logins** (legacy marker, not required for backend security).  
+5. Updates `user` and `isAuthenticated` state.  
+6. On **normal user login**, any stale admin markers are cleared.  
+7. On **logout**, all storage (local + session) and cookies are cleared.
+
+**Role & route protection**:
+
+- **Authoritative enforcement is on the backend** via Spring Security:
+  - `/api/admin/**` → `ROLE_ADMIN` only (JWT `role` claim = `ADMIN`).  
+  - `/api/user/**`, `/api/payment-card/**`, `/api/payment/**`, `/api/bookings/**` → `ROLE_USER` or `ROLE_ADMIN`.  
+- Frontend *may* use lightweight guards (layouts or components) for UX, but these are secondary; do **not** rely on them as the only security layer.  
+- JWT creation and role embedding is handled centrally by `JwtUtil` and `AuthService` / `AdminService`.
 
 **Used by**:
 
