@@ -4,7 +4,7 @@
  */
 
 // Movie summary (matches backend MovieSummary DTO)
-// For browsing lists (homepage, movies page)
+// Virtual Proxy: Lightweight version for browsing, full details loaded on-click of card
 export interface MovieSummary {
   movie_id: number;
   title: string;
@@ -21,8 +21,7 @@ export interface MovieSummary {
 }
 
 // Full movie details (matches backend Movie entity)
-// For full movie details (includes cast, directors, producers)
-// score and duration are already in MovieSummary
+// Virtual Proxy: Loaded on-demand when user clicks movie (see useSelectedMovie hook)
 export interface BackendMovie extends MovieSummary {
   cast_names: string;
   directors: string;

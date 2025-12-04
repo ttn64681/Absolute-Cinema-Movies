@@ -5,8 +5,7 @@ import type { NextRequest } from 'next/server';
  * Next.js Middleware - Protected Proxy Pattern
  *
  * Intercepts route requests BEFORE page render
- * - Checks JWT token from cookies
- * - Validates user role
+ * - Uses lightweight role cookie for routing decisions
  * - Redirects unauthorized users
  *
  * Access Rules:
@@ -14,22 +13,26 @@ import type { NextRequest } from 'next/server';
  * - Logged in users: Can access user pages, checkout, and public pages
  * - Admins: Can ONLY access admin pages and logout (isolated)
  *
- * Benefits:
- * - Runs server-side (no race conditions)
- * - Blocks before render (better UX)
- * - Can access cookies (no localStorage issues)
- * - No hydration problems
+ * Backend still validates JWT for APIs; middleware only needs coarse role info.
  */
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Get tokens from cookies
-  const token = request.cookies.get('token')?.value;
-  const adminToken = request.cookies.get('adminToken')?.value;
+  // Get role from a lightweight cookie set by AuthContext
+  const roleCookie = request.cookies.get('role')?.value;
 
-  const isAdmin = !!(token && adminToken);
-  const isLoggedInUser = !!(token && !adminToken);
+  let role: 'USER' | 'ADMIN' | null = null;
+
+  if (roleCookie === 'ADMIN' || roleCookie === 'USER') {
+    role = roleCookie;
+  }
+
+  // Lightweight diagnostics to verify middleware execution and routing decisions
+  console.log('[middleware] path:', pathname, '| roleCookie:', roleCookie, '| derived role:', role);
+
+  const isAdmin = role === 'ADMIN';
+  const isLoggedInUser = role === 'USER';
 
   // ============================================
   // ADMIN ROUTES - Only admins can access

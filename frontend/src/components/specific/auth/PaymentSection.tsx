@@ -61,11 +61,8 @@ export default function PaymentSection({ data, updateData, isLoading = false }: 
   };
 
   return (
-    <div className="space-y-6">
-      <div className="text-center">
-        <h2 className="text-2xl font-bold text-white mb-2">Payment Information</h2>
-        <p className="text-white/70">Add up to 3 payment methods (optional)</p>
-      </div>
+    <div className="space-y-6 pt-4 border-t border-white/10">
+      <h3 className="text-white font-semibold mb-4">Payment Information (Optional)</h3>
 
       {/* Payment Cards List */}
       <div className="space-y-4">

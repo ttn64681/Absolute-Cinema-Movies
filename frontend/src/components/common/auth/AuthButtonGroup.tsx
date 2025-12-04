@@ -34,19 +34,8 @@ export default function AuthButtonGroup({
 }: AuthButtonGroupProps) {
   return (
     <div className={`space-y-4 ${className}`}>
-      {/* Primary and Secondary buttons */}
+      {/* Primary and Secondary buttons (secondary on the left, primary on the right) */}
       <div className="flex flex-col sm:flex-row gap-4">
-        <AuthButton
-          type={primaryType}
-          onClick={primaryOnClick}
-          loading={primaryLoading}
-          disabled={primaryDisabled}
-          variant="primary"
-          className="flex-1"
-        >
-          {primaryText}
-        </AuthButton>
-
         {secondaryText && (
           <AuthButton
             type="button"
@@ -58,6 +47,17 @@ export default function AuthButtonGroup({
             {secondaryText}
           </AuthButton>
         )}
+
+        <AuthButton
+          type={primaryType}
+          onClick={primaryOnClick}
+          loading={primaryLoading}
+          disabled={primaryDisabled}
+          variant="primary"
+          className="flex-1"
+        >
+          {primaryText}
+        </AuthButton>
       </div>
 
       {/* Skip button - smaller, less prominent */}

@@ -22,10 +22,9 @@ export function useAdminMovieShows(movieId: number) {
   const [movieShows, setMovieShows] = useState<ShowTime[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-    
+
   // get all movie shows for the selected movie
   const fetchMovieShows = async (movieId: number) => {
-
     // If the ID is 0, there is no selected movie. Don't bother calling the API.
     if (movieId == 0) {
       setMovieShows([]);
@@ -33,7 +32,7 @@ export function useAdminMovieShows(movieId: number) {
     }
     setIsLoading(true);
     try {
-      const data = await getMovieShowsForMovie(movieId);    
+      const data = await getMovieShowsForMovie(movieId);
       if (data) {
         setMovieShows(data);
       }
@@ -44,28 +43,27 @@ export function useAdminMovieShows(movieId: number) {
       setMovieShows([]);
     } finally {
       setIsLoading(false);
-      console.log("isLoading is " + isLoading );
+      console.log('isLoading is ' + isLoading);
     }
-  }
+  };
 
   // Schedule a movie show
   const scheduleMovieShow = async (movieShow: BackendMovieShow) => {
     const createdMovieShow = await createMovieShow(movieShow);
 
-        if (createdMovieShow) {
-          console.log("Movie created successfully.");
-          return true;
-        } else {
-          console.log("Failed to schedule new movie show.");
-          return false;
-        }
-  }
+    if (createdMovieShow) {
+      console.log('Movie created successfully.');
+      return true;
+    } else {
+      console.log('Failed to schedule new movie show.');
+      return false;
+    }
+  };
 
-      // Fetch the movie shows when movieId (the selected movie) changes
-      useEffect(() => {
-        fetchMovieShows(movieId);
-      }, [movieId]);
-    
+  // Fetch the movie shows when movieId (the selected movie) changes
+  useEffect(() => {
+    fetchMovieShows(movieId);
+  }, [movieId]);
+
   return { movieShows, isLoading, error, scheduleMovieShow };
-
 }

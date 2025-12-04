@@ -41,6 +41,9 @@ export default function SelectedMovie({ movie, onClose }: MovieDetailProps) {
     setSelectedShowtime,
   } = useSelectedMovie(movie);
 
+  // Decorator pattern: Conditionally render based on movie status
+  const isUpcoming = displayMovie.status?.toLowerCase() === 'upcoming';
+  
   return (
     <div className="fixed inset-0 flex z-50 items-center justify-center p-4">
       {/* Overlay */}
@@ -66,26 +69,31 @@ export default function SelectedMovie({ movie, onClose }: MovieDetailProps) {
           {/* Trailer Section */}
           <SelectedMovieTrailer movie={displayMovie} />
 
-          {/* Showtimes Section */}
-          <SelectedMovieShowtimes
-            movie={displayMovie}
-            availableDates={availableDates}
-            datesLoading={datesLoading}
-            datesError={datesError}
-            onDateChange={setCurrentDate}
-            currentDate={currentDate}
-            onShowtimeSelect={setSelectedShowtime}
-            selectedShowtime={selectedShowtime}
-          />
+          {/* Decorator: Only render showtimes for NOW_PLAYING movies */}
+          {!isUpcoming && (
+            <SelectedMovieShowtimes
+              movie={displayMovie}
+              availableDates={availableDates}
+              datesLoading={datesLoading}
+              datesError={datesError}
+              onDateChange={setCurrentDate}
+              currentDate={currentDate}
+              onShowtimeSelect={setSelectedShowtime}
+              selectedShowtime={selectedShowtime}
+            />
+          )}
 
           {/* Movie Credits Section - Shows loading state if MovieSummary, full credits if BackendMovie */}
           <SelectedMovieCredits movie={displayMovie} />
 
-          <SelectedMovieBookButton
-            selectedShowtime={selectedShowtime ?? ''}
-            movie={displayMovie}
-            currentDate={currentDate}
-          />
+          {/* Decorator: Only render checkout button for NOW_PLAYING movies */}
+          {!isUpcoming && (
+            <SelectedMovieBookButton
+              selectedShowtime={selectedShowtime ?? ''}
+              movie={displayMovie}
+              currentDate={currentDate}
+            />
+          )}
         </div>
       </div>
     </div>

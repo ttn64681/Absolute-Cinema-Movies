@@ -120,19 +120,19 @@ export default function RegisterStep2Form() {
             onAddressChange={handleAddressChange}
           />
 
-          <div className="flex flex-col space-y-3 pt-4">
-            <button
-              type="submit"
-              className="w-full bg-gradient-to-r from-acm-pink to-acm-orange text-white py-3 px-6 rounded-lg font-semibold hover:brightness-110 transition-all duration-200 shadow-lg hover:shadow-acm-pink/25"
-            >
-              Continue
-            </button>
+          <div className="flex flex-col sm:flex-row gap-3 pt-4">
             <button
               type="button"
               onClick={handleGoBack}
-              className="w-full bg-transparent border border-white/20 text-white/80 py-3 px-6 rounded-lg font-medium hover:bg-white/5 hover:text-white transition-all duration-200"
+              className="w-full sm:w-auto flex-1 inline-flex items-center justify-center gap-2 bg-transparent border border-white/20 text-white/80 py-3 px-6 rounded-lg font-medium hover:bg-white/5 hover:text-white transition-all duration-200 cursor-pointer"
             >
               Go Back
+            </button>
+            <button
+              type="submit"
+              className="w-full sm:w-auto flex-1 inline-flex items-center justify-center gap-2 bg-linear-to-r from-acm-pink to-acm-orange text-white py-3 px-6 rounded-lg font-semibold hover:brightness-110 transition-all duration-200 shadow-lg hover:shadow-acm-pink/25 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Continue
             </button>
           </div>
         </form>

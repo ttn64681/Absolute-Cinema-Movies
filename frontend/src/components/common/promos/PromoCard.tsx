@@ -13,49 +13,51 @@ export default function PromoCard({ promotion }: PromoCardProps) {
   const expirationDate = formatExpirationDate(promotion.expirationDate);
 
   return (
-    <div className="w-full border border-white rounded-lg overflow-hidden">
-      <div className="flex flex-row h-32">
-        <div className="relative w-64 h-32 flex-shrink-0 border-r border-white">
-          <Image
-            src={promotion.imageLink || '/cinema_seats.jpg'}
-            alt={promotion.title}
-            fill
-            className="object-cover"
-            sizes="(max-width: 768px) 100vw, 256px"
-          />
+    <article className="relative flex w-full overflow-hidden rounded-2xl border border-white/40 bg-linear-to-br from-black via-black to-[#2b0018] shadow-lg hover:border-acm-pink/70 hover:shadow-acm-pink/30 transition-all duration-300">
+      {/* Left: image strip */}
+      <div className="relative w-64 h-40 shrink-0 overflow-hidden">
+        <Image
+          src={promotion.imageLink || '/cinema_seats.jpg'}
+          alt={promotion.title}
+          fill
+          className="object-cover"
+          sizes="256px"
+        />
+        <div className="absolute inset-0 bg-black/35" />
+        <div className="absolute top-3 left-3 inline-flex items-center gap-2 rounded-full bg-black/60 px-3 py-1 text-[11px] font-semibold text-white/90 backdrop-blur-sm">
+          <span className="text-acm-pink uppercase tracking-wide">{discountText}</span>
+        </div>
+      </div>
+
+      {/* Right: content strip */}
+      <div className="relative flex flex-1 flex-col justify-between px-6 py-4">
+        <div className="flex items-start justify-between gap-4">
+          <div className="space-y-2">
+            <h3 className="font-red-rose text-2xl md:text-3xl font-bold text-white leading-snug">{promotion.title}</h3>
+            <p className="text-base text-white/85 leading-relaxed">{promotion.description}</p>
+          </div>
+
+          <div className="flex flex-col items-end text-right text-sm text-white/80 gap-1">
+            <span className="uppercase tracking-wide">Promo code</span>
+            <span className="inline-flex items-center justify-center px-3 py-1 rounded-full bg-black/70 text-acm-pink font-semibold tracking-wide">
+              {promotion.promoCode}
+            </span>
+            <span className="text-xs text-white/60">Valid until {expirationDate}</span>
+          </div>
         </div>
 
-        <div className="flex flex-1 flex-row gap-4 px-6">
-          <div className="flex-shrink-0 min-w-[200px] flex items-center py-3">
-            <div>
-              <div className="text-acm-pink font-afacad font-bold text-2xl mb-1 leading-tight">
-                {discountText}
-              </div>
-              <div className="text-white font-afacad text-sm uppercase tracking-wide">
-                {promotion.title}
-              </div>
-            </div>
-          </div>
-
-          <div className="flex-1 border-l border-r border-white px-4 py-3 flex items-center justify-center">
-            <div className="text-white font-afacad text-base leading-relaxed text-center">
-              {promotion.description}
-            </div>
-          </div>
-
-          <div className="flex-shrink-0 min-w-[180px] flex items-center justify-center py-3">
-            <div className="text-center">
-              <div className="text-acm-pink font-afacad font-bold text-xl mb-1">
-                CODE: {promotion.promoCode}
-              </div>
-              <div className="text-white font-afacad text-sm">
-                EXP {expirationDate}
-              </div>
-            </div>
+        <div className="mt-4 flex items-center justify-start gap-3">
+          <div className="flex items-center gap-2 text-sm text-white/70">
+            <span className="inline-flex items-center rounded-full bg-white/5 px-3 py-1 font-medium">
+              {promotion.discountType === 'percentage'
+                ? `${promotion.discountValue}% off`
+                : `$${promotion.discountValue} off`}
+            </span>
+            <span className="text-white/30">•</span>
+            <span>Limited time offer</span>
           </div>
         </div>
       </div>
-    </div>
+    </article>
   );
 }
-

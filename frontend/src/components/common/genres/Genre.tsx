@@ -28,7 +28,7 @@ export default function Genre({ text, imageUrl }: GenreProps) {
   const imageSrc = imageUrl || getGenreImage(text);
 
   return (
-    <a href={`/movies?=${text}`}>
+    <a href={`/movies?genres=${encodeURIComponent(text)}`}>
       <button
         className="relative w-64 h-32 border-2 border-white/60 hover:border-acm-pink text-white overflow-hidden rounded-lg duration-200 group hover:cursor-pointer transition-all hover:scale-105"
         title={text}

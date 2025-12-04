@@ -18,6 +18,10 @@ export default function NavBar() {
   // Get authentication state
   const { isAuthenticated, user } = useAuth();
 
+  const isAdmin =
+    typeof window !== 'undefined' &&
+    (localStorage.getItem('adminToken') || sessionStorage.getItem('adminToken'));
+
   // When user clicks search button or presses Enter, build URL with all search parameters
   const handleSearch = () => {
     const params = new URLSearchParams();
@@ -56,12 +60,18 @@ export default function NavBar() {
           <div className="flex items-center space-x-2 sm:space-x-4 flex-1">
             {/* Brand Logo */}
             <div className="flex-shrink-0 flex items-center">
-              <Link
-                href="/"
-                className="text-2xl sm:text-3xl lg:text-4xl acm-gradient font-pacifico leading-none transform -translate-y-1 transition-all duration-200 hover:drop-shadow-[0_0_25px_rgba(255,71,139,1)] hover:-translate-y-1.5 cursor-pointer"
-              >
-                acm
-              </Link>
+              {isAdmin ? (
+                <span className="text-2xl sm:text-3xl lg:text-4xl acm-gradient font-pacifico leading-none transform -translate-y-1 transition-all duration-200 cursor-default select-none">
+                  acm
+                </span>
+              ) : (
+                <Link
+                  href="/"
+                  className="text-2xl sm:text-3xl lg:text-4xl acm-gradient font-pacifico leading-none transform -translate-y-1 transition-all duration-200 hover:drop-shadow-[0_0_25px_rgba(255,71,139,1)] hover:-translate-y-1.5 cursor-pointer"
+                >
+                  acm
+                </Link>
+              )}
             </div>
 
             {/* Search Bar - Always visible, responsive width */}
