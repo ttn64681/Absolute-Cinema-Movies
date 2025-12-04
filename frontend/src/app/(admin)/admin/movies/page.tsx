@@ -63,6 +63,7 @@ export default function AdminMoviesPage() {
 
     if (movie_id) {
       await deleteMovie(movie_id);
+      alert("Movie deleted.");
     } 
     
     const updatedMovies = movies.filter((movie) => movie.movie_id !== movie_id);

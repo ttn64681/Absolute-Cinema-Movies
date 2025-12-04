@@ -135,12 +135,20 @@ export default function NavBar() {
 
             {/* Authentication Actions */}
             {!isAuthenticated ? (
-              <Link
-                href="/auth/register"
-                className="border border-pink-500 text-pink-500 hover:bg-pink-500 hover:text-white px-3 py-1 sm:px-4 rounded-md transition-all duration-200 font-medium text-sm sm:text-base cursor-pointer"
-              >
-                Join
-              </Link>
+              <div className="flex flex-row gap-5">
+                <Link
+                  href="/auth/register"
+                  className="border border-acm-pink text-acm-pink hover:opacity-60 hover:underline px-3 py-1 sm:px-4 rounded-md transition-all duration-200 font-medium text-sm sm:text-base cursor-pointer"
+                >
+                  Sign Up
+                </Link>
+                <Link
+                  href="/auth/login"
+                  className="bg-pink-500 border border-pink-500 text-white hover:opacity-60 hover:underline px-3 py-1 sm:px-4 rounded-md transition-all duration-200 font-medium text-sm sm:text-base cursor-pointer"
+                >
+                  Log In
+                </Link>
+              </div>
             ) : (
               <div className="text-white text-sm sm:text-base font-medium">Hi, {user?.firstName || 'User'}</div>
             )}
