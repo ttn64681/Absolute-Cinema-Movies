@@ -169,29 +169,6 @@ function AdminUsersPage() {
       </div>
 
       <div className="max-w-[65rem] mx-auto px-4">
-        {/* Administrators */}
-        <div className="mb-10">
-          <h2 className="text-xl mb-3">Administrators</h2>
-          {isLoading ? (
-            <div className="text-center py-8 text-white/60">Loading...</div>
-          ) : error ? (
-            <div className="text-center py-8 text-red-400">{error}</div>
-          ) : (
-            <div className="rounded-md overflow-hidden h-48 overflow-y-auto" style={{ backgroundColor: '#242424' }}>
-              {adminList.length === 0 ? (
-                <div className="text-center py-8 text-white/60">No administrators found</div>
-              ) : (
-                adminList.map((admin) => (
-                  <div key={admin.id} className="flex items-center justify-between px-5 py-4 border-b border-white/10">
-                    <div className="flex-1">
-                      <span>{admin.email}</span>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          )}
-        </div>
 
         {/* Members */}
         <div className="mb-16">
@@ -201,7 +178,7 @@ function AdminUsersPage() {
           ) : error ? (
             <div className="text-center py-8 text-red-400">{error}</div>
           ) : (
-            <div className="rounded-md overflow-hidden h-48 overflow-y-auto" style={{ backgroundColor: '#242424' }}>
+            <div className="rounded-md overflow-hidden h-100 overflow-y-auto" style={{ backgroundColor: '#242424' }}>
               {memberList.length === 0 ? (
                 <div className="text-center py-8 text-white/60">No members found</div>
               ) : (
@@ -236,6 +213,31 @@ function AdminUsersPage() {
               )}
             </div>
           )}
+        </div>
+
+        {/* Administrators */}
+          <div className="mb-10">
+            <h2 className="text-xl mb-3">Administrators</h2>
+            {isLoading ? (
+              <div className="text-center py-8 text-white/60">Loading...</div>
+            ) : error ? (
+              <div className="text-center py-8 text-red-400">{error}</div>
+            ) : (
+              <div className="rounded-md overflow-hidden h-48 overflow-y-auto" style={{ backgroundColor: '#242424' }}>
+                {adminList.length === 0 ? (
+                  <div className="text-center py-8 text-white/60">No administrators found</div>
+                ) : (
+                  adminList.map((admin) => (
+                    <div key={admin.id} className="flex items-center justify-between px-5 py-4 border-b border-white/10">
+                      <div className="flex-1">
+                        <span>{admin.email}</span>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+              
+            )}
         </div>
       </div>
       <div style={{ height: '80px' }}></div>

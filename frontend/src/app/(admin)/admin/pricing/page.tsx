@@ -266,7 +266,7 @@ export default function AdminPricingPage() {
         {/* const formattedExpirationDate = `${editingPromo.expirationDate.substring(5, 7)}/${editingPromo.expirationDate.substring(8, 10)}/${editingPromo.expirationDate.substring(0, 4)}`; */}
         <div className="mb-16">
           <div className="text-xl font-afacad mb-3">Promotions</div>
-          <div className="rounded-md overflow-hidden shadow-lg h-48 overflow-y-auto bg-[#242424]">
+          <div className="rounded-md overflow-hidden shadow-lg h-80 overflow-y-auto bg-[#242424]">
             {(loading && !isAdding && loadingPromoId == null) ? <div className="flex justify-center items-center h-48"><Spinner size="md" color="pink" /></div> : promotions.map((promo) => (
                 <div key={promo.id} className="flex items-center justify-between px-5 py-4 border-b border-white/10">
                   <div className="flex-1 font-afacad flex items-center gap-4">
