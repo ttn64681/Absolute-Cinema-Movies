@@ -1,15 +1,15 @@
 'use client';
 
 import Image from 'next/image';
-import { BackendPromotion } from '@/types/promotion';
+import { FullPromo } from '@/hooks/useHomePromotions';
 import { formatDiscountForSmallPromo, formatExpirationDate } from '@/utils/promotion';
 
 interface PromoCardProps {
-  promotion: BackendPromotion;
+  promotion: FullPromo;
 }
 
 export default function PromoCard({ promotion }: PromoCardProps) {
-  const discountText = formatDiscountForSmallPromo(promotion);
+  // const discountText = formatDiscountForSmallPromo(promotion);
   const expirationDate = formatExpirationDate(promotion.expirationDate);
 
   return (
@@ -17,7 +17,7 @@ export default function PromoCard({ promotion }: PromoCardProps) {
       {/* Left: image strip */}
       <div className="relative w-64 h-40 shrink-0 overflow-hidden">
         <Image
-          src={promotion.imageLink || '/cinema_seats.jpg'}
+          src={promotion.imageUrl || '/cinema_seats.jpg'}
           alt={promotion.title}
           fill
           className="object-cover"
@@ -25,7 +25,7 @@ export default function PromoCard({ promotion }: PromoCardProps) {
         />
         <div className="absolute inset-0 bg-black/35" />
         <div className="absolute top-3 left-3 inline-flex items-center gap-2 rounded-full bg-black/60 px-3 py-1 text-[11px] font-semibold text-white/90 backdrop-blur-sm">
-          <span className="text-acm-pink uppercase tracking-wide">{discountText}</span>
+          <span className="text-acm-pink uppercase tracking-wide">{promotion.discount}</span>
         </div>
       </div>
 
@@ -49,9 +49,7 @@ export default function PromoCard({ promotion }: PromoCardProps) {
         <div className="mt-4 flex items-center justify-start gap-3">
           <div className="flex items-center gap-2 text-sm text-white/70">
             <span className="inline-flex items-center rounded-full bg-white/5 px-3 py-1 font-medium">
-              {promotion.discountType === 'percentage'
-                ? `${promotion.discountValue}% off`
-                : `$${promotion.discountValue} off`}
+              {promotion.discountTag}
             </span>
             <span className="text-white/30">•</span>
             <span>Limited time offer</span>

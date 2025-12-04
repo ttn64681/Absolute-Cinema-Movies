@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { promotionClient } from '@/clients/promotionClient';
-import { BackendPromotion, PromotionStatus } from '@/types/promotion';
-import { formatDiscountForSmallPromo } from '@/utils/promotion';
+import { BackendPromotion, DiscountType, PromotionStatus } from '@/types/promotion';
+import { formatDiscount, formatDiscountForSmallPromo } from '@/utils/promotion';
 
 interface HeroPromo {
   id: number;
@@ -18,6 +18,18 @@ interface SmallPromoData {
   discount: string;
   promo: string;
   imageUrl?: string;
+}
+
+export interface FullPromo {
+  id: number;
+  promoCode: string;
+  title: string;
+  description: string;
+  imageUrl: string;
+  type: DiscountType;
+  discount: string;
+  discountTag: string;
+  expirationDate: string;
 }
 
 /**
@@ -35,6 +47,7 @@ interface SmallPromoData {
 export function useHomePromotions() {
   const [heroPromos, setHeroPromos] = useState<HeroPromo[]>([]);
   const [smallPromos, setSmallPromos] = useState<SmallPromoData[]>([]);
+  const [fullPromos, setFullPromos] = useState<FullPromo[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -68,14 +81,30 @@ export function useHomePromotions() {
           imageUrl: p.imageLink,
         }));
 
+        // Transform to FullPromo format
+        const fullPromosData = activePromotions.map((p: BackendPromotion) => ({
+          id: p.id,
+          promoCode: p.promoCode,
+          title: p.title,
+          description: p.description,
+          imageUrl: p.imageLink,
+          type: p.discountType,
+          discount: formatDiscountForSmallPromo(p),
+          discountTag: formatDiscount(p),
+          expirationDate: p.expirationDate,
+        }))
+
         setHeroPromos(heroPromosData);
         setSmallPromos(smallPromosData);
+        setFullPromos(fullPromosData);
+        
       } catch (err) {
         console.error('Error fetching promotions:', err);
         const errorMessage = err instanceof Error ? err.message : 'Failed to load promotions...';
         setError(errorMessage);
         setHeroPromos([]);
         setSmallPromos([]);
+        setFullPromos([]);
       } finally {
         setIsLoading(false);
       }
@@ -87,6 +116,7 @@ export function useHomePromotions() {
   return {
     heroPromos,
     smallPromos,
+    fullPromos,
     isLoading,
     error,
   };
