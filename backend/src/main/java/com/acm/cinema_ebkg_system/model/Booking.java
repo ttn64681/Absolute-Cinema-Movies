@@ -5,8 +5,6 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import com.acm.cinema_ebkg_system.model.Promotion;
-
 /**
  * Booking Entity - Represents a user's booking for a movie show
  * 
@@ -18,7 +16,7 @@ import com.acm.cinema_ebkg_system.model.Promotion;
  * - Links to User (many bookings belong to one user)
  * - Links to Promotion (optional promotional discount)
  * - Has many tickets (one booking can have multiple tickets)
- * - Tracks total amount and booking status
+ * - Tracks total amount
  */
 @Entity
 @Table(name = "booking")
@@ -46,12 +44,12 @@ public class Booking {
     // Many-to-one relationship with Promotion (optional)
     // Many bookings can use one promotion
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "promotion_id", nullable = true)
+    @JoinColumn(name = "promotion_id", referencedColumnName = "id", nullable = true)
     @JsonIgnoreProperties({"bookings"})
     private Promotion promotion;
     
-    // Payment ID - nullable for now (can be set later when payment is processed)
-    @Column(name = "payment_id", nullable = true)
+    // Payment Card ID - nullable for now (can be set later when payment is processed)
+    @Column(name = "payment_card_id", nullable = true)
     private Long paymentId;
     
     // Number of tickets in this booking
@@ -61,10 +59,6 @@ public class Booking {
     // Total amount for this booking
     @Column(name = "total_amount", nullable = false, precision = 10, scale = 2)
     private java.math.BigDecimal totalAmount;
-    
-    // Booking status
-    @Column(name = "status", nullable = false, length = 20)
-    private String status = "pending"; // pending, confirmed, cancelled
     
     // One-to-many relationship with Ticket
     // One booking has many tickets
@@ -123,10 +117,6 @@ public class Booking {
         return totalAmount;
     }
 
-    public String getStatus() {
-        return status;
-    }
-
     public List<Ticket> getTickets() {
         return tickets;
     }
@@ -166,10 +156,6 @@ public class Booking {
 
     public void setTotalAmount(java.math.BigDecimal totalAmount) {
         this.totalAmount = totalAmount;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
     }
 
     public void setTickets(List<Ticket> tickets) {

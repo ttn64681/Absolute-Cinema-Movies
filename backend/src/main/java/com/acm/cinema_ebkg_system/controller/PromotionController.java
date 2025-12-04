@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.acm.cinema_ebkg_system.dto.promotion.PromotionDTO;
@@ -92,6 +93,20 @@ public class PromotionController {
             return ResponseEntity.ok("Promotion deleted successfully");
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Error deleting promotion: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Validate promo code for checkout
+     * GET /api/promotion/validate?promoCode=CODE
+     */
+    @GetMapping("/validate")
+    public ResponseEntity<?> validatePromoCode(@RequestParam String promoCode) {
+        try {
+            java.util.Map<String, Object> result = promotionService.validatePromoCode(promoCode);
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Error validating promo code: " + e.getMessage());
         }
     }
 }

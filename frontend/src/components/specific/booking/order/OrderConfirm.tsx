@@ -92,8 +92,11 @@ export default function OrderConfirm({
 
             <div className="mt-6 flex gap-4">
               <div className="w-24 h-36 rounded-xl overflow-hidden bg-gray-900 border border-white/5">
-                {/* TODO: Get poster from database */}
-                <img src="/poster_godzilla.jpg" alt={movieTitle} className="w-full h-full object-cover" />
+                {moviePoster ? (
+                  <img src={moviePoster} alt={movieTitle} className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-white/40 text-xs">No Image</div>
+                )}
               </div>
               <div className="flex-1">
                 <p className="font-semibold leading-tight mt-1">{movieTitle}</p>

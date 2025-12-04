@@ -64,6 +64,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 
                 // Step 4: Extract role from token
                 String role = jwtUtil.getRoleFromToken(token);
+                System.out.println("JwtAuthenticationFilter - Request: " + request.getRequestURI() + ", Role: " + role);
                 
                 // Step 5: Check if user is not already authenticated
                 if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
@@ -73,8 +74,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     if ("ADMIN".equals(role)) {
                         authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
                         authorities.add(new SimpleGrantedAuthority("ROLE_USER")); // Admins can also access user routes
+                        System.out.println("JwtAuthenticationFilter - Admin authenticated with ROLE_ADMIN");
                     } else {
                         authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
+                        System.out.println("JwtAuthenticationFilter - User authenticated with ROLE_USER");
                     }
                     
                     // Create authentication token for Spring Security

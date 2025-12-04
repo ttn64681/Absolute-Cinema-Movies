@@ -137,7 +137,7 @@ function SeatingPageContent() {
           console.log('Reservation started - timer should now be visible');
           
           // Navigate to ticket-age page with showId
-          router.push(`/booking/ticket-age?showId=${showId}&seats=${selectedSeats.length}&seatIds=${selectedSeats.join(',')}&title=${encodeURIComponent(movieTitle)}&date=${encodeURIComponent(date)}&time=${encodeURIComponent(time)}`);
+          router.push(`/booking/ticket-age?showId=${showId}&movieId=${movieIdParam || ''}&seats=${selectedSeats.length}&seatIds=${selectedSeats.join(',')}&title=${encodeURIComponent(movieTitle)}&date=${encodeURIComponent(date)}&time=${encodeURIComponent(time)}`);
         } else {
           alert('Failed to reserve seats. Please try again.');
         }

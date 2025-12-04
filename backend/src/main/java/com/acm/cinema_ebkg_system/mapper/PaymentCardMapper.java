@@ -15,11 +15,12 @@ import com.acm.cinema_ebkg_system.util.PaymentEncryptionUtil;
 public class PaymentCardMapper {
     
     /**
-     * Convert PaymentCard entity to PaymentCardResponseDTO with masked card number
+     * Convert PaymentCard entity to PaymentCardResponseDTO with masked or unmasked card number
      * @param paymentCard - PaymentCard entity (may have encrypted or decrypted card number)
-     * @return PaymentCardResponseDTO with masked card number
+     * @param maskCardNumber - If true, mask card number (show only last 4 digits). If false, return full decrypted number.
+     * @return PaymentCardResponseDTO with masked or unmasked card number
      */
-    public static PaymentCardResponseDTO toResponseDTO(PaymentCard paymentCard) {
+    public static PaymentCardResponseDTO toResponseDTO(PaymentCard paymentCard, boolean maskCardNumber) {
         PaymentCardResponseDTO dto = new PaymentCardResponseDTO();
         
         dto.setId(paymentCard.getId());
@@ -29,10 +30,23 @@ public class PaymentCardMapper {
         dto.setCardholderName(paymentCard.getCardholderName());
         dto.setIsDefault(paymentCard.getIsDefault());
         
-        // Mask card number - show only last 4 digits
+        // Set card number (masked or unmasked based on parameter)
         String cardNumber = paymentCard.getCardNumber();
-        String maskedCardNumber = maskCardNumber(cardNumber);
-        dto.setCardNumber(maskedCardNumber);  // Set masked value in cardNumber field for frontend compatibility
+        if (maskCardNumber) {
+            String masked = maskCardNumberValue(cardNumber);
+            dto.setCardNumber(masked);  // Set masked value in cardNumber field for frontend compatibility
+        } else {
+            // Return full decrypted card number (for checkout auto-fill)
+            String decrypted = cardNumber;
+            try {
+                decrypted = PaymentEncryptionUtil.decryptCardNumber(cardNumber);
+            } catch (Exception e) {
+                // Already decrypted or invalid format - use as is
+                decrypted = cardNumber;
+            }
+            // Remove spaces for consistency
+            dto.setCardNumber(decrypted.replaceAll("\\s+", ""));
+        }
         
         // Set billing address fields from associated Address entity
         if (paymentCard.getAddress() != null) {
@@ -47,12 +61,21 @@ public class PaymentCardMapper {
     }
     
     /**
+     * Convert PaymentCard entity to PaymentCardResponseDTO with masked card number (default behavior)
+     * @param paymentCard - PaymentCard entity (may have encrypted or decrypted card number)
+     * @return PaymentCardResponseDTO with masked card number
+     */
+    public static PaymentCardResponseDTO toResponseDTO(PaymentCard paymentCard) {
+        return toResponseDTO(paymentCard, true);  // Default to masked for security
+    }
+    
+    /**
      * Mask card number to show only last 4 digits
      * Handles both encrypted and decrypted card numbers
      * @param cardNumber - Card number (may be encrypted, decrypted, or null)
      * @return Masked card number (e.g., "**** **** **** 1234")
      */
-    private static String maskCardNumber(String cardNumber) {
+    private static String maskCardNumberValue(String cardNumber) {
         if (cardNumber == null || cardNumber.isEmpty()) {
             return "**** **** **** ****";
         }

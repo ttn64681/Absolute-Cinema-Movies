@@ -3,6 +3,7 @@ package com.acm.cinema_ebkg_system.model;
 import jakarta.persistence.*;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * Show Seat Entity - Represents individual seats for each movie show
@@ -52,11 +53,11 @@ public class ShowSeat {
     @Column(name = "is_available", nullable = false)
     private Boolean isAvailable = true;
     
-    // One-to-one relationship with TicketSeat
-    // One seat is linked to exactly one ticket (show_seat_id is UNIQUE in ticket_seat table)
-    @OneToOne(mappedBy = "showSeat", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JsonIgnoreProperties({"showSeat"})
-    private TicketSeat ticketSeat;
+    // One-to-many relationship with Ticket
+    // One seat can be linked to multiple tickets (via show_seat_id foreign key in ticket table)
+    @OneToMany(mappedBy = "showSeat", fetch = FetchType.LAZY)
+    @JsonIgnoreProperties({"showSeat", "booking"})
+    private List<Ticket> tickets;
     
     // Timestamp when record was created
     @Column(name = "created_at")
@@ -123,8 +124,8 @@ public class ShowSeat {
         return isAvailable;
     }
 
-    public TicketSeat getTicketSeat() {
-        return ticketSeat;
+    public List<Ticket> getTickets() {
+        return tickets;
     }
 
     public LocalDateTime getCreatedAt() {
@@ -164,8 +165,8 @@ public class ShowSeat {
         this.isAvailable = isAvailable;
     }
 
-    public void setTicketSeat(TicketSeat ticketSeat) {
-        this.ticketSeat = ticketSeat;
+    public void setTickets(List<Ticket> tickets) {
+        this.tickets = tickets;
     }
 
     public void setCreatedAt(LocalDateTime createdAt) {

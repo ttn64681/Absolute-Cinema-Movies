@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
  * Key Features:
  * - Links to Booking (many tickets belong to one booking)
  * - Links to TicketCategory (ticket type and pricing)
- * - Associates with ShowSeats via TicketSeat junction table
+ * - Associates with ShowSeats via show_seat_id foreign key
  * - Tracks ticket price at time of purchase
  */
 @Entity
@@ -43,11 +43,12 @@ public class Ticket {
     @Column(name = "tic_type", nullable = false)
     private TicketType ticType;
     
-    // One-to-one relationship with TicketSeat
-    // One ticket is linked to exactly one seat (ticket_id is UNIQUE in ticket_seat table)
-    @OneToOne(mappedBy = "ticket", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JsonIgnoreProperties({"ticket"})
-    private TicketSeat ticketSeat;
+    // Many-to-one relationship with ShowSeat
+    // One ticket is linked to exactly one seat via show_seat_id foreign key
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "show_seat_id", nullable = true)
+    @JsonIgnoreProperties({"tickets", "movieShow", "createdAt", "updatedAt"})
+    private ShowSeat showSeat;
     
     
     // Timestamp when record was created
@@ -62,11 +63,11 @@ public class Ticket {
     public Ticket() {}
 
     // All-args constructor
-    public Ticket(Long id, Booking booking, TicketType ticType, TicketSeat ticketSeat, LocalDateTime createdAt, LocalDateTime updatedAt) {
+    public Ticket(Long id, Booking booking, TicketType ticType, ShowSeat showSeat, LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
         this.booking = booking;
         this.ticType = ticType;
-        this.ticketSeat = ticketSeat;
+        this.showSeat = showSeat;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
     }
@@ -95,8 +96,8 @@ public class Ticket {
         return ticType;
     }
 
-    public TicketSeat getTicketSeat() {
-        return ticketSeat;
+    public ShowSeat getShowSeat() {
+        return showSeat;
     }
 
     public LocalDateTime getCreatedAt() {
@@ -120,8 +121,8 @@ public class Ticket {
         this.ticType = ticType;
     }
 
-    public void setTicketSeat(TicketSeat ticketSeat) {
-        this.ticketSeat = ticketSeat;
+    public void setShowSeat(ShowSeat showSeat) {
+        this.showSeat = showSeat;
     }
 
     public void setCreatedAt(LocalDateTime createdAt) {
