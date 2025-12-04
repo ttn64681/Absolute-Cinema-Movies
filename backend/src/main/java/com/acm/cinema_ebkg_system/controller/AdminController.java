@@ -97,8 +97,9 @@ public class AdminController {
             // Step 3: Create admin DTO using static factory method
             AuthResponse.UserDto adminDto = UserDtoFactory.fromAdmin(admin);
 
-            // Step 4: Return success response with tokens and admin data
+            // Step 4: Return success response w/ tokens, admin data, & role
             AuthResponse response = new AuthResponse(true, "Admin login successful", token, refreshToken, adminDto);
+            response.setRole("ADMIN");
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             AuthResponse response = new AuthResponse(false, e.getMessage());
@@ -137,12 +138,15 @@ public class AdminController {
      * @return ResponseEntity<List<Admin>> with all admin users
      */
     @GetMapping("/all")
-    public ResponseEntity<List<Admin>> getAllAdmins() {
+    public ResponseEntity<?> getAllAdmins() {
         try {
             List<Admin> admins = adminService.getAllAdmins();
             return ResponseEntity.ok(admins);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
+            System.err.println("Error fetching admins: " + e.getMessage());
+            e.printStackTrace();
+            AuthResponse response = new AuthResponse(false, "Failed to fetch admins: " + e.getMessage());
+            return ResponseEntity.status(org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
 

@@ -1,8 +1,9 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
 import { AdminMovie, PaginatedMovieResponse } from '@/types/admin';
-import { getMovieDetails, createNewMovie, editExistingMovie } from '@/clients/adminMovieClient';
+import { getMovieDetails, createNewMovie, editExistingMovie, deleteExistingMovie } from '@/clients/adminMovieClient';
 
+// Dummy movie data to use when there isn't a selected movie
 const dummyMovie: AdminMovie = {
   movie_id: 0,
   title: '',
@@ -37,18 +38,20 @@ const dummyMovie: AdminMovie = {
  */
 export function useAdminMovie(movieId: number) {
   const [selectedMovie, setMovie] = useState<AdminMovie>(dummyMovie);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [selectedMovieLoading, setSelectedMovieLoading] = useState(false);
+  const [selectedMovieError, setSelectedMovieError] = useState<string | null>(null);
+  const [refreshFlag, setRefreshFlag] = useState(0); 
 
   // get ALL movie information when the admin selects a movie to edit
   const fetchMovieInfo = async (movieId: number) => {
+
     // If the ID is 0, there is no selected movie. Don't bother calling the API.
     if (movieId == 0) {
       setMovie(dummyMovie);
       return;
     }
-    setIsLoading(true);
-    console.log('isLoading is ' + isLoading);
+    setSelectedMovieLoading(true);
+    console.log('isLoading is ' + selectedMovieLoading);
     try {
       const data = await getMovieDetails(movieId);
       if (data) {
@@ -57,44 +60,78 @@ export function useAdminMovie(movieId: number) {
     } catch (err) {
       console.error('Error fetching movies:', err);
       const errorMessage = err instanceof Error ? err.message : 'Failed to load movies';
-      setError(errorMessage);
+      setSelectedMovieError(errorMessage);
       setMovie(dummyMovie);
     } finally {
-      setIsLoading(false);
-      console.log('isLoading is ' + isLoading);
+      setSelectedMovieLoading(false);
     }
   };
 
   // Add a new movie
   const addMovie = async (movie: Partial<AdminMovie>) => {
-    const createdMovie = await createNewMovie(movie);
+    setSelectedMovieLoading(true);
+    try {
+      const createdMovie = await createNewMovie(movie);
+      if (createdMovie) {
+        console.log('Movie created successfully.');
+        return createdMovie.movie_id;
+      }
 
-    if (createdMovie) {
-      console.log('Movie created successfully.');
-      return true;
-    } else {
-      console.log('Failed to create new movie.');
-      return false;
+    } catch (error) {
+      console.error('Error creating movie:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to create movie';
+      setSelectedMovieError(errorMessage);
+      return null;
+    } finally {
+      setSelectedMovieLoading(false);
     }
   };
 
   // Edit an existing movie
   const editMovie = async (movie: Partial<AdminMovie>, movieId: number) => {
-    const updatedMovie = await editExistingMovie(movie, movieId);
+    setSelectedMovieLoading(true);
+    try {
+      const updatedMovie = await editExistingMovie(movie, movieId);
+      if (updatedMovie) {
+        console.log('Movie updated successfully.');
+        return updatedMovie.movie_id;
+      }
 
-    if (updatedMovie) {
-      console.log('Movie created successfully.');
-      return true;
-    } else {
-      console.log('Failed to create new movie.');
-      return false;
+    } catch (error) {
+      console.error('Error updating movie:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to update movie';
+      setSelectedMovieError(errorMessage);
+      return null;
+    } finally {
+      setSelectedMovieLoading(false);
     }
   };
 
-  // Fetch a movie when movieId changes
+  // Delete an (upcoming) movie
+  const deleteMovie = async (movieId: number) => {
+    setSelectedMovieLoading(true);
+    try {
+      const deleteStatus = await deleteExistingMovie(movieId);
+
+    } catch (error) {
+      console.error('Error deleting movie:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to delete movie';
+      setSelectedMovieError(errorMessage);
+      return null;
+    } finally {
+      setSelectedMovieLoading(false);
+    }
+  };
+
+  // Set a flag to fetch the movie data for the same selected movie after it has changed
+  const refreshMovie = () => {
+    setRefreshFlag(prev => prev + 1);
+  }
+
+  // Fetch movie data when the selected movie changes or movie data of the selected movie is changed
   useEffect(() => {
     fetchMovieInfo(movieId);
-  }, [movieId]);
+  }, [movieId, refreshFlag]);
 
-  return { selectedMovie, isLoading, error, addMovie, editMovie };
+  return { selectedMovie, selectedMovieLoading, selectedMovieError, addMovie, editMovie, deleteMovie, refreshMovie };
 }

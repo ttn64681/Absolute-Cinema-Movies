@@ -86,6 +86,7 @@ public class ShowSeatService {
         
         // Get all booked/reserved seats for this movie_show from show_seats table
         // We only need to check which seats are taken - all others are available by default
+        // Fetch all seats for the show
         List<ShowSeat> dbSeats = showSeatRepository.findByMovieShowId(showId);
         
         // Create a map of existing seats for quick lookup: "row+number" -> ShowSeat
@@ -560,10 +561,12 @@ public class ShowSeatService {
         LocalDateTime tenMinutesAgo = now.minus(10, ChronoUnit.MINUTES);
         
         // Find all reserved seats for this show that were reserved more than 10 minutes ago
+        // Fetch all seats for the show
         List<ShowSeat> allSeats = showSeatRepository.findByMovieShowId(showId);
         List<ShowSeat> expiredSeats = new ArrayList<>();
         
         for (ShowSeat seat : allSeats) {
+            // Access only the fields we need
             if (!seat.getIsAvailable() && seat.getReservedAt() != null) {
                 // Check if reservation is older than 10 minutes
                 if (seat.getReservedAt().isBefore(tenMinutesAgo)) {
@@ -577,6 +580,10 @@ public class ShowSeatService {
         }
         
         if (!expiredSeats.isEmpty()) {
+            // Save seats
+            for (ShowSeat seat : expiredSeats) {
+                // Seat is already updated above
+            }
             showSeatRepository.saveAll(expiredSeats);
             updateAvailableSeatsCount(showId);
             System.out.println("Released " + expiredSeats.size() + " expired reservation(s) for showId: " + showId);

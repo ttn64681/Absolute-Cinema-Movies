@@ -27,6 +27,7 @@ export default function CheckoutButton({ tickets, seats, ticketsByCategory }: pr
 
     // Get all params to pass to checkout page
     const showId = searchParams.get('showId');
+    const movieId = searchParams.get('movieId');
     const seatIds = searchParams.get('seatIds');
     const title = searchParams.get('title') || '';
     const date = searchParams.get('date') || '';
@@ -38,7 +39,7 @@ export default function CheckoutButton({ tickets, seats, ticketsByCategory }: pr
     }
 
     // Build checkout URL with all necessary params
-    const checkoutUrl = `/booking/checkout?showId=${showId}&seatIds=${seatIds}&title=${encodeURIComponent(title)}&date=${encodeURIComponent(date)}&time=${encodeURIComponent(time)}&adult=${ticketsByCategory[0]}&child=${ticketsByCategory[1]}&senior=${ticketsByCategory[2]}&seats=${seats}`;
+    const checkoutUrl = `/booking/checkout?showId=${showId}&movieId=${movieId || ''}&seatIds=${seatIds}&title=${encodeURIComponent(title)}&date=${encodeURIComponent(date)}&time=${encodeURIComponent(time)}&adult=${ticketsByCategory[0]}&child=${ticketsByCategory[1]}&senior=${ticketsByCategory[2]}&seats=${seats}`;
 
     // Check authentication before navigating
     if (!isLoading && !isAuthenticated) {

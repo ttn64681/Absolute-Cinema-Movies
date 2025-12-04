@@ -11,6 +11,9 @@ public class PaymentEncryptionUtil {
 
     public static String encryptCardNumber(String cardNumber) throws Exception {
         try {
+            if (KEY == null || KEY.isEmpty()) {
+                throw new Exception("AES_KEY environment variable is not set");
+            }
             SecretKeySpec key = new SecretKeySpec(hexStringToByteArray(KEY), "AES");
             Cipher cipher = Cipher.getInstance("AES");
             cipher.init(Cipher.ENCRYPT_MODE, key);
@@ -23,6 +26,9 @@ public class PaymentEncryptionUtil {
 
     public static String decryptCardNumber(String encryptedCardNumber) throws Exception {
         try {
+            if (KEY == null || KEY.isEmpty()) {
+                throw new Exception("AES_KEY environment variable is not set");
+            }
             SecretKeySpec key = new SecretKeySpec(hexStringToByteArray(KEY), "AES");
             Cipher cipher = Cipher.getInstance("AES");
             cipher.init(Cipher.DECRYPT_MODE, key);

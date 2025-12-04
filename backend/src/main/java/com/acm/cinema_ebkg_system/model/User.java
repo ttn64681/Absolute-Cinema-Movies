@@ -4,7 +4,6 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.ArrayList;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.acm.cinema_ebkg_system.enums.AddressType;
 import com.acm.cinema_ebkg_system.enums.UserStatus;
@@ -84,8 +83,10 @@ public class User {
     @Column(name = "password_reset_token_expires_at")
     private LocalDateTime passwordResetTokenExpiresAt;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonManagedReference
+    // Legacy PaymentInfo relationship - no longer used (replaced by PaymentCard)
+    // Ignored to prevent JPA from querying non-existent payment_info table
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JsonIgnore
     private List<PaymentInfo> paymentInfos = new ArrayList<>();
     
     // One-to-many relationship with Address

@@ -14,7 +14,7 @@ type Showtime = {
 interface ScheduleModalProps {
   isOpen: boolean;
   onClose: () => void;
-  //onSchedule: (date: string, time: string, showRoomId: number) => void;
+  onSchedule: (movieId: number) => void;
   movieId: number;
   movieTitle: string;
   //existingShowtimes?: Showtime[];
@@ -31,7 +31,7 @@ const SHOW_ROOMS = [
 export default function ScheduleModal({
   isOpen,
   onClose,
-  //nSchedule,
+  onSchedule,
   movieId,
   movieTitle,
 }: ScheduleModalProps) {
@@ -116,38 +116,11 @@ export default function ScheduleModal({
       // Send the movie show to backend and await response
       const movieShowStatus = await scheduleMovieShow(newMovieShow);
       if (movieShowStatus) {
-        alert("Movie show successfully scheduled.");
+        alert("Movie show for \" " + movieTitle + "\"  on " + selectedDate + " at " + selectedTime + " in Showroom " + selectedShowRoomId + " successfully scheduled.");
         onClose();
       } else {
         alert("Movie show schedule conflict. Check that there isn't another show at the same time in the same room.");
       }
-      
-
-      // Parse time string (e.g., "7:30 PM" -> time: "7:30", ampm: "PM")
-      /*const timeParts = selectedTime.trim().split(/\s+/);
-      const timeValue = timeParts[0];
-      const ampm = timeParts[1] || 'PM';
-
-      const roomName = SHOW_ROOMS.find(room => room.id === selectedShowRoomId)?.name || '';
-
-      // Create new showtime object
-      const newShowtime: Showtime = {
-        date: selectedDate,
-        time: timeValue,
-        ampm,
-        room: roomName,
-      };
-
-      // Add to local showtimes list immediately
-      setShowtimes((prev) => [...prev, newShowtime]);
-
-      // Save to parent component (which updates movie data)
-      onSchedule(selectedDate, selectedTime, selectedShowRoomId);
-
-      // Reset form fields after scheduling
-      setSelectedDate("");
-      setSelectedTime("");
-      setSelectedShowRoomId(null);*/
       
     }
   };

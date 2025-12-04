@@ -115,6 +115,8 @@ export const apiConfig = {
     // BOOKING ENDPOINTS
     bookings: {
       create: '/api/bookings/create',
+      getById: (bookingId: number) => `/api/bookings/${bookingId}`,
+      getUserOrders: '/api/bookings/user/orders',
     },
 
     // MOVIE SHOW ENDPOINTS
@@ -151,18 +153,28 @@ function isValidJWT(token: string | null): boolean {
 api.interceptors.request.use(
   (config) => {
     // Check both localStorage and sessionStorage for token
+    // Priority: adminToken (for admin endpoints) > token (for user endpoints)
+    const localAdminToken = localStorage.getItem('adminToken');
+    const sessionAdminToken = sessionStorage.getItem('adminToken');
+    const adminToken = localAdminToken || sessionAdminToken;
+    
     const localToken = localStorage.getItem('token');
     const sessionToken = sessionStorage.getItem('token');
     const token = localToken || sessionToken;
+    
+    // Use adminToken if available (for admin endpoints), otherwise use regular token
+    const tokenToUse = adminToken || token;
 
-    if (token) {
+    if (tokenToUse) {
       // Validate token format before sending
-      if (isValidJWT(token)) {
-        config.headers.Authorization = `Bearer ${token}`;
+      if (isValidJWT(tokenToUse)) {
+        config.headers.Authorization = `Bearer ${tokenToUse}`;
       } else {
         console.warn('Invalid JWT token format detected. Token will not be sent.');
-        console.warn('Token value:', token.substring(0, 20) + '...');
+        console.warn('Token value:', tokenToUse.substring(0, 20) + '...');
         // Clear invalid token
+        if (localAdminToken) localStorage.removeItem('adminToken');
+        if (sessionAdminToken) sessionStorage.removeItem('adminToken');
         if (localToken) localStorage.removeItem('token');
         if (sessionToken) sessionStorage.removeItem('token');
       }

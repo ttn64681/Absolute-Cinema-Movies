@@ -1,6 +1,7 @@
 package com.acm.cinema_ebkg_system.controller;
 
 import com.acm.cinema_ebkg_system.dto.booking.CreateBookingRequest;
+import com.acm.cinema_ebkg_system.dto.booking.OrderResponseDTO;
 import com.acm.cinema_ebkg_system.model.Booking;
 import com.acm.cinema_ebkg_system.service.BookingService;
 import com.acm.cinema_ebkg_system.util.JwtUtil;
@@ -11,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -76,6 +78,118 @@ public class BookingController {
             // Token invalid or expired
         }
         return null;
+    }
+    
+    /**
+     * Complete payment for a booking
+     * Updates payment_info with actual card details
+     * POST /api/bookings/{bookingId}/complete-payment
+     */
+    @PostMapping("/{bookingId}/complete-payment")
+    public ResponseEntity<Map<String, Object>> completePayment(
+            @PathVariable Long bookingId,
+            @RequestBody Map<String, Object> paymentData,
+            HttpServletRequest httpRequest) {
+        
+        try {
+            Long userId = getUserIdFromRequest(httpRequest);
+            if (userId == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(createErrorResponse("User not authenticated"));
+            }
+            
+            // Extract payment data
+            String cardNumber = (String) paymentData.get("cardNumber");
+            String expirationDate = (String) paymentData.get("expirationDate");
+            String cardholderName = (String) paymentData.get("cardholderName");
+            String billingAddress = (String) paymentData.get("billingAddress");
+            
+            // Safely extract promotionId - only if it's a valid number
+            Long promotionId = null;
+            Object promoIdObj = paymentData.get("promotionId");
+            if (promoIdObj != null && !promoIdObj.toString().equals("null") && !promoIdObj.toString().isEmpty()) {
+                try {
+                    promotionId = Long.parseLong(promoIdObj.toString());
+                    // Verify promotion exists before proceeding
+                    if (promotionId <= 0) {
+                        promotionId = null;
+                    }
+                } catch (NumberFormatException e) {
+                    promotionId = null;
+                }
+            }
+            
+            java.math.BigDecimal finalTotalAmount = paymentData.get("finalTotalAmount") != null
+                ? new java.math.BigDecimal(paymentData.get("finalTotalAmount").toString())
+                : null;
+            
+            // Complete payment
+            Booking booking = bookingService.completePayment(bookingId, userId, cardNumber, 
+                expirationDate, cardholderName, billingAddress, promotionId, finalTotalAmount);
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "Payment completed successfully");
+            response.put("bookingId", booking.getBookingId());
+            response.put("totalAmount", booking.getTotalAmount());
+            
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(createErrorResponse(e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(createErrorResponse("Failed to complete payment: " + e.getMessage()));
+        }
+    }
+    
+    /**
+     * Get booking details by booking ID
+     * GET /api/bookings/{bookingId}
+     * Used for order confirmation page
+     */
+    @GetMapping("/{bookingId}")
+    public ResponseEntity<?> getBookingById(
+            @PathVariable Long bookingId,
+            HttpServletRequest httpRequest) {
+        try {
+            Long userId = getUserIdFromRequest(httpRequest);
+            if (userId == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(createErrorResponse("User not authenticated"));
+            }
+            
+            OrderResponseDTO booking = bookingService.getBookingById(bookingId, userId);
+            return ResponseEntity.ok(booking);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(createErrorResponse(e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(createErrorResponse("Failed to fetch booking: " + e.getMessage()));
+        }
+    }
+    
+    /**
+     * Get all paid orders for the authenticated user
+     * GET /api/bookings/user/orders
+     * Returns list of orders ordered by creation date descending (most recent first)
+     */
+    @GetMapping("/user/orders")
+    public ResponseEntity<?> getUserOrders(HttpServletRequest httpRequest) {
+        try {
+            Long userId = getUserIdFromRequest(httpRequest);
+            if (userId == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(createErrorResponse("User not authenticated"));
+            }
+            
+            List<OrderResponseDTO> orders = bookingService.getUserOrders(userId);
+            return ResponseEntity.ok(orders);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(createErrorResponse("Failed to fetch orders: " + e.getMessage()));
+        }
     }
     
     /**

@@ -6,6 +6,7 @@ import com.acm.cinema_ebkg_system.dto.auth.RegisterRequest;
 import com.acm.cinema_ebkg_system.dto.auth.ResetPasswordRequest;
 import com.acm.cinema_ebkg_system.mapper.UserDtoFactory;
 import com.acm.cinema_ebkg_system.model.User;
+import com.acm.cinema_ebkg_system.model.Admin;
 import com.acm.cinema_ebkg_system.model.Address;
 import com.acm.cinema_ebkg_system.model.PaymentCard;
 import com.acm.cinema_ebkg_system.enums.AddressType;
@@ -50,6 +51,9 @@ public class AuthService {
 
     @Autowired
     private EmailService emailService;
+
+    @Autowired
+    private AdminService adminService;
 
     @Autowired
     private JwtUtil jwtUtil;
@@ -148,7 +152,7 @@ public class AuthService {
         }
 
         // Step 7: Return success response with verification token for testing
-        return new AuthResponse(true, "Registration successful! Verification token: " + verificationToken);
+        return new AuthResponse(true, "Registration successful :D ! Verification token: " + verificationToken);
     }
 
     /**
@@ -172,7 +176,7 @@ public class AuthService {
         System.out.println("Login attempt - User: " + user.getEmail() + ", account_status: " + user.getAccountStatus());
         if (user.getAccountStatus() != UserStatus.active) {
             String message = user.getAccountStatus() == UserStatus.suspended 
-                ? "Your account has been suspended. Please contact support." 
+                ? "Your account has been suspended :C" 
                 : "Please verify your email before logging in. Check your inbox for the verification link.";
             return new AuthResponse(false, message);
         }
@@ -185,8 +189,10 @@ public class AuthService {
         // Step 4: Create user DTO using factory method (Factory Method pattern)
         AuthResponse.UserDto userDto = UserDtoFactory.fromUser(user);
 
-        // Step 5: Return success response with tokens and user data
-        return new AuthResponse(true, "Login successful", token, refreshToken, userDto);
+        // Step 5: Return success response w/ tokens, user data, & set role for frontend routing
+        AuthResponse response = new AuthResponse(true, "Login successful", token, refreshToken, userDto);
+        response.setRole("USER");
+        return response;
     }
 
     /**
@@ -194,34 +200,58 @@ public class AuthService {
      * 
      * Process Flow:
      * 1. Validate the provided refresh token and extract user information
-     * 2. Get user information from database
-     * 3. Generate a new access token
-     * 4. Create user DTO
+     * 2. Check role from token (USER or ADMIN)
+     * 3. Get user/admin information from database based on role
+     * 4. Generate a new access token with same role
+     * 5. Create user/admin DTO
      * 
      * @param refreshToken The refresh token to validate and use for generating new access token
-     * @return AuthResponse with new access token and user data
-     * @throws RuntimeException if refresh token is invalid or user not found
+     * @return AuthResponse with new access token and user/admin data
+     * @throws RuntimeException if refresh token is invalid or user/admin not found
      */
     public AuthResponse refreshToken(String refreshToken) {
         // Step 1: Validate refresh token and extract user information
         String email = jwtUtil.getUsernameFromToken(refreshToken);
         Long userId = jwtUtil.getUserIdFromToken(refreshToken);
         Boolean rememberMe = jwtUtil.getRememberMeFromToken(refreshToken);
+        String role = jwtUtil.getRoleFromToken(refreshToken);
 
-        // Step 2: Get user information from database
-        User user = userService.getUserById(userId);
-        if (user == null) {
-            return new AuthResponse(false, "User not found");
+        // Step 2: Check role and get user/admin information from database
+        if ("ADMIN".equals(role)) {
+            // Handle admin token refresh
+            Admin admin = adminService.getAdminById(userId);
+            if (admin == null) {
+                return new AuthResponse(false, "Admin not found");
+            }
+
+            // Step 3: Generate new access token with ADMIN role
+            String newToken = jwtUtil.generateToken(email, userId, "ADMIN", rememberMe != null ? rememberMe : false);
+
+            // Step 4: Create admin DTO using factory method
+            AuthResponse.UserDto adminDto = UserDtoFactory.fromAdmin(admin);
+
+            // Step 5: Return success response w/ new token, admin data, refresh token, & set role for frontend routing
+            AuthResponse response = new AuthResponse(true, "Token refreshed successfully", newToken, refreshToken, adminDto);
+            response.setRole("ADMIN");
+            return response;
+        } else {
+            // Handle regular user token refresh
+            User user = userService.getUserById(userId);
+            if (user == null) {
+                return new AuthResponse(false, "User not found");
+            }
+
+            // Step 3: Generate new access token w/ same user info and remember me preference
+            String newToken = jwtUtil.generateToken(email, userId, rememberMe != null ? rememberMe : false);
+
+            // Step 4: Create user DTO using factory method
+            AuthResponse.UserDto userDto = UserDtoFactory.fromUser(user);
+
+            // Step 5: Return new access token w/ user info & role (refresh token stays the same)
+            AuthResponse response = new AuthResponse(true, "Token refreshed successfully", newToken, refreshToken, userDto);
+            response.setRole("USER");
+            return response;
         }
-
-        // Step 3: Generate new access token with same user information and remember me preference
-        String newToken = jwtUtil.generateToken(email, userId, rememberMe != null ? rememberMe : false);
-
-        // Step 4: Create user DTO using factory method
-        AuthResponse.UserDto userDto = UserDtoFactory.fromUser(user);
-
-        // Step 5: Return new access token with user information (refresh token stays the same)
-        return new AuthResponse(true, "Token refreshed successfully", newToken, refreshToken, userDto);
     }
 
     /**
@@ -247,8 +277,10 @@ public class AuthService {
         // Step 3: Create user DTO using factory method
         AuthResponse.UserDto userDto = UserDtoFactory.fromUser(user);
         
-        // Step 4: Return success response with tokens
-        return new AuthResponse(true, "Email verified successfully! You can now use all features.", jwtToken, refreshToken, userDto);
+        // Step 4: Return success response w/ tokens & role
+        AuthResponse response = new AuthResponse(true, "Email verified successfully! You can now use all features.", jwtToken, refreshToken, userDto);
+        response.setRole("USER");
+        return response;
     }
 
     /**
@@ -260,7 +292,7 @@ public class AuthService {
      */
     public AuthResponse resendVerification(String email) {
         userService.resendVerificationEmail(email);
-        return new AuthResponse(true, "Verification email has been resent. Please check your inbox.");
+        return new AuthResponse(true, "Verification email has been resent!!! Please check your inbox.");
     }
 
     /**
@@ -277,7 +309,7 @@ public class AuthService {
      */
     public AuthResponse forgotPassword(String email) {
         userService.initiatePasswordReset(email);
-        return new AuthResponse(true, "Password reset email has been sent. Please check your inbox.");
+        return new AuthResponse(true, "Password reset email has been sent!!! Please check your inbox.");
     }
 
     /**
@@ -295,7 +327,7 @@ public class AuthService {
      */
     public AuthResponse resetPassword(ResetPasswordRequest request) {
         userService.resetPasswordWithToken(request.getToken(), request.getNewPassword());
-        return new AuthResponse(true, "Password has been reset successfully. You can now log in with your new password.");
+        return new AuthResponse(true, "Password has been reset successfully :D You can now log in with your new password.");
     }
 
     /**
@@ -307,9 +339,9 @@ public class AuthService {
     public AuthResponse checkEmail(String email) {
         boolean emailExists = userService.emailExists(email);
         if (emailExists) {
-            return new AuthResponse(false, "Email is already taken. Please use a different email address.");
+            return new AuthResponse(false, "Email is already taken :/ Please use a different email address.");
         } else {
-            return new AuthResponse(true, "Email is available.");
+            return new AuthResponse(true, "Email is available!");
         }
     }
 }

@@ -5,67 +5,16 @@ import Image from 'next/image';
 import { useMemo, useState } from 'react';
 import NavBar from '@/components/common/navBar/NavBar';
 import { useProfile } from '@/contexts/ProfileContext';
+import { useUserId } from '@/hooks/useUserId';
+import { useOrders } from '@/hooks/useOrders';
 import { OrderRow } from '@/types/order';
-
-const demoOrders: OrderRow[] = [
-  {
-    id: '1',
-    date: '9/9/25',
-    time: '9:00PM',
-    movie: 'Godzilla',
-    bookingNumber: '13077234087237',
-    ticketNumbers: '13077234087237',
-    showtime: '10/01/2025 2PM-3PM',
-    orderDate: '8/29/25',
-    posterUrl: '/poster_godzilla.jpg',
-    tickets: {
-      adult: { count: 3, price: 12.5 },
-      child: { count: 2, price: 8.0 },
-      senior: { count: 1, price: 10.0 },
-    },
-    bookingFee: 1.46,
-    paymentMethod: 'Mastercard **** **** **** 4383',
-  },
-  {
-    id: '2',
-    date: '9/5/25',
-    time: '9:00PM',
-    movie: 'The Batman',
-    bookingNumber: '13077234087238',
-    ticketNumbers: '13077234087238',
-    showtime: '9/5/25 9:00PM-11:00PM',
-    orderDate: '9/1/25',
-    posterUrl: '/TheBatmanPoster.jpg',
-    tickets: {
-      adult: { count: 2, price: 12.5 },
-      child: { count: 1, price: 8.0 },
-      senior: { count: 0, price: 10.0 },
-    },
-    bookingFee: 2.5,
-    paymentMethod: 'Visa **** **** **** 1234',
-  },
-  {
-    id: '3',
-    date: '8/29/25',
-    time: '9:00PM',
-    movie: 'Oldboy',
-    bookingNumber: '13077234087239',
-    ticketNumbers: '13077234087239',
-    showtime: '8/29/25 9:00PM-11:30PM',
-    orderDate: '8/25/25',
-    posterUrl: '/poster_oldboy.jpg',
-    tickets: {
-      adult: { count: 1, price: 12.5 },
-      child: { count: 0, price: 8.0 },
-      senior: { count: 0, price: 10.0 },
-    },
-    bookingFee: 1.5,
-    paymentMethod: 'Mastercard **** **** **** 5678',
-  },
-];
+import UserProfileSidebar from '@/components/specific/user/UserProfileSidebar';
+import UserNavTabs from '@/components/specific/user/UserNavTabs';
 
 export default function OrdersPage() {
   const { profilePicUrl } = useProfile();
+  const { userId } = useUserId();
+  const { orders, isLoading, error } = useOrders(userId);
   const [selectedOrder, setSelectedOrder] = useState<OrderRow | null>(null);
 
   const handleOrderClick = (order: OrderRow) => {
@@ -80,18 +29,39 @@ export default function OrdersPage() {
   const formatCurrency = (amount: number) => `$${amount.toFixed(2)}`;
 
   // Calculate pricing for the currently selected order
+  // Use backend totalAmount if available (includes discount), otherwise calculate
   const pricing = useMemo(() => {
-    if (!selectedOrder) return { ticketsSubtotal: 0, tax: 0, orderTotal: 0 };
+    if (!selectedOrder) return { ticketsSubtotal: 0, tax: 0, orderTotal: 0, discount: 0 };
 
+    // If backend provided totalAmount, use it (already includes discount)
+    if (selectedOrder.totalAmount !== undefined && selectedOrder.totalAmount > 0) {
+      // Calculate breakdown for display
+      const adultTotal = selectedOrder.tickets.adult.count * selectedOrder.tickets.adult.price;
+      const childTotal = selectedOrder.tickets.child.count * selectedOrder.tickets.child.price;
+      const seniorTotal = selectedOrder.tickets.senior.count * selectedOrder.tickets.senior.price;
+      const ticketsSubtotal = adultTotal + childTotal + seniorTotal;
+      const tax = ticketsSubtotal * 0.08; // 8% tax (matching checkout calculation)
+      const totalBeforeDiscount = ticketsSubtotal + tax + selectedOrder.bookingFee;
+      const discount = totalBeforeDiscount - selectedOrder.totalAmount;
+      
+      return { 
+        ticketsSubtotal, 
+        tax, 
+        orderTotal: selectedOrder.totalAmount, // Use backend total (includes discount)
+        discount: discount > 0 ? discount : 0 
+      };
+    }
+
+    // Fallback: calculate if backend total not available
     const adultTotal = selectedOrder.tickets.adult.count * selectedOrder.tickets.adult.price;
     const childTotal = selectedOrder.tickets.child.count * selectedOrder.tickets.child.price;
     const seniorTotal = selectedOrder.tickets.senior.count * selectedOrder.tickets.senior.price;
 
     const ticketsSubtotal = adultTotal + childTotal + seniorTotal;
-    const tax = ticketsSubtotal * 0.04; // 4% tax
+    const tax = ticketsSubtotal * 0.08; // 8% tax
     const orderTotal = ticketsSubtotal + tax + selectedOrder.bookingFee;
 
-    return { ticketsSubtotal, tax, orderTotal };
+    return { ticketsSubtotal, tax, orderTotal, discount: 0 };
   }, [selectedOrder]);
 
   return (
@@ -99,69 +69,56 @@ export default function OrdersPage() {
       <NavBar />
       <div className="h-30" />
 
-      {/* Tabs */}
-      <div className="flex items-center justify-center gap-10 mt-2 mb-18 font-red-rose text-[30px]">
-        <Link href="/user/profile" className="font-bold text-gray-300 hover:text-white transition-colors">
-          Account Info
-        </Link>
-        <Link href="/user/payments" className="font-bold text-gray-300 hover:text-white transition-colors">
-          Payment
-        </Link>
-        <Link href="/user/orders" className="relative font-bold text-acm-pink">
-          Order History
-          <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-acm-pink rounded-full" />
-        </Link>
-      </div>
+      <UserNavTabs activeTab="orders" />
 
-      <div className="max-w-6xl mx-auto px-6 pb-16 ml-20">
-        <div className="grid grid-cols-1 md:grid-cols-[250px_1fr] gap-10 items-start">
-          {/* Sidebar */}
-          <aside className="flex flex-col items-center gap-6 -mt-2 md:-mt-20">
-            <div className="relative">
-              <div className="rounded-full flex items-center justify-center w-[170px] h-[170px] bg-[#2B2B2B]">
-                {profilePicUrl ? (
-                  <Image
-                    src={profilePicUrl}
-                    alt="Profile"
-                    width={170}
-                    height={170}
-                    className="w-full h-full rounded-full object-cover"
-                    loading="lazy"
-                  />
-                ) : (
-                  <svg width="84" height="84" viewBox="0 0 24 24" fill="none" stroke="#EDEDED" strokeWidth="1.2">
-                    <circle cx="12" cy="8" r="4" />
-                    <path d="M3 21c2.2-4.2 6.1-6 9-6s6.8 1.8 9 6" />
-                  </svg>
-                )}
-              </div>
-            </div>
-            <button className="text-[#FF478B] hover:text-[#FF3290] font-afacad text-lg" type="button">
-              Log Out
-            </button>
-          </aside>
+      <div className="max-w-7xl mx-auto px-8 pb-16 mt-8">
+        <div className="grid grid-cols-1 md:grid-cols-[280px_1fr] gap-12 items-start">
+          <UserProfileSidebar profilePicUrl={profilePicUrl} />
 
           {/* Orders Table */}
           <section className="p-0">
-            <div className="grid grid-cols-3 font-afacad text-white text-2xl mb-4 px-2">
-              <div className="font-bold">Date</div>
-              <div className="font-bold">Time</div>
-              <div className="font-bold">Movie</div>
-            </div>
-
-            <div className="divide-y divide-white border-b border-white">
-              {demoOrders.map((order) => (
-                <div
-                  key={order.id}
-                  className="grid grid-cols-3 items-center py-6 px-2 font-afacad text-white text-xl cursor-pointer hover:bg-gray-500/20 transition-colors"
-                  onClick={() => handleOrderClick(order)}
-                >
-                  <div>{order.date}</div>
-                  <div>{order.time}</div>
-                  <div>{order.movie}</div>
+            {isLoading && (
+              <div className="text-center py-8">
+                <div className="text-white text-xl">Loading orders...</div>
+              </div>
+            )}
+            
+            {error && (
+              <div className="text-center py-8">
+                <div className="text-red-400 mb-4">{error}</div>
+              </div>
+            )}
+            
+            {!isLoading && !error && orders.length === 0 && (
+              <div className="text-center py-8">
+                <div className="text-white/60 mb-4">No orders found</div>
+                <div className="text-white/40">Your order history will appear here after you complete a booking.</div>
+              </div>
+            )}
+            
+            {!isLoading && !error && orders.length > 0 && (
+              <>
+                <div className="grid grid-cols-3 font-afacad text-white text-2xl mb-4 px-2">
+                  <div className="font-bold">Date</div>
+                  <div className="font-bold">Time</div>
+                  <div className="font-bold">Movie</div>
                 </div>
-              ))}
-            </div>
+
+                <div className="divide-y divide-white border-b border-white">
+                  {orders.map((order) => (
+                    <div
+                      key={order.id}
+                      className="grid grid-cols-3 items-center py-6 px-2 font-afacad text-white text-xl cursor-pointer hover:bg-gray-500/20 transition-colors"
+                      onClick={() => handleOrderClick(order)}
+                    >
+                      <div>{order.date}</div>
+                      <div>{order.time}</div>
+                      <div>{order.movie}</div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
           </section>
         </div>
       </div>
@@ -187,6 +144,13 @@ export default function OrdersPage() {
                 </div>
                 <div className="text-white">
                   Ticket Numbers: <span className="text-[#FF478B]">{selectedOrder.ticketNumbers}</span>
+                </div>
+                <div className="text-white">
+                  Seats: <span className="text-[#FF478B]">
+                    {selectedOrder.seats && selectedOrder.seats.length > 0
+                      ? selectedOrder.seats.join(', ')
+                      : 'N/A'}
+                  </span>
                 </div>
               </div>
             </div>
@@ -248,6 +212,12 @@ export default function OrdersPage() {
                   <span>Booking fee:</span>
                   <span>${selectedOrder.bookingFee.toFixed(2)}</span>
                 </div>
+                {pricing.discount > 0 && selectedOrder.promotionName && (
+                  <div className="flex justify-between text-green-400">
+                    <span>Promotion ({selectedOrder.promotionName}):</span>
+                    <span>-{formatCurrency(pricing.discount)}</span>
+                  </div>
+                )}
               </div>
               <div className="mb-4">
                 <div className="text-white mb-2">Payment Method:</div>

@@ -131,4 +131,46 @@ public class PromotionService {
             promotionRepository.save(promotion);
         }
     }
+
+    /**
+     * Validate promo code for checkout
+     * Checks if promo code is active, not expired, and returns discount info
+     * @param promoCode - Promo code to validate
+     * @return Map with validation result and discount details
+     */
+    public java.util.Map<String, Object> validatePromoCode(String promoCode) {
+        java.util.Map<String, Object> result = new java.util.HashMap<>();
+        
+        Optional<Promotion> promotionOpt = promotionRepository.findByPromoCodeIgnoreCase(promoCode);
+        
+        if (!promotionOpt.isPresent()) {
+            result.put("valid", false);
+            result.put("error", "Promo code not found");
+            return result;
+        }
+        
+        Promotion promotion = promotionOpt.get();
+        
+        // Check if expired
+        if (promotion.getExpirationDate().isBefore(LocalDateTime.now())) {
+            result.put("valid", false);
+            result.put("error", "Promo code has expired");
+            return result;
+        }
+        
+        // Check if active
+        if (promotion.getStatus() != PromotionStatus.active) {
+            result.put("valid", false);
+            result.put("error", "Promo code is not active");
+            return result;
+        }
+        
+        // Valid promo code
+        result.put("valid", true);
+        result.put("discountValue", promotion.getDiscountValue());
+        result.put("discountType", promotion.getDiscountType().toString());
+        result.put("promotionId", promotion.getId());
+        
+        return result;
+    }
 }

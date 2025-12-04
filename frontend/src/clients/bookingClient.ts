@@ -59,6 +59,26 @@ export interface CreateBookingResponse {
   totalAmount: number;
 }
 
+export interface BookingDetailsResponse {
+  bookingId: number;
+  movieTitle: string;
+  moviePosterUrl: string;
+  showDateTime: string | null;
+  showDate: string;
+  showTime: string;
+  seats: string[];
+  numTickets: number;
+  ticketCounts: {
+    adult: number;
+    child: number;
+    senior: number;
+  };
+  totalAmount: number;
+  paymentMethod: string;
+  orderDate: string;
+  promotionName: string | null;
+}
+
 /**
  * Booking Client API
  *
@@ -75,6 +95,19 @@ export const bookingClient = {
     return request<CreateBookingResponse>(endpoints.bookings.create, {
       method: 'POST',
       body: JSON.stringify(bookingRequest),
+    });
+  },
+
+  /**
+   * Get booking details by booking ID
+   * Used for order confirmation page
+   *
+   * @param bookingId - Booking ID
+   * @returns Booking details with all order information
+   */
+  async getBookingById(bookingId: number): Promise<BookingDetailsResponse> {
+    return request<BookingDetailsResponse>(endpoints.bookings.getById(bookingId), {
+      method: 'GET',
     });
   },
 };

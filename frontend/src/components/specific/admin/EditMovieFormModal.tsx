@@ -4,13 +4,6 @@ import { useEffect, useState } from "react";
 import { formatDateInput, formatTimeInput, parseScore } from "@/components/specific/admin/movieFormUtils";
 import { useAdminMovie } from '@/hooks/useAdminMovie';
 
-type Showtime = {
-  date: string;
-  time: string;
-  ampm: string;
-  room?: string;
-};
-
 export type AdminMovie = {
   movie_id: number;
   title: string;
@@ -35,13 +28,13 @@ interface MovieFormModalProps {
   initialMovieId: number; // replace with a movie id
 }
 
-// Add/edit movie form
+// Edit movie form
 export default function EditMovieFormModal({ isOpen, onClose, onSaved, initialMovieId }: MovieFormModalProps) {
-  //console.log("Movie ID retrieved: " + initialMovieId);
-  const {selectedMovie, isLoading, error, addMovie, editMovie} = useAdminMovie(initialMovieId);
-  //console.log(selectedMovie);
 
-  //const [editingMovie, setEditingMovie] = useState(dummyMovie);
+  // Hook call
+  const {selectedMovie, editMovie, refreshMovie} = useAdminMovie(initialMovieId);
+
+  // Saving state
   const [saving, setSaving] = useState(false);
 
   const [title, setTitle] = useState("");
@@ -53,12 +46,10 @@ export default function EditMovieFormModal({ isOpen, onClose, onSaved, initialMo
   const [directors, setDirectors] = useState("");
   const [producers, setProducers] = useState("");
   const [cast_names, setCastNames] = useState("");
-  //const [reviews, setReviews] = useState("");
   const [rating, setRating] = useState("");
   const [duration, setDuration] = useState(0);
   const [score, setScore] = useState(0);
   const [release_date, setReleaseDate] = useState("");
-  //const [showtimes, setShowtimes] = useState<Showtime[]>([{ date: "", time: "", ampm: "AM" }]);
   const [editingId, setEditingId] = useState(0);
 
 
@@ -66,7 +57,6 @@ export default function EditMovieFormModal({ isOpen, onClose, onSaved, initialMo
     if (!isOpen) return;
 
     if (selectedMovie) {
-      //setEditingMovie(selectedMovie);
       setEditingId(selectedMovie.movie_id);
       setTitle(selectedMovie.title || "");
       setStatus(selectedMovie.status || "upcoming");
@@ -81,28 +71,8 @@ export default function EditMovieFormModal({ isOpen, onClose, onSaved, initialMo
       setRating(selectedMovie.rating || "");
       setScore(selectedMovie.score || 0);
       setDuration(selectedMovie.duration || 0);
-      //console.log("Selected movie data was set");
-
-      /*if (initialMovie._meta?.showtimes && initialMovie._meta.showtimes.length > 0) {
-        setShowtimes(initialMovie._meta.showtimes);
-      } else {
-        let ampmValue: "AM" | "PM" = "AM";
-        if (initialMovie.time.includes("AM")) {
-          ampmValue = "AM";
-        } else {
-          ampmValue = "PM";
-        }
-        setShowtimes([
-          {
-            date: initialMovie.date,
-            time: initialMovie.time.split(":").slice(0, 2).join(":"),
-            ampm: ampmValue,
-          },
-        ]);
-      }*/
+  
     } else {
-      // reset for new
-      //setEditingMovie(dummyMovie);
       setEditingId(0);
       setTitle("");
       setStatus("upcoming");
@@ -119,15 +89,7 @@ export default function EditMovieFormModal({ isOpen, onClose, onSaved, initialMo
       setDuration(0);
       console.log("Selected movie data was not set");
     }
-  }, [isOpen, selectedMovie]);
-
-  /*const handleAddShowtime = () => setShowtimes((prev) => [...prev, { date: "", time: "", ampm: "AM" }]);
-  const handleRemoveShowtime = (index: number) => setShowtimes((prev) => prev.filter((_, i) => i !== index));
-  const updateShowtime = (index: number, field: keyof Showtime, value: string) => {
-    setShowtimes((previousShowtimes) =>
-      previousShowtimes.map((showtime, i) => (i === index ? { ...showtime, [field]: value } : showtime))
-    );
-  };*/
+  }, [isOpen, selectedMovie, initialMovieId]);
 
   // Display helpers 
   const getHeaderTitle = () => {
@@ -151,7 +113,7 @@ export default function EditMovieFormModal({ isOpen, onClose, onSaved, initialMo
   };
   const isSaveDisabled = () => {
     if (saving) return true;
-    if (!formValid()) return true;
+    if (!formComplete()) return true;
     return false;
   };
   const getSaveOpacity = () => {
@@ -163,21 +125,41 @@ export default function EditMovieFormModal({ isOpen, onClose, onSaved, initialMo
     return "Save";
   };
 
-  const formValid = () => {
+  const formComplete = () => {
     if (!title || !genres || !synopsis || !cast_names || !directors || !producers || !score || !rating || !release_date || !trailer_link || !poster_link ) 
       return false;
-    //if (!showtimes.length || !showtimes[0].date || !showtimes[0].time) return false;
     return true;
   };
 
+  // Ensure release date, score, and duration are in correct format
+  const validateNumbers = () => {
+    const dateRegex = /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/;
+    const validDate = dateRegex.test(release_date);
+
+    const scoreRegex = /^(100|[1-9][0-9]|\d)$/;
+    const validScore = scoreRegex.test(score.toString());
+
+    const durationRegex = /^-?\d+(\.\d+)?$/;
+    const validDuration = durationRegex.test(duration.toString());
+
+    if (!validDate) return "Check that the release date is in the correct format.";
+    if (!validScore) return "Check that the score is a number between 1 and 100.";
+    if (!validDuration) return "Check that the duration is a number.";
+
+    return null;
+  }
+
   const onSave = async () => {
-    if (!formValid()) return;
+    if (!formComplete()) return;
+
+    // If one of the numeric fields is invalid, alert the user without sending data to backend
+    const message = validateNumbers();
+    if (message) {
+      alert(message);
+      return;
+    }
+
     setSaving(true);
-
-    /*const existing = typeof window !== "undefined" ? sessionStorage.getItem("movies") : null;
-    const parsed: AdminMovie[] = existing ? JSON.parse(existing) : [];
-
-      const primary = showtimes[0];*/
 
       // Partial movie object to send to backend
       const backendMovieRequest: Partial<AdminMovie> = {
@@ -213,30 +195,15 @@ export default function EditMovieFormModal({ isOpen, onClose, onSaved, initialMo
         score
       };
 
-    /*let updated: AdminMovie[];
-    if (editingId) {
-      const exists = parsed.some((m) => m.movie_id === editingId);
-      if (exists) {
-        updated = parsed.map((m) => {
-          if (m.movie_id === editingId) return movieData;
-          return m;
-        });
-      } else {
-        updated = [...parsed, movieData];
-      }
-    } else {
-      updated = [...parsed, movieData];
-    }*/
-
-    //sessionStorage.setItem("movies", JSON.stringify(updated));
     const editingStatus = await editMovie(backendMovieRequest, editingId);
     if (editingStatus) {
       onSaved(updatedMovie);
-      alert("Movie data successfully saved.");
+      refreshMovie();
+      alert("Movie data for \"" + title + "\" successfully saved.");
+      onClose();
     } else {
       alert("Error saving movie data.");
     }
-    onClose();
     setSaving(false);
   };
 
