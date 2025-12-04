@@ -10,6 +10,7 @@ import TicketPriceEditor from '@/components/specific/admin/TicketPriceEditor';
 import { usePromotions } from '@/hooks/usePromotions';
 import { BackendPromotion, DiscountType, PromotionStatus } from '@/types/promotion';
 import Spinner from '@/components/common/Spinner';
+import { useToast } from '@/contexts/ToastContext';
 
 interface Promotion {
   id: number;
@@ -71,6 +72,8 @@ export default function AdminPricingPage() {
     { id: 2, name: 'Processing Fee', amount: 1.0 },
   ]);
 
+    const { showToast } = useToast();
+
   // Fetch once on mount
   useEffect(() => {
     getPromotions();
@@ -93,6 +96,12 @@ export default function AdminPricingPage() {
       setLoadingPromoId(null);
     } else {
       setIsAdding(true);
+
+      if (promoData.imageLink.length >= 20000000) {
+        showToast('File is too large', 'error');
+        return;
+      }
+
       await addPromotion(
         {
           promoCode: promoData.promoCode,
