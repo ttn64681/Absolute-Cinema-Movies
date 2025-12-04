@@ -191,7 +191,9 @@ public class AdminService {
         // Step 3: Create admin DTO using factory method (Factory Method pattern)
         AuthResponse.UserDto adminDto = UserDtoFactory.fromAdmin(admin);
 
-        // Step 4: Return success response with tokens and admin data
-        return new AuthResponse(true, "Admin login successful", token, refreshToken, adminDto);
+        // Step 4: Return success response w/ tokens, admin data, & set role for frontend routing
+        AuthResponse response = new AuthResponse(true, "Admin login successful", token, refreshToken, adminDto);
+        response.setRole("ADMIN");
+        return response;
     }
 }

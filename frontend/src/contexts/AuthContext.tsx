@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useMemo, useCallback, ReactNode } from 'react';
 import { authClient, AuthResponse } from '@/clients/authClient';
-import { getAuthToken } from '@/utils/auth';
+import { getAuthToken, setRoleCookie, clearRoleCookie, clearAdminTokenCookie, clearAllAuthCookies } from '@/utils/auth';
 
 interface User {
   id: number;
@@ -46,6 +46,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const sessionRefreshToken = sessionStorage.getItem('refreshToken');
     const refreshToken = localRefreshToken || sessionRefreshToken;
 
+    // CRITICAL: Clear cookies IMMEDIATELY if no tokens exist (prevents stale cookie issues)
+    // This ensures cookies are cleared before any async operations, preventing middleware race conditions
+    if (!token && !refreshToken) {
+      clearRoleCookie();
+      clearAdminTokenCookie();
+      setUser(null);
+      setIsLoading(false);
+      return;
+    }
+
     console.log('checkAuthStatus - localToken:', localToken ? 'exists' : 'null');
     console.log('checkAuthStatus - sessionToken:', sessionToken ? 'exists' : 'null');
     console.log('checkAuthStatus - localRefreshToken:', localRefreshToken ? 'exists' : 'null');
@@ -65,7 +75,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Check if this is an admin token before refresh
       const isAdmin = !!(localStorage.getItem('adminToken') || sessionStorage.getItem('adminToken'));
       console.log('checkAuthStatus - isAdmin before refresh:', isAdmin);
-      
+
       // Try to refresh token to validate it
       authClient
         .refreshToken()
@@ -81,10 +91,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 if (response.refreshToken) {
                   localStorage.setItem('refreshToken', response.refreshToken);
                 }
-                // If it was an admin token, also update adminToken
+                // If it was an admin token, also update adminToken (for API calls only, not cookie)
                 if (isAdmin) {
                   localStorage.setItem('adminToken', response.token);
-                  document.cookie = `adminToken=${response.token}; path=/; SameSite=Lax`;
                 }
                 console.log('Updated tokens in localStorage');
               } else {
@@ -92,13 +101,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 if (response.refreshToken) {
                   sessionStorage.setItem('refreshToken', response.refreshToken);
                 }
-                // If it was an admin token, also update adminToken
+                // If it was an admin token, also update adminToken (for API calls only, not cookie)
                 if (isAdmin) {
                   sessionStorage.setItem('adminToken', response.token);
-                  document.cookie = `adminToken=${response.token}; path=/; SameSite=Lax`;
                 }
                 console.log('Updated tokens in sessionStorage');
               }
+
+              // Keep role cookie in sync for middleware-based routing
+              const role = response.role || (isAdmin ? 'ADMIN' : 'USER');
+              setRoleCookie(role);
 
               // Trigger custom event to notify other tabs about token refresh
               window.dispatchEvent(
@@ -119,7 +131,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             sessionStorage.removeItem('refreshToken');
             sessionStorage.removeItem('adminToken');
             sessionStorage.removeItem('rememberMe');
-            document.cookie = `adminToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax`;
+            clearRoleCookie(); // Clear role cookie when tokens invalid
+            clearAdminTokenCookie(); // Clear adminToken cookie
             setUser(null);
           }
           setIsLoading(false);
@@ -134,7 +147,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           sessionStorage.removeItem('refreshToken');
           sessionStorage.removeItem('adminToken');
           sessionStorage.removeItem('rememberMe');
-          document.cookie = `adminToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax`;
+          clearRoleCookie(); // Clear role cookie when token refresh fails
+          clearAdminTokenCookie(); // Clear adminToken cookie
           setUser(null);
           setIsLoading(false);
         });
@@ -147,10 +161,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       sessionStorage.removeItem('token');
       sessionStorage.removeItem('refreshToken');
       sessionStorage.removeItem('rememberMe');
+      clearRoleCookie(); // Clear role cookie when tokens incomplete
       setUser(null);
       setIsLoading(false);
     } else {
       console.log('No tokens found, user not authenticated');
+      // Clear role cookie if no tokens exist (in case stale cookie remains)
+      // Also clear adminToken cookie to prevent legacy fallback
+      clearRoleCookie();
+      clearAdminTokenCookie();
+      setUser(null);
       setIsLoading(false);
     }
   }, []);
@@ -181,8 +201,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (response.refreshToken) {
           localStorage.setItem('refreshToken', response.refreshToken);
         }
-        // Also set cookie for potential middleware-based protection
-        document.cookie = `token=${response.token}; path=/; SameSite=Lax`;
         console.log('Stored tokens in localStorage for remember me');
         console.log('localStorage token after storage:', localStorage.getItem('token') ? 'exists' : 'null');
         console.log('localStorage rememberMe after storage:', localStorage.getItem('rememberMe'));
@@ -194,8 +212,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (response.refreshToken) {
           sessionStorage.setItem('refreshToken', response.refreshToken);
         }
-        // Also set cookie for potential middleware-based protection
-        document.cookie = `token=${response.token}; path=/; SameSite=Lax`;
         console.log('Stored tokens in sessionStorage for session only');
         console.log('sessionStorage token after storage:', sessionStorage.getItem('token') ? 'exists' : 'null');
         console.log('sessionStorage rememberMe after storage:', sessionStorage.getItem('rememberMe'));
@@ -206,7 +222,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Ensure no stale admin markers remain when logging in as a regular user
       localStorage.removeItem('adminToken');
       sessionStorage.removeItem('adminToken');
-      document.cookie = `adminToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax`;
+      clearAdminTokenCookie(); // Clear adminToken cookie
+
+      // Set role cookie for middleware-based routing (default to USER when login succeeds)
+      const role = response.role || 'USER';
+      setRoleCookie(role);
     } else {
       console.log('Login failed:', response.message);
     }
@@ -226,27 +246,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Remember me = localStorage (persistent), otherwise = sessionStorage (session-only)
       if (rememberMe) {
         localStorage.setItem('token', response.token);
-        localStorage.setItem('adminToken', response.token); // Mark as admin
+        localStorage.setItem('adminToken', response.token); // Mark as admin (for API calls only)
         localStorage.setItem('rememberMe', 'true');
         if (response.refreshToken) {
           localStorage.setItem('refreshToken', response.refreshToken);
         }
-        // Also set cookies for potential middleware-based admin protection
-        document.cookie = `token=${response.token}; path=/; SameSite=Lax`;
-        document.cookie = `adminToken=${response.token}; path=/; SameSite=Lax`;
         console.log('Stored admin tokens in localStorage for remember me');
       } else {
         sessionStorage.setItem('token', response.token);
-        sessionStorage.setItem('adminToken', response.token); // Mark as admin
+        sessionStorage.setItem('adminToken', response.token); // Mark as admin (for API calls only)
         sessionStorage.setItem('rememberMe', 'false');
         if (response.refreshToken) {
           sessionStorage.setItem('refreshToken', response.refreshToken);
         }
-        // Also set cookies for potential middleware-based admin protection
-        document.cookie = `token=${response.token}; path=/; SameSite=Lax`;
-        document.cookie = `adminToken=${response.token}; path=/; SameSite=Lax`;
         console.log('Stored admin tokens in sessionStorage for session only');
       }
+
+      // Set role cookie for middleware-based routing (ADMIN for admin login)
+      const role = response.role || 'ADMIN';
+      setRoleCookie(role);
     } else {
       console.log('Admin login failed:', response.message);
     }
@@ -270,7 +288,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.clear();
     sessionStorage.clear();
 
-    // Clear cookies
+    // Clear all auth-related cookies using utility function
+    clearAllAuthCookies();
+
+    // Also clear any other cookies (fallback for any non-auth cookies)
     document.cookie.split(';').forEach((c) => {
       document.cookie = c.replace(/^ +/, '').replace(/=.*/, '=;expires=' + new Date().toUTCString() + ';path=/');
     });

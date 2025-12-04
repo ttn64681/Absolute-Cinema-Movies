@@ -15,6 +15,7 @@ import lombok.AllArgsConstructor;
 public class AuthResponse {
     private boolean success;
     private String message;
+    private String role; /* role for middleware restriction */
     private String token;
     private String refreshToken;
     private UserDto user;
