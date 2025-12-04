@@ -24,6 +24,8 @@ export default function AdminMoviesPage() {
     goToThisPage,
   } = useAdminMoviesList();
 
+  const { deleteMovie } = useAdminMovie(0);
+
   // Use adminMovies if available; otherwise, fall back to fallbackMoviesList
   const moviesList = adminMovies && adminMovies.length > 0 ? adminMovies : [];
   /*console.log(moviesList);
@@ -42,40 +44,29 @@ export default function AdminMoviesPage() {
   const [currentPage, setCurrentPage] = useState(1); // current page of movies to show
   const moviesPerPage = 10; // # of movies to display on one page
 
-  const [updatedMovies, setUpdatedMovies] = useState<AdminMovie[]>([]); // updated movies list- used when a movie gets added/changed
+  
 
-  // Retrieve in session storage?
+  // Update movies list whenever movies from backend change
   useEffect(() => {
-    console.log("updated movies list");
-    console.log(updatedMovies);
     if (typeof window === 'undefined') return;
-      if (updatedMovies.length == 0) {
-        setMovies(adminMovies && adminMovies.length > 0 ? adminMovies : []);
-      } else {
-        setMovies(updatedMovies);
-        console.log("after updating movies");
-        console.log(movies);
-      }
-      
-  }, [adminMovies, updatedMovies]);
+      setMovies(adminMovies && adminMovies.length > 0 ? adminMovies : []);
+  }, [adminMovies]);
 
   // Delete movie function
-  const remove = (movie_id: number) => {
+  const remove = async (movie_id: number) => {
     const movieToDelete = movies.find((movie) => movie.movie_id === movie_id);
     const deleteMovieStatus = movieToDelete?.status;
     
     if (deleteMovieStatus == 'now_playing') {
       return;
     }
+
+    if (movie_id) {
+      await deleteMovie(movie_id);
+    } 
     
     const updatedMovies = movies.filter((movie) => movie.movie_id !== movie_id);
     setMovies(updatedMovies);
-    const nonInitialMovies = updatedMovies.filter(
-      (movie) => !moviesList.some((initialMovie) => initialMovie.movie_id === movie.movie_id)
-    );
-    if (typeof window !== 'undefined') {
-      sessionStorage.setItem('movies', JSON.stringify(nonInitialMovies));
-    }
   };
 
   // Function to open add movie menu
@@ -103,9 +94,6 @@ export default function AdminMoviesPage() {
       } else {
         updated = [...prevMovies, savedMovie];
       }
-      
-      // Use setUpdatedMovies to trigger a re-render
-      setUpdatedMovies(updated);  
       return updated;
     });
   };
@@ -122,9 +110,7 @@ export default function AdminMoviesPage() {
       if (scheduledMovie) {
         scheduledMovie.status = "now_playing";
         updated[index] = scheduledMovie;
-      }
-      // Use setUpdatedMovies to trigger a re-render
-      setUpdatedMovies(updated);  
+      } 
       return updated;
     });
   }

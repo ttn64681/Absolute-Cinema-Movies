@@ -28,13 +28,13 @@ interface MovieFormModalProps {
   initialMovieId: number; // replace with a movie id
 }
 
-// Add/edit movie form
+// Edit movie form
 export default function EditMovieFormModal({ isOpen, onClose, onSaved, initialMovieId }: MovieFormModalProps) {
-  //console.log("Movie ID retrieved: " + initialMovieId);
-  const {selectedMovie, isLoading, error, editMovie, refreshMovie} = useAdminMovie(initialMovieId);
-  //console.log(selectedMovie);
 
-  //const [editingMovie, setEditingMovie] = useState(dummyMovie);
+  // Hook call
+  const {selectedMovie, editMovie, refreshMovie} = useAdminMovie(initialMovieId);
+
+  // Saving state
   const [saving, setSaving] = useState(false);
 
   const [title, setTitle] = useState("");
@@ -57,7 +57,6 @@ export default function EditMovieFormModal({ isOpen, onClose, onSaved, initialMo
     if (!isOpen) return;
 
     if (selectedMovie) {
-      //setEditingMovie(selectedMovie);
       setEditingId(selectedMovie.movie_id);
       setTitle(selectedMovie.title || "");
       setStatus(selectedMovie.status || "upcoming");
@@ -74,8 +73,6 @@ export default function EditMovieFormModal({ isOpen, onClose, onSaved, initialMo
       setDuration(selectedMovie.duration || 0);
   
     } else {
-      // reset for new
-      //setEditingMovie(dummyMovie);
       setEditingId(0);
       setTitle("");
       setStatus("upcoming");
@@ -116,7 +113,7 @@ export default function EditMovieFormModal({ isOpen, onClose, onSaved, initialMo
   };
   const isSaveDisabled = () => {
     if (saving) return true;
-    if (!formValid()) return true;
+    if (!formComplete()) return true;
     return false;
   };
   const getSaveOpacity = () => {
@@ -128,14 +125,40 @@ export default function EditMovieFormModal({ isOpen, onClose, onSaved, initialMo
     return "Save";
   };
 
-  const formValid = () => {
+  const formComplete = () => {
     if (!title || !genres || !synopsis || !cast_names || !directors || !producers || !score || !rating || !release_date || !trailer_link || !poster_link ) 
       return false;
     return true;
   };
 
+  // Ensure release date, score, and duration are in correct format
+  const validateNumbers = () => {
+    const dateRegex = /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/;
+    const validDate = dateRegex.test(release_date);
+
+    const scoreRegex = /^(100|[1-9][0-9]|\d)$/;
+    const validScore = scoreRegex.test(score.toString());
+
+    const durationRegex = /^-?\d+(\.\d+)?$/;
+    const validDuration = durationRegex.test(duration.toString());
+
+    if (!validDate) return "Check that the release date is in the correct format.";
+    if (!validScore) return "Check that the score is a number between 1 and 100.";
+    if (!validDuration) return "Check that the duration is a number.";
+
+    return null;
+  }
+
   const onSave = async () => {
-    if (!formValid()) return;
+    if (!formComplete()) return;
+
+    // If one of the numeric fields is invalid, alert the user without sending data to backend
+    const message = validateNumbers();
+    if (message) {
+      alert(message);
+      return;
+    }
+
     setSaving(true);
 
       // Partial movie object to send to backend
@@ -176,11 +199,11 @@ export default function EditMovieFormModal({ isOpen, onClose, onSaved, initialMo
     if (editingStatus) {
       onSaved(updatedMovie);
       refreshMovie();
-      alert("Movie data successfully saved.");
+      alert("Movie data for \"" + title + "\" successfully saved.");
+      onClose();
     } else {
       alert("Error saving movie data.");
     }
-    onClose();
     setSaving(false);
   };
 

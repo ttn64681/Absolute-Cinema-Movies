@@ -125,6 +125,35 @@ async function editExistingMovie(movie: Partial<AdminMovie>, movieId: number) {
   }
 }
 
+// Deletes a movie
+// Movie must be upcoming (has no movie shows) for this to work
+async function deleteExistingMovie(movieId: number) {
+  try {
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+    const response = await fetch(buildUrl(`/api/movies/${movieId}`), {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token && { Authorization: `Bearer ${token}` }),
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to delete movie: ${response.status}`);
+    }
+    const responseText = await response.text();
+    if (!responseText.trim()) {
+      throw new Error('Empty response from server');
+    }
+
+    const data = JSON.parse(responseText);
+
+    return data;
+  } catch (error) {
+    console.error('Error creating movie: ', error);
+  }
+}
+
 // Gets all showtimes (date and time combined) for a single movie
 // Calls the getAvailableTimes backend endpoint in MovieController
 async function getShowtimes(movieId: number) {
@@ -152,4 +181,4 @@ async function getShowtimes(movieId: number) {
   }
 }
 
-export { fetchMoviesPaginated, getMovieDetails, createNewMovie, editExistingMovie, getShowtimes };
+export { fetchMoviesPaginated, getMovieDetails, createNewMovie, editExistingMovie, deleteExistingMovie, getShowtimes };

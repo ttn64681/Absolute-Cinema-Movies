@@ -4,13 +4,6 @@ import { useEffect, useState } from "react";
 import { formatDateInput, formatTimeInput, parseScore } from "@/components/specific/admin/movieFormUtils";
 import { useAdminMovie } from '@/hooks/useAdminMovie';
 
-type Showtime = {
-  date: string;
-  time: string;
-  ampm: string;
-  room?: string;
-};
-
 export type AdminMovie = {
   movie_id: number;
   title: string;
@@ -37,11 +30,13 @@ interface MovieFormModalProps {
 // Add/edit movie form
 export default function AddMovieFormModal({ isOpen, onClose, onSaved }: MovieFormModalProps) {
 
-  const {selectedMovie, isLoading, error, addMovie, refreshMovie} = useAdminMovie(0);
+  // Hook call for sending the new movie to the backend
+  const {selectedMovie, addMovie, refreshMovie } = useAdminMovie(0);
 
-  //const [editingMovie, setEditingMovie] = useState(dummyMovie);
+  // Saving state
   const [saving, setSaving] = useState(false);
 
+  // Movie info fields
   const [title, setTitle] = useState("");
   const [status, setStatus] = useState("upcoming");
   const [genres, setGenres] = useState("");
@@ -51,14 +46,13 @@ export default function AddMovieFormModal({ isOpen, onClose, onSaved }: MovieFor
   const [directors, setDirectors] = useState("");
   const [producers, setProducers] = useState("");
   const [cast_names, setCastNames] = useState("");
-  //const [reviews, setReviews] = useState("");
   const [rating, setRating] = useState("");
   const [duration, setDuration] = useState(0);
   const [score, setScore] = useState(0);
   const [release_date, setReleaseDate] = useState("");
-  //const [showtimes, setShowtimes] = useState<Showtime[]>([{ date: "", time: "", ampm: "AM" }]);
 
 
+  // Set all info fields to be empty every time the form is re-opened
   useEffect(() => {
     if (!isOpen) return;
 
@@ -79,15 +73,8 @@ export default function AddMovieFormModal({ isOpen, onClose, onSaved }: MovieFor
   
   }, [isOpen]);
 
-  /*const handleAddShowtime = () => setShowtimes((prev) => [...prev, { date: "", time: "", ampm: "AM" }]);
-  const handleRemoveShowtime = (index: number) => setShowtimes((prev) => prev.filter((_, i) => i !== index));
-  const updateShowtime = (index: number, field: keyof Showtime, value: string) => {
-    setShowtimes((previousShowtimes) =>
-      previousShowtimes.map((showtime, i) => (i === index ? { ...showtime, [field]: value } : showtime))
-    );
-  };*/
-
   // Display helpers 
+
   const getHeaderTitle = () => {
     return "Add Movie";
   };
@@ -110,7 +97,7 @@ export default function AddMovieFormModal({ isOpen, onClose, onSaved }: MovieFor
   };
   const isSaveDisabled = () => {
     if (saving) return true;
-    if (!formValid()) return true;
+    if (!formComplete()) return true;
     return false;
   };
   const getSaveOpacity = () => {
@@ -122,66 +109,93 @@ export default function AddMovieFormModal({ isOpen, onClose, onSaved }: MovieFor
     return "Save";
   };
 
-  const formValid = () => {
-    if (!title || !genres || !synopsis) return false;
-    //if (!showtimes.length || !showtimes[0].date || !showtimes[0].time) return false;
+  // Validate that all fields of the form are filled
+  const formComplete = () => {
+    if (!title || !genres || !synopsis || !cast_names || !directors || !producers || !score || !rating || !release_date || !trailer_link || !poster_link ) 
+      return false;
     return true;
   };
 
-    const onSave = async () => {
-      if (!formValid()) return;
-      setSaving(true);
-  
-      /*const existing = typeof window !== "undefined" ? sessionStorage.getItem("movies") : null;
-      const parsed: AdminMovie[] = existing ? JSON.parse(existing) : [];
-  
-        const primary = showtimes[0];*/
-  
-        // Partial movie object to send to backend
-        const backendMovieRequest: Partial<AdminMovie> = {
-          title,
-          genres,
-          rating,
-          release_date,
-          synopsis,
-          trailer_link,
-          poster_link,
-          cast_names,
-          directors,
-          producers,
-          duration,
-          score
-        };
-  
-      //sessionStorage.setItem("movies", JSON.stringify(updated));
-      const newMovieId = await addMovie(backendMovieRequest);
-      if (newMovieId) {
-        // Full movie object to return to the movies list
-        const updatedMovie: AdminMovie = {
-          movie_id: newMovieId,
-          status,
-          title,
-          genres,
-          rating,
-          release_date,
-          synopsis,
-          trailer_link,
-          poster_link,
-          cast_names,
-          directors,
-          producers,
-          duration,
-          score
-        };
-        onSaved(updatedMovie);
-        refreshMovie();
-        alert("New movie successfully created.");
-      } else {
-        alert("Error creating movie.");
-      }
-      onClose();
-      setSaving(false);
+  // Ensure release date, score, and duration are in correct format
+  const validateNumbers = () => {
+    const dateRegex = /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/;
+    const validDate = dateRegex.test(release_date);
+
+    const scoreRegex = /^(100|[1-9][0-9]|\d)$/;
+    const validScore = scoreRegex.test(score.toString());
+
+    const durationRegex = /^-?\d+(\.\d+)?$/;
+    const validDuration = durationRegex.test(duration.toString());
+
+    if (!validDate) return "Check that the release date is in the correct format.";
+    if (!validScore) return "Check that the score is a number between 1 and 100.";
+    if (!validDuration) return "Check that the duration is a number.";
+
+    return null;
+  }
+
+  // Save the new movie
+  const onSave = async () => {
+    if (!formComplete()) return;
+
+    // If one of the numeric fields is invalid, alert the user without sending data to backend
+    const message = validateNumbers();
+    if (message) {
+      alert(message);
+      return;
+    }
+
+    setSaving(true);
+
+    // Build a movie object compatible with backend
+    const backendMovieRequest: Partial<AdminMovie> = {
+      title,
+      genres,
+      rating,
+      release_date,
+      synopsis,
+      trailer_link,
+      poster_link,
+      cast_names,
+      directors,
+      producers,
+      duration,
+      score
     };
+  
+    // Send new movie data to backend
+    // backend returns the new movie ID if the request is successful
+    const newMovieId = await addMovie(backendMovieRequest);
+
+    if (newMovieId) {
+      // Full movie object to return to the movies list
+      const updatedMovie: AdminMovie = {
+        movie_id: newMovieId,
+        status,
+        title,
+        genres,
+        rating,
+        release_date,
+        synopsis,
+        trailer_link,
+        poster_link,
+        cast_names,
+        directors,
+        producers,
+        duration,
+        score
+      };
+        
+      onSaved(updatedMovie);
+      refreshMovie(); // ensure the new movie data is fetched
+      alert("New movie \"" + title + "\" with ID " + newMovieId + " successfully created.");
+      onClose();
+
+    } else {
+      alert("Error creating movie");
+    }
+    setSaving(false);
+  };
 
   if (!isOpen) return null;
 
