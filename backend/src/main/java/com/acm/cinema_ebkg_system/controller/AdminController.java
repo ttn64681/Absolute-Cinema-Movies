@@ -97,8 +97,9 @@ public class AdminController {
             // Step 3: Create admin DTO using static factory method
             AuthResponse.UserDto adminDto = UserDtoFactory.fromAdmin(admin);
 
-            // Step 4: Return success response with tokens and admin data
+            // Step 4: Return success response w/ tokens, admin data, & role
             AuthResponse response = new AuthResponse(true, "Admin login successful", token, refreshToken, adminDto);
+            response.setRole("ADMIN");
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             AuthResponse response = new AuthResponse(false, e.getMessage());

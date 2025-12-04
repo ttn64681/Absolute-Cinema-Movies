@@ -16,10 +16,10 @@ import type { NextRequest } from 'next/server';
  * Backend still validates JWT for APIs; middleware only needs coarse role info.
  */
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Get role from a lightweight cookie set by AuthContext
+  // Get role from cookie set by AuthContext (only source of truth)
   const roleCookie = request.cookies.get('role')?.value;
 
   let role: 'USER' | 'ADMIN' | null = null;
@@ -29,7 +29,7 @@ export function middleware(request: NextRequest) {
   }
 
   // Lightweight diagnostics to verify middleware execution and routing decisions
-  console.log('[middleware] path:', pathname, '| roleCookie:', roleCookie, '| derived role:', role);
+  console.log('[middleware] path:', pathname, '| roleCookie:', roleCookie ?? 'null', '| derived role:', role ?? 'null');
 
   const isAdmin = role === 'ADMIN';
   const isLoggedInUser = role === 'USER';
@@ -40,9 +40,11 @@ export function middleware(request: NextRequest) {
   if (pathname.startsWith('/admin')) {
     if (!isAdmin) {
       // Not admin - redirect to login
+      console.log('[middleware] BLOCKING /admin access - redirecting to admin-login');
       return NextResponse.redirect(new URL('/auth/admin-login', request.url));
     }
     // Admin has access
+    console.log('[middleware] ALLOWING /admin access - user is admin');
     return NextResponse.next();
   }
 
@@ -60,8 +62,8 @@ export function middleware(request: NextRequest) {
       return NextResponse.next();
     }
 
-    // Block admins from all other pages - redirect to admin dashboard
-    return NextResponse.redirect(new URL('/admin/users', request.url));
+    // Block admins from all other pages - redirect to admin home page
+    return NextResponse.redirect(new URL('/admin', request.url));
   }
 
   // ============================================
