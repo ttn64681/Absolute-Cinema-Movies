@@ -1,5 +1,7 @@
 'use client';
 
+import { OrderHomeButton, OrderHistoryButton } from "./OrderButtons";
+
 interface OrderConfirmProps {
   email?: string;
   bookingNumber?: string;
@@ -45,9 +47,6 @@ export default function OrderConfirm({
 
   const computedTotal = orderTotal ?? subtotal + tax + bookingFee;
   const priceDisplay = formatPriceWithSmallCents(computedTotal, currency);
-  const qrSource = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(
-    bookingNumber,
-  )}`;
 
   return (
     <div className="min-h-screen bg-[#050506] text-white px-6 pt-28 pb-10 lg:px-16">
@@ -73,14 +72,12 @@ export default function OrderConfirm({
             </div>
           </dl>
 
-          {/* QR code */}
-          <div className="mt-10 flex flex-col items-center sm:items-start gap-3">
-            <img
-              src={qrSource}
-              alt="Booking QR code"
-              className="w-48 h-48 rounded-lg bg-white p-2 shadow-2xl shadow-pink-500/30 border border-white/10"
-            />
+
+          <div className="flex flex-row my-8 gap-x-6">
+            <OrderHomeButton />
+            <OrderHistoryButton />
           </div>
+
         </section>
 
         {/* Summary card */}
