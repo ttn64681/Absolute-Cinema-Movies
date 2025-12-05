@@ -110,7 +110,7 @@ export default function AdminHomePage() {
         <AdminCard href="/admin/users" title="Manage Users" />
       </div>
 
-      {/*<div className="max-w-[70rem] mx-auto px-4 mt-10 mb-16">
+      {<div className="max-w-[70rem] mx-auto px-4 mt-10 mb-16">
         <h2 className="text-xl font-afacad mb-3">Upcoming Showtimes</h2>
         <div className="rounded-md p-4 sm:p-6 overflow-y-auto" style={{ backgroundColor: '#242424', border: '1px solid #FF478B', maxHeight: '360px' }}>
           {upcomingShowtimes.length === 0 && (
@@ -129,7 +129,7 @@ export default function AdminHomePage() {
             </ul>
           )}
         </div>
-      </div>*/}
+      </div>}
     </div>
   );
 }
