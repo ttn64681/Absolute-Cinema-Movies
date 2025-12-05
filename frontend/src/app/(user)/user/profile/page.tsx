@@ -104,6 +104,7 @@ export default function ProfilePage() {
 
   // Send updated user data to the backend
   const saveProfileChanges = async () => {
+    setSavingProfile(true);
     if (validatePhoneNumber(userData.phone)) {
       const success = await updateUser({
         firstName: userData.firstName,
@@ -126,10 +127,12 @@ export default function ProfilePage() {
     } else {
       showToast('The phone number is invalid. Check that it contains only numbers.','error',8000);
     }
+    setSavingProfile(false);
   };
 
   // Send updated password data to the backend
   const savePasswordChange = async () => {
+    setSavingPassword(true);
     // Check if new password meets security requirements
     const { secure, message } = checkPasswordSecurity(userData.currentPassword, userData.newPassword);
 
@@ -154,8 +157,8 @@ export default function ProfilePage() {
       } else {
         showToast('Unknown error','error',8000);
       }
-      
     }
+    setSavingPassword(false);
   };
 
   const onImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -398,16 +401,28 @@ export default function ProfilePage() {
             </div>
 
             {/* Save button */}
-            <div className="flex justify-center mt-8">
-              <button
-                title="Save Changes"
-                type="button"
-                onClick={saveProfileChanges}
-                className="px-10 py-3 rounded-full font-afacad font-bold text-white cursor-pointer hover:shadow-lg hover:underline hover:shadow-acm-pink/50 transition-all bg-gradient-to-r from-acm-pink to-acm-orange border-none"
-              >
-                Save Changes
-              </button>
-            </div>
+            {savingProfile ? (
+              <div className="flex justify-center mt-8">
+                <button
+                  title="Save Changes"
+                  type="button"
+                  className="px-10 py-3 rounded-full font-afacad font-bold text-white cursor-not-allowed transition-all bg-gradient-to-r from-acm-pink to-acm-orange border-none"
+                >
+                  Saving...
+                </button>
+              </div>
+            ) : (
+              <div className="flex justify-center mt-8">
+                <button
+                  title="Save Changes"
+                  type="button"
+                  onClick={saveProfileChanges}
+                  className="px-10 py-3 rounded-full font-afacad font-bold text-white cursor-pointer hover:shadow-lg hover:underline hover:shadow-acm-pink/50 transition-all bg-gradient-to-r from-acm-pink to-acm-orange border-none"
+                >
+                  Save Changes
+                </button>
+              </div>
+            )}
 
             {/* Change Password */}
             <div className="mt-16 pt-6 border-t border-white/10">
@@ -443,9 +458,20 @@ export default function ProfilePage() {
               </div>
 
               {/* Change password button */}
+              {savingPassword ? (
               <div className="flex justify-center mt-8">
                 <button
-                  title="Change Password"
+                  title="Saving"
+                  type="button"
+                  className="px-10 py-3 rounded-full font-afacad font-bold text-white cursor-not-allowed transition-all bg-gradient-to-r from-acm-pink to-acm-orange border-none"
+                >
+                  Saving...
+                </button>
+              </div>
+            ) : (
+              <div className="flex justify-center mt-8">
+                <button
+                  title="Save Changes"
                   type="button"
                   onClick={savePasswordChange}
                   className="px-10 py-3 rounded-full font-afacad font-bold text-white cursor-pointer hover:shadow-lg hover:underline hover:shadow-acm-pink/50 transition-all bg-gradient-to-r from-acm-pink to-acm-orange border-none"
@@ -453,6 +479,7 @@ export default function ProfilePage() {
                   Change Password
                 </button>
               </div>
+            )}
             </div>
           </section>
         </div>
