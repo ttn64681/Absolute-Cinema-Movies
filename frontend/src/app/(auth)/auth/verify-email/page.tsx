@@ -14,6 +14,7 @@ import api from '@/config/api';
 function VerifyEmailContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const redirectPath = searchParams.get('redirect');
   const [status, setStatus] = useState<'verifying' | 'success' | 'error' | 'registration-success'>('verifying');
   const [message, setMessage] = useState('Verifying your email...');
   const [resendEmail, setResendEmail] = useState('');
@@ -59,9 +60,12 @@ function VerifyEmailContent() {
             localStorage.setItem('user', JSON.stringify(response.data.user));
           }
 
-          // Redirect to login page after 2 seconds
+          // Redirect to login page after 2 seconds with redirect parameter if present
           setTimeout(() => {
-            router.push('/auth/login');
+            const loginUrl = redirectPath 
+              ? `/auth/login?redirect=${encodeURIComponent(redirectPath)}`
+              : '/auth/login';
+            router.push(loginUrl);
           }, 2000);
         } else {
           setStatus('error');
@@ -238,8 +242,13 @@ function VerifyEmailContent() {
               {/* Alternative Actions */}
               <div className="space-y-2">
                 <button
-                  onClick={() => router.push('/auth/login')}
-                  className="w-full bg-white/10 text-white py-2 px-4 rounded-md hover:bg-white/20 transition-colors font-medium border border-white/20"
+                  onClick={() => {
+                    const loginUrl = redirectPath 
+                      ? `/auth/login?redirect=${encodeURIComponent(redirectPath)}`
+                      : '/auth/login';
+                    router.push(loginUrl);
+                  }}
+                  className="w-full bg-white/10 text-white py-2 px-4 rounded-md hover:bg-white/20 transition-colors font-medium border border-white/20 cursor-pointer"
                 >
                   Go to Login
                 </button>
@@ -255,8 +264,13 @@ function VerifyEmailContent() {
 
           {status === 'success' && (
             <button
-              onClick={() => router.push('/auth/login')}
-              className="w-full inline-flex justify-center bg-gradient-to-r from-acm-pink to-acm-orange text-white px-5 py-2.5 rounded-lg font-semibold hover:brightness-110 transition-all"
+              onClick={() => {
+                const loginUrl = redirectPath 
+                  ? `/auth/login?redirect=${encodeURIComponent(redirectPath)}`
+                  : '/auth/login';
+                router.push(loginUrl);
+              }}
+              className="w-full inline-flex justify-center bg-gradient-to-r from-acm-pink to-acm-orange text-white px-5 py-2.5 rounded-lg font-semibold hover:brightness-110 transition-all cursor-pointer"
             >
               Go to Login
             </button>
@@ -267,8 +281,13 @@ function VerifyEmailContent() {
               <button
                 title="Go to Login"
                 type="button"
-                onClick={() => router.push('/auth/login')}
-                className="w-full inline-flex justify-center bg-gradient-to-r from-acm-pink to-acm-orange text-white px-5 py-2.5 rounded-lg font-semibold hover:brightness-110 transition-all"
+                onClick={() => {
+                  const loginUrl = redirectPath 
+                    ? `/auth/login?redirect=${encodeURIComponent(redirectPath)}`
+                    : '/auth/login';
+                  router.push(loginUrl);
+                }}
+                className="w-full inline-flex justify-center bg-gradient-to-r from-acm-pink to-acm-orange text-white px-5 py-2.5 rounded-lg font-semibold hover:brightness-110 transition-all cursor-pointer"
               >
                 Go to Login
               </button>

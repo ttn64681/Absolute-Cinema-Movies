@@ -33,21 +33,34 @@ export default function PaymentForm({ onSubmit, isLoading = false }: PaymentForm
   // Luhn algorithm for card number validation
   const luhnCheck = (cardNumber: string): boolean => {
     const cleaned = cardNumber.replace(/\s/g, '');
+    
+    // Must have at least 1 digit
+    if (!cleaned || cleaned.length === 0) {
+      return false;
+    }
+    
     let sum = 0;
     let isEven = false;
     
-    // Start from the rightmost digit
+    // Start from rightmost digit (check digit), work left
     for (let i = cleaned.length - 1; i >= 0; i--) {
-      let digit = parseInt(cleaned[i], 10);
+      const digit = parseInt(cleaned[i], 10);
       
-      if (isEven) {
-        digit *= 2;
-        if (digit > 9) {
-          digit -= 9;
-        }
+      // Invalid digit
+      if (isNaN(digit)) {
+        return false;
       }
       
-      sum += digit;
+      if (isEven) {
+        // Double every second digit from right
+        const doubled = digit * 2;
+        // If result > 9, subtract 9 (equivalent to adding digits)
+        sum += doubled > 9 ? doubled - 9 : doubled;
+      } else {
+        // Add digit as-is
+        sum += digit;
+      }
+      
       isEven = !isEven;
     }
     

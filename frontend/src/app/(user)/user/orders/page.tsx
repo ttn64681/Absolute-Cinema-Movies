@@ -98,25 +98,25 @@ export default function OrdersPage() {
             
             {!isLoading && !error && orders.length > 0 && (
               <>
-                <div className="grid grid-cols-3 font-afacad text-white text-2xl mb-4 px-2">
-                  <div className="font-bold">Date</div>
-                  <div className="font-bold">Time</div>
-                  <div className="font-bold">Movie</div>
-                </div>
+            <div className="grid grid-cols-3 font-afacad text-white text-2xl mb-4 px-2">
+              <div className="font-bold">Date</div>
+              <div className="font-bold">Time</div>
+              <div className="font-bold">Movie</div>
+            </div>
 
-                <div className="divide-y divide-white border-b border-white">
+            <div className="divide-y divide-white border-b border-white">
                   {orders.map((order) => (
-                    <div
-                      key={order.id}
-                      className="grid grid-cols-3 items-center py-6 px-2 font-afacad text-white text-xl cursor-pointer hover:bg-gray-500/20 transition-colors"
-                      onClick={() => handleOrderClick(order)}
-                    >
-                      <div>{order.date}</div>
-                      <div>{order.time}</div>
-                      <div>{order.movie}</div>
-                    </div>
-                  ))}
+                <div
+                  key={order.id}
+                  className="grid grid-cols-3 items-center py-6 px-2 font-afacad text-white text-xl cursor-pointer hover:bg-gray-500/20 transition-colors"
+                  onClick={() => handleOrderClick(order)}
+                >
+                  <div>{order.date}</div>
+                  <div>{order.time}</div>
+                  <div>{order.movie}</div>
                 </div>
+              ))}
+            </div>
               </>
             )}
           </section>
