@@ -34,6 +34,9 @@ public class PaymentCardService {
     
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private EmailService emailService;
     
     /**
      * Get all payment cards for a user (default first) with decrypted card numbers
@@ -134,10 +137,11 @@ public class PaymentCardService {
                 // If not marked as default, explicitly set to false
                 paymentCard.setIsDefault(false);
             }
-        }
+        }        
         
         PaymentCard saved = paymentCardRepository.save(paymentCard);
-        
+
+        emailService.sendPaymentCardEmail(paymentCard.getUser().getEmail(), paymentCard.getUser().getFirstName(), "added");
         // Decrypt for return
        /* try {
             if (saved.getCardNumber() != null) {
@@ -180,6 +184,8 @@ public class PaymentCardService {
             // Shouldn't happen since we just encrypted it, but handle gracefully
             System.out.println("Warning: Could not decrypt newly saved card number");
         }
+
+        emailService.sendPaymentCardEmail(paymentCard.getUser().getEmail(), paymentCard.getUser().getFirstName(), "changed");
         
         return saved;
     }
@@ -199,6 +205,8 @@ public class PaymentCardService {
         
         // Delete the payment card
         paymentCardRepository.deleteById(paymentCardId);
+
+        emailService.sendPaymentCardEmail(paymentCard.getUser().getEmail(), paymentCard.getUser().getFirstName(), "deleted");
         
         // Delete the associated billing address
         if (addressId != null) {
@@ -277,6 +285,8 @@ public class PaymentCardService {
         paymentCard.setPaymentCardType(dto.getCardType());
         paymentCard.setExpirationDate(dto.getExpirationDate());
         paymentCard.setIsDefault(dto.getIsDefault() != null ? dto.getIsDefault() : false);
+
+        emailService.sendPaymentCardEmail(user.getEmail(), user.getFirstName(), "added");
         
         return createPaymentCard(paymentCard);
     }
@@ -313,5 +323,5 @@ public class PaymentCardService {
         }
         
         return updatePaymentCard(existingCard);
-    }
+    }    
 }

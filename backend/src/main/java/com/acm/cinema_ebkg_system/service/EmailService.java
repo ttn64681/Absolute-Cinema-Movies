@@ -251,6 +251,28 @@ public class EmailService {
         }
     }
 
+    public void sendPaymentCardEmail(String toEmail, String name, String crud) {
+        try {
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setFrom(fromEmail);
+            message.setTo(toEmail);
+            message.setSubject("ACM Cinemas - PaymentCard Updated");
+
+            String emailBody = "Hello " + name + ", \n\n"
+                + "Your payment card has been successfully " + crud +  ".\n"
+                + "Best regards,\n"
+                + "ACM Cinema Team";
+            
+            message.setText(emailBody);
+            mailSender.send(message);
+            
+            System.out.println("Confirmation email sent successfully to: " + toEmail);
+        } catch (Exception e) {
+            System.err.println("Failed to send confirmation email to: " + toEmail);
+            throw new RuntimeException("Failed to send confirmation email: " + e.getMessage());
+        }
+    }
+
     /**
      * Send order confirmation email to user after successful payment
      * 
