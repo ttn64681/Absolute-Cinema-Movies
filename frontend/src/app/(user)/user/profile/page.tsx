@@ -14,7 +14,7 @@ import { useUser } from '@/hooks/useUser';
 import { getUserIdFromToken } from '@/utils/auth';
 
 function validatePhoneNumber(phoneNumber: string) {
-  const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
+  const phoneRegex = /^[1-9][\d]{2}(-?\d{3})(-?\d{4})$/;
   return phoneRegex.test(phoneNumber);
 }
 
