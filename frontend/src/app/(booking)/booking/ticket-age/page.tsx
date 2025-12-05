@@ -100,15 +100,6 @@ function TicketAgePageContent() {
                     )}
                 </div>
             </div>
-
-
-
-            <PromoBanner 
-              title="Limited-Time Discount: Save 20% on your order"
-              description="Apply your discount now to lock it in at checkout."
-              buttonText="Apply Now!"
-              buttonHref="/booking/checkout"
-            />
         </div>
     );
 }
