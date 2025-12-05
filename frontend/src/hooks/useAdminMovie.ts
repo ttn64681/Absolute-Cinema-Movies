@@ -118,9 +118,12 @@ export function useAdminMovie(movieId: number) {
   };
 
   // Delete an (upcoming) movie
-  const deleteMovie = async (movieId: number) => {
+  const deleteMovie = async (movieId: number, movieTitle: string) => {
     setSelectedMovieLoading(true);
     try {
+      if (!confirm('Are you sure you want to delete \"' + movieTitle + '\"?')) {
+        return;
+      }
       await deleteExistingMovie(movieId);
       showToast("Movie deleted.", 'success', 8000);
 

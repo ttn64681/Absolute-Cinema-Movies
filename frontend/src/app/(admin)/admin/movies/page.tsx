@@ -53,7 +53,7 @@ export default function AdminMoviesPage() {
   }, [adminMovies]);
 
   // Delete movie function
-  const remove = async (movie_id: number) => {
+  const remove = async (movie_id: number, title: string) => {
     const movieToDelete = movies.find((movie) => movie.movie_id === movie_id);
     const deleteMovieStatus = movieToDelete?.status;
     
@@ -62,8 +62,8 @@ export default function AdminMoviesPage() {
     }
 
     if (movie_id) {
-      await deleteMovie(movie_id);
-      alert("Movie deleted.");
+      await deleteMovie(movie_id, title);
+      //alert("Movie deleted.");
     } 
     
     const updatedMovies = movies.filter((movie) => movie.movie_id !== movie_id);
@@ -169,7 +169,7 @@ export default function AdminMoviesPage() {
       </div>
 
       {/* Search Bar */}
-      <div className="max-w-[65rem] mx-auto mb-4 px-4 flex justify-center">
+      {/*<div className="max-w-[65rem] mx-auto mb-4 px-4 flex justify-center">
         <div className="relative max-w-md w-full">
           <input
             type="text"
@@ -180,7 +180,7 @@ export default function AdminMoviesPage() {
           />
           <PiMagnifyingGlass className="absolute left-2 top-1/2 transform -translate-y-1/2 text-white/30 text-2xl pointer-events-none" />
         </div>
-      </div>
+      </div>*/}
 
       {/* List of Movies Container */}
       <div className="relative max-w-[80rem] mx-auto min-h">
@@ -267,7 +267,7 @@ export default function AdminMoviesPage() {
                     <button
                       title={deleteButtonTitle}
                       className={deleteButtonClassName}
-                      onClick={() => remove(movie.movie_id)}
+                      onClick={() => remove(movie.movie_id, movie.title)}
                       disabled={hasShowtimes}
                       style={{ background: 'none', border: 'none' }}
                     >
@@ -319,7 +319,7 @@ export default function AdminMoviesPage() {
           type="button"
           title="Add movie"
           onClick={openAddModal}
-          className="text-black px-5 py-2 rounded-full transition-colors hover:opacity-90 font-afacad font-bold"
+          className="text-black px-5 py-2 rounded-full transition-colors hover:opacity-90 font-afacad font-bold hover:shadow-md hover:underline hover:shadow-acm-pink/50"
           style={{ background: 'linear-gradient(to right, #FF478B, #FF5C33)' }}
         >
           Add Movie

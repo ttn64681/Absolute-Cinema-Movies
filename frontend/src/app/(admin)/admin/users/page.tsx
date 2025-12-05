@@ -168,7 +168,7 @@ function AdminUsersPage() {
         </Link>
       </div>
 
-      <div className="max-w-[65rem] mx-auto px-4">
+      <div className="flex flex-row gap-20 max-w-[90rem] mx-auto px-4">
 
         {/* Members */}
         <div className="mb-16">
@@ -178,7 +178,7 @@ function AdminUsersPage() {
           ) : error ? (
             <div className="text-center py-8 text-red-400">{error}</div>
           ) : (
-            <div className="rounded-md overflow-hidden h-100 overflow-y-auto" style={{ backgroundColor: '#242424' }}>
+            <div className="rounded-md overflow-hidden w-100 h-100 overflow-y-auto" style={{ backgroundColor: '#242424' }}>
               {memberList.length === 0 ? (
                 <div className="text-center py-8 text-white/60">No members found</div>
               ) : (

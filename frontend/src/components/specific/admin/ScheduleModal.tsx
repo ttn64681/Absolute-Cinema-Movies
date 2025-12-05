@@ -333,7 +333,7 @@ export default function ScheduleModal({
               disabled={!selectedDate || !selectedTime || selectedShowRoomId === null}
               className={`px-8 py-2 rounded-full font-afacad font-bold text-black bg-gradient-to-r from-[#FF478B] to-[#FF5C33] ${
                 selectedDate && selectedTime && selectedShowRoomId !== null
-                  ? "opacity-100"
+                  ? "opacity-100 hover:shadow-md hover:underline hover:shadow-acm-pink/50"
                   : "opacity-50 cursor-not-allowed"
               }`}
             >
