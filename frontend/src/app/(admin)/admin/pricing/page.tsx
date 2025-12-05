@@ -59,6 +59,7 @@ export default function AdminPricingPage() {
   const {promotions, loading, getPromotions, addPromotion, updatePromotion, deletePromotion} = usePromotions();
   const [isAdding, setIsAdding] = useState(false);
   const [loadingPromoId, setLoadingPromoId] = useState<number | null>(null);
+  const [isSending, setIsSending] = useState(false);
   
 
   const [ticketPrices, setTicketPrices] = useState<TicketPrices>({
@@ -147,9 +148,10 @@ export default function AdminPricingPage() {
   };
 
   // Sets promotion to active when sent
-  const sendPromotion = (promo: BackendPromotion) => {
+  const sendPromotion = async (promo: BackendPromotion) => {
     console.log("Sending promotion");
-    updatePromotion(promo.id, {
+    setIsSending(true);
+    await updatePromotion(promo.id, {
       promoCode: promo.promoCode,
       title: promo.title,
       description: promo.description,
@@ -159,6 +161,7 @@ export default function AdminPricingPage() {
       status: PromotionStatus.active,
       expirationDate: promo.expirationDate,
     })
+    setIsSending(false);
   };
 
   const handleBookingFeeSave = (feeData: { name: string; amount: number }) => {
@@ -276,7 +279,11 @@ export default function AdminPricingPage() {
         <div className="mb-16">
           <div className="text-xl font-afacad mb-3">Promotions</div>
           <div className="rounded-md overflow-hidden shadow-lg h-80 overflow-y-auto bg-[#242424]">
-            {(loading && !isAdding && loadingPromoId == null) ? <div className="flex justify-center items-center h-48"><Spinner size="md" color="pink" /></div> : promotions.map((promo) => (
+            {(loading && !isAdding && loadingPromoId == null) ?
+            <div className="flex flex-col justify-center items-center h-full gap-y-4">
+              <Spinner size="xl" color="pink" />
+              <span className="text-gray-500">{(isSending) ? "Sending to all users..." : "Getting promotions..."}</span>
+            </div> : promotions.map((promo) => (
                 <div key={promo.id} className="flex items-center justify-between px-5 py-4 border-b border-white/10">
                   <div className="flex-1 font-afacad flex items-center gap-4">
                     <span className="w-32">{promo.title}:</span>
@@ -308,8 +315,10 @@ export default function AdminPricingPage() {
                         disabled={promo.status == PromotionStatus.active}
                       >
                           <PiPencilSimple className="text-lg" />                                            
-                      </button>                 
-                      <button
+                      </button>      
+
+                      {/* Promotion Deletion Dropped */}
+                      {/* <button
                         title={promo.status == PromotionStatus.active ? "Cannot delete active promotion" : "Delete"}
                         type="button"
                         className={promo.status == PromotionStatus.active ? "transition-colors text-gray-500 opacity-50" : "transition-colors hover:text-white"}
@@ -317,7 +326,7 @@ export default function AdminPricingPage() {
                         disabled={promo.status == PromotionStatus.active}
                       >
                         <PiX className="text-lg" />
-                      </button>
+                      </button> */}
                       
                     </div>
                   }
