@@ -178,7 +178,7 @@ function AdminUsersPage() {
           ) : error ? (
             <div className="text-center py-8 text-red-400">{error}</div>
           ) : (
-            <div className="rounded-md overflow-hidden w-100 h-120 overflow-y-auto" style={{ backgroundColor: '#242424' }}>
+            <div className="rounded-md overflow-hidden w-100 h-[60vh] overflow-y-auto" style={{ backgroundColor: '#242424' }}>
               {memberList.length === 0 ? (
                 <div className="text-center py-8 text-white/60">No members found</div>
               ) : (
@@ -223,7 +223,7 @@ function AdminUsersPage() {
             ) : error ? (
               <div className="text-center py-8 text-red-400">{error}</div>
             ) : (
-              <div className="rounded-md overflow-hidden w-100 h-120 overflow-y-auto" style={{ backgroundColor: '#242424' }}>
+              <div className="rounded-md overflow-hidden w-100 h-[60vh] overflow-y-auto" style={{ backgroundColor: '#242424' }}>
                 {adminList.length === 0 ? (
                   <div className="text-center py-8 text-white/60">No administrators found</div>
                 ) : (
