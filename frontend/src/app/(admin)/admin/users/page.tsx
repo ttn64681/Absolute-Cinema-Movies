@@ -25,13 +25,13 @@ function AdminUsersPage() {
   // Fetch admins and users from backend
   useEffect(() => {
     const fetchData = async () => {
-      setIsLoading(true);
-      setError(null);
+        setIsLoading(true);
+        setError(null);
       
       let adminsSuccess = false;
       let usersSuccess = false;
-      
-      // Fetch admins
+        
+        // Fetch admins
       try {
         const adminsResponse = await api.get<Admin[]>(endpoints.admin.getAllAdmins);
         console.log('Admins response:', adminsResponse.data);
@@ -48,8 +48,8 @@ function AdminUsersPage() {
         });
         setAdminList([]);
       }
-      
-      // Fetch users
+        
+        // Fetch users
       try {
         const usersResponse = await api.get<BackendUser[]>(endpoints.users.getAllUsers);
         console.log('Users response:', usersResponse.data);

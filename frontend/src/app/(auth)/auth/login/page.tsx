@@ -140,7 +140,10 @@ function LoginPageContent() {
       <div className="mt-6 text-center space-y-3">
         <p className="text-white/70 text-sm">
           Don&apos;t have an account?{' '}
-          <Link href="/auth/register" className="text-acm-pink hover:text-acm-pink/80 transition-colors">
+          <Link 
+            href={redirectPath !== '/' ? `/auth/register?redirect=${encodeURIComponent(redirectPath)}` : '/auth/register'} 
+            className="text-acm-pink hover:text-acm-pink/80 transition-colors cursor-pointer"
+          >
             Sign up
           </Link>
         </p>

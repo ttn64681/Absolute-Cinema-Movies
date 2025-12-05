@@ -207,9 +207,9 @@ function StepTracker({ steps, currentStep }: StepTrackerProps) {
 export default function CheckoutPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="text-white">Loading...</div>
-      </div>
+        </div>
     }>
       <CheckoutPageContent />
     </Suspense>

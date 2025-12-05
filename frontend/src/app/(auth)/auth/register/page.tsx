@@ -1,19 +1,21 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useRegistration } from '@/contexts/RegistrationContext';
 import { validateEmail, validatePassword, authClient } from '@/clients/authClient';
 import AuthFormContainer from '@/components/common/auth/AuthFormContainer';
 import AuthInput from '@/components/common/auth/AuthInput';
 import AuthButton from '@/components/common/auth/AuthButton';
 
-export default function RegisterPage() {
+function RegisterPageContent() {
   const { data, updateData, isStepValid } = useRegistration();
   const [errors, setErrors] = useState<{[key: string]: string}>({});
   const [isCheckingEmail, setIsCheckingEmail] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectPath = searchParams.get('redirect');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -73,7 +75,10 @@ export default function RegisterPage() {
 
     // If no errors, proceed to next step
     if (Object.keys(newErrors).length === 0 && isStepValid(1)) {
-      router.push('/auth/register/step2');
+      const step2Url = redirectPath 
+        ? `/auth/register/step2?redirect=${encodeURIComponent(redirectPath)}`
+        : '/auth/register/step2';
+      router.push(step2Url);
     }
   };
 
@@ -144,5 +149,26 @@ export default function RegisterPage() {
         </p>
       </div>
     </AuthFormContainer>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense
+      fallback={
+        <AuthFormContainer
+          stepNumber={1}
+          stepTitle="Create an Account"
+          stepDescription="Step 1 of 3 - Get started with your account"
+        >
+          <div className="text-center py-8">
+            <div className="inline-block w-8 h-8 border-2 border-white/30 border-t-acm-pink rounded-full animate-spin"></div>
+            <p className="mt-4 text-white/60">Loading...</p>
+          </div>
+        </AuthFormContainer>
+      }
+    >
+      <RegisterPageContent />
+    </Suspense>
   );
 }

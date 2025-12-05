@@ -232,19 +232,19 @@ public class AuthService {
             return new AuthResponse(true, "Token refreshed successfully", newToken, refreshToken, adminDto);
         } else {
             // Handle regular user token refresh
-            User user = userService.getUserById(userId);
-            if (user == null) {
-                return new AuthResponse(false, "User not found");
-            }
+        User user = userService.getUserById(userId);
+        if (user == null) {
+            return new AuthResponse(false, "User not found");
+        }
 
-            // Step 3: Generate new access token with same user information and remember me preference
-            String newToken = jwtUtil.generateToken(email, userId, rememberMe != null ? rememberMe : false);
+        // Step 3: Generate new access token with same user information and remember me preference
+        String newToken = jwtUtil.generateToken(email, userId, rememberMe != null ? rememberMe : false);
 
-            // Step 4: Create user DTO using factory method
-            AuthResponse.UserDto userDto = UserDtoFactory.fromUser(user);
+        // Step 4: Create user DTO using factory method
+        AuthResponse.UserDto userDto = UserDtoFactory.fromUser(user);
 
-            // Step 5: Return new access token with user information (refresh token stays the same)
-            return new AuthResponse(true, "Token refreshed successfully", newToken, refreshToken, userDto);
+        // Step 5: Return new access token with user information (refresh token stays the same)
+        return new AuthResponse(true, "Token refreshed successfully", newToken, refreshToken, userDto);
         }
     }
 

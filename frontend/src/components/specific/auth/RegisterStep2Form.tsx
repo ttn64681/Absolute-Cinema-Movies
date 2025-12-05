@@ -1,16 +1,18 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useRegistration } from '@/contexts/RegistrationContext';
 import { validatePhoneNumber } from '@/clients/authClient';
 import AuthInput from '@/components/common/auth/AuthInput';
 import HomeAddressFields from './HomeAddressFields';
 
-export default function RegisterStep2Form() {
+function RegisterStep2FormContent() {
   const { data, updateData, isStepValid } = useRegistration();
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectPath = searchParams.get('redirect');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,12 +44,18 @@ export default function RegisterStep2Form() {
 
     // If no errors, proceed to next step
     if (isStepValid(2)) {
-      router.push('/auth/register/step3');
+      const step3Url = redirectPath 
+        ? `/auth/register/step3?redirect=${encodeURIComponent(redirectPath)}`
+        : '/auth/register/step3';
+      router.push(step3Url);
     }
   };
 
   const handleGoBack = () => {
-    router.push('/auth/register');
+    const registerUrl = redirectPath 
+      ? `/auth/register?redirect=${encodeURIComponent(redirectPath)}`
+      : '/auth/register';
+    router.push(registerUrl);
   };
 
   const handleAddressChange = (field: string, value: string) => {
@@ -138,5 +146,24 @@ export default function RegisterStep2Form() {
         </form>
       </div>
     </div>
+  );
+}
+
+export default function RegisterStep2Form() {
+  return (
+    <Suspense
+      fallback={
+        <div className="w-full max-w-2xl">
+          <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-8 shadow-xl">
+            <div className="text-center py-8">
+              <div className="inline-block w-8 h-8 border-2 border-white/30 border-t-acm-pink rounded-full animate-spin"></div>
+              <p className="mt-4 text-white/60">Loading...</p>
+            </div>
+          </div>
+        </div>
+      }
+    >
+      <RegisterStep2FormContent />
+    </Suspense>
   );
 }
