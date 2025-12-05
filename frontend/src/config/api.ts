@@ -161,7 +161,7 @@ api.interceptors.request.use(
     const localToken = localStorage.getItem('token');
     const sessionToken = sessionStorage.getItem('token');
     const token = localToken || sessionToken;
-    
+
     // Use adminToken if available (for admin endpoints), otherwise use regular token
     const tokenToUse = adminToken || token;
 

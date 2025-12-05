@@ -114,12 +114,12 @@ export default function ScheduleModal({
       }
 
       // Send the movie show to backend and await response
-      const movieShowStatus = await scheduleMovieShow(newMovieShow);
+      const movieShowStatus = await scheduleMovieShow(newMovieShow, movieTitle, selectedDate, selectedTime, selectedShowRoomId);
       if (movieShowStatus) {
-        alert("Movie show for \" " + movieTitle + "\"  on " + selectedDate + " at " + selectedTime + " in Showroom " + selectedShowRoomId + " successfully scheduled.");
-        onClose();
+        //alert("Movie show for \" " + movieTitle + "\"  on " + selectedDate + " at " + selectedTime + " in Showroom " + selectedShowRoomId + " successfully scheduled.");
+        //onClose();
       } else {
-        alert("Movie show schedule conflict. Check that there isn't another show at the same time in the same room.");
+        //alert("Movie show schedule conflict. Check that there isn't another show at the same time in the same room.");
       }
       
     }
@@ -333,7 +333,7 @@ export default function ScheduleModal({
               disabled={!selectedDate || !selectedTime || selectedShowRoomId === null}
               className={`px-8 py-2 rounded-full font-afacad font-bold text-black bg-gradient-to-r from-[#FF478B] to-[#FF5C33] ${
                 selectedDate && selectedTime && selectedShowRoomId !== null
-                  ? "opacity-100"
+                  ? "opacity-100 hover:shadow-md hover:underline hover:shadow-acm-pink/50"
                   : "opacity-50 cursor-not-allowed"
               }`}
             >

@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { ShowTime, BackendMovieShow } from '@/types/admin';
 import { getMovieDetails, createNewMovie, editExistingMovie } from '@/clients/adminMovieClient';
 import { getMovieShowsForMovie, createMovieShow } from '@/clients/adminMovieShowClient';
+import { useToast } from '@/contexts/ToastContext';
 
 /**
  * Hook for admin movie show operations
@@ -22,6 +23,7 @@ export function useAdminMovieShows(movieId: number) {
   const [movieShows, setMovieShows] = useState<ShowTime[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { showToast } = useToast();
 
   // get all movie shows for the selected movie
   const fetchMovieShows = async (movieId: number) => {
@@ -48,14 +50,16 @@ export function useAdminMovieShows(movieId: number) {
   };
 
   // Schedule a movie show
-  const scheduleMovieShow = async (movieShow: BackendMovieShow) => {
+  const scheduleMovieShow = async (movieShow: BackendMovieShow, movieTitle: string, date: string, time: string, roomId: number) => {
     const createdMovieShow = await createMovieShow(movieShow);
 
     if (createdMovieShow) {
-      console.log('Movie created successfully.');
+      console.log('Movie show scheduled successfully.');
+      showToast("Movie show for \" " + movieTitle + "\"  on " + date + " at " + time + " in Showroom " + roomId + " successfully scheduled.", 'success', 8000);
       return true;
     } else {
       console.log('Failed to schedule new movie show.');
+      showToast("Movie show schedule conflict. Check that there isn't another show at the same time in the same room.", 'error', 8000);
       return false;
     }
   };

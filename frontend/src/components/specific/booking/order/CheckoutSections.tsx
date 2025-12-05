@@ -204,20 +204,34 @@ export default function CheckoutSections({
   // Luhn algorithm for card number validation
   const luhnCheck = (cardNumber: string): boolean => {
     const cleaned = cardNumber.replace(/\s/g, '');
+    
+    // Must have at least 1 digit
+    if (!cleaned || cleaned.length === 0) {
+      return false;
+    }
+    
     let sum = 0;
     let isEven = false;
     
+    // Start from rightmost digit (check digit), work left
     for (let i = cleaned.length - 1; i >= 0; i--) {
-      let digit = parseInt(cleaned[i], 10);
+      const digit = parseInt(cleaned[i], 10);
       
-      if (isEven) {
-        digit *= 2;
-        if (digit > 9) {
-          digit -= 9;
-        }
+      // Invalid digit
+      if (isNaN(digit)) {
+        return false;
       }
       
-      sum += digit;
+      if (isEven) {
+        // Double every second digit from right
+        const doubled = digit * 2;
+        // If result > 9, subtract 9 (equivalent to adding digits)
+        sum += doubled > 9 ? doubled - 9 : doubled;
+      } else {
+        // Add digit as-is
+        sum += digit;
+      }
+      
       isEven = !isEven;
     }
     
@@ -228,25 +242,26 @@ export default function CheckoutSections({
   const validateCardNumber = (cardNumber: string, cardType?: string): boolean => {
     const cleaned = cardNumber.replace(/\s/g, '');
     
+    // Must be 13-19 digits (standard card lengths)
     if (!/^\d{13,19}$/.test(cleaned)) {
       return false;
     }
     
+    // Optional card type validation (only if cardType is provided)
+    // Case-insensitive comparison for flexibility
     if (cardType) {
-      if (cardType === 'visa' && (cleaned.length !== 16 || !cleaned.startsWith('4'))) {
+      const normalizedType = cardType.toLowerCase();
+      if (normalizedType === 'visa' && (cleaned.length !== 16 || !cleaned.startsWith('4'))) {
         return false;
-      } else if (cardType === 'mastercard' && (cleaned.length !== 16 || !cleaned.startsWith('5'))) {
+      } else if ((normalizedType === 'mastercard' || normalizedType === 'master card') && (cleaned.length !== 16 || !cleaned.startsWith('5'))) {
         return false;
-      } else if (cardType === 'amex' && (cleaned.length !== 15 || (!cleaned.startsWith('34') && !cleaned.startsWith('37')))) {
+      } else if ((normalizedType === 'amex' || normalizedType === 'american express') && (cleaned.length !== 15 || (!cleaned.startsWith('34') && !cleaned.startsWith('37')))) {
         return false;
-      } else if (cardType === 'discover' && (cleaned.length !== 16 || !cleaned.startsWith('6'))) {
-        return false;
-      }
-    } else {
-      if (cleaned.length !== 16) {
+      } else if (normalizedType === 'discover' && (cleaned.length !== 16 || !cleaned.startsWith('6'))) {
         return false;
       }
     }
+    // If no cardType provided, accept any valid length (13-19) that passes Luhn check
     
     return luhnCheck(cardNumber);
   };
@@ -364,19 +379,21 @@ export default function CheckoutSections({
       return;
     }
     
-    if (formData.cardType === 'visa' && (cleaned.length !== 16 || !cleaned.startsWith('4'))) {
+    // Case-insensitive card type comparison
+    const normalizedCardType = formData.cardType?.toLowerCase();
+    if (normalizedCardType === 'visa' && (cleaned.length !== 16 || !cleaned.startsWith('4'))) {
       showToast('Visa cards must be 16 digits and start with 4', 'error');
       setCurrentStep(2);
       return;
-    } else if (formData.cardType === 'mastercard' && (cleaned.length !== 16 || !cleaned.startsWith('5'))) {
+    } else if ((normalizedCardType === 'mastercard' || normalizedCardType === 'master card') && (cleaned.length !== 16 || !cleaned.startsWith('5'))) {
       showToast('Mastercard must be 16 digits and start with 5', 'error');
       setCurrentStep(2);
       return;
-    } else if (formData.cardType === 'amex' && (cleaned.length !== 15 || (!cleaned.startsWith('34') && !cleaned.startsWith('37')))) {
+    } else if ((normalizedCardType === 'amex' || normalizedCardType === 'american express') && (cleaned.length !== 15 || (!cleaned.startsWith('34') && !cleaned.startsWith('37')))) {
       showToast('American Express must be 15 digits and start with 34 or 37', 'error');
       setCurrentStep(2);
       return;
-    } else if (formData.cardType === 'discover' && (cleaned.length !== 16 || !cleaned.startsWith('6'))) {
+    } else if (normalizedCardType === 'discover' && (cleaned.length !== 16 || !cleaned.startsWith('6'))) {
       showToast('Discover cards must be 16 digits and start with 6', 'error');
       setCurrentStep(2);
       return;
@@ -747,16 +764,18 @@ export default function CheckoutSections({
                   return;
                 }
                 
-                if (formData.cardType === 'visa' && (cleaned.length !== 16 || !cleaned.startsWith('4'))) {
+                // Case-insensitive card type comparison
+                const normalizedCardType2 = formData.cardType?.toLowerCase();
+                if (normalizedCardType2 === 'visa' && (cleaned.length !== 16 || !cleaned.startsWith('4'))) {
                   showToast('Visa cards must be 16 digits and start with 4', 'error');
                   return;
-                } else if (formData.cardType === 'mastercard' && (cleaned.length !== 16 || !cleaned.startsWith('5'))) {
+                } else if ((normalizedCardType2 === 'mastercard' || normalizedCardType2 === 'master card') && (cleaned.length !== 16 || !cleaned.startsWith('5'))) {
                   showToast('Mastercard must be 16 digits and start with 5', 'error');
                   return;
-                } else if (formData.cardType === 'amex' && (cleaned.length !== 15 || (!cleaned.startsWith('34') && !cleaned.startsWith('37')))) {
+                } else if ((normalizedCardType2 === 'amex' || normalizedCardType2 === 'american express') && (cleaned.length !== 15 || (!cleaned.startsWith('34') && !cleaned.startsWith('37')))) {
                   showToast('American Express must be 15 digits and start with 34 or 37', 'error');
                   return;
-                } else if (formData.cardType === 'discover' && (cleaned.length !== 16 || !cleaned.startsWith('6'))) {
+                } else if (normalizedCardType2 === 'discover' && (cleaned.length !== 16 || !cleaned.startsWith('6'))) {
                   showToast('Discover cards must be 16 digits and start with 6', 'error');
                   return;
                 }

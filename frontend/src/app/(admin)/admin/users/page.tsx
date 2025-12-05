@@ -25,13 +25,13 @@ function AdminUsersPage() {
   // Fetch admins and users from backend
   useEffect(() => {
     const fetchData = async () => {
-      setIsLoading(true);
-      setError(null);
+        setIsLoading(true);
+        setError(null);
       
       let adminsSuccess = false;
       let usersSuccess = false;
-      
-      // Fetch admins
+        
+        // Fetch admins
       try {
         const adminsResponse = await api.get<Admin[]>(endpoints.admin.getAllAdmins);
         console.log('Admins response:', adminsResponse.data);
@@ -48,8 +48,8 @@ function AdminUsersPage() {
         });
         setAdminList([]);
       }
-      
-      // Fetch users
+        
+        // Fetch users
       try {
         const usersResponse = await api.get<BackendUser[]>(endpoints.users.getAllUsers);
         console.log('Users response:', usersResponse.data);
@@ -168,7 +168,7 @@ function AdminUsersPage() {
         </Link>
       </div>
 
-      <div className="max-w-[65rem] mx-auto px-4">
+      <div className="flex flex-row gap-20 max-w-[90rem] mx-auto px-4">
 
         {/* Members */}
         <div className="mb-16">
@@ -178,7 +178,7 @@ function AdminUsersPage() {
           ) : error ? (
             <div className="text-center py-8 text-red-400">{error}</div>
           ) : (
-            <div className="rounded-md overflow-hidden h-100 overflow-y-auto" style={{ backgroundColor: '#242424' }}>
+            <div className="rounded-md overflow-hidden w-100 h-100 overflow-y-auto" style={{ backgroundColor: '#242424' }}>
               {memberList.length === 0 ? (
                 <div className="text-center py-8 text-white/60">No members found</div>
               ) : (

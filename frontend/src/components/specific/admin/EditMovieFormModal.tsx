@@ -117,7 +117,7 @@ export default function EditMovieFormModal({ isOpen, onClose, onSaved, initialMo
     return false;
   };
   const getSaveOpacity = () => {
-    if (isSaveDisabled()) return 0.6;
+    if (isSaveDisabled()) return 0.25;
     return 1;
   };
   const getSaveButtonLabel = () => {
@@ -199,10 +199,10 @@ export default function EditMovieFormModal({ isOpen, onClose, onSaved, initialMo
     if (editingStatus) {
       onSaved(updatedMovie);
       refreshMovie();
-      alert("Movie data for \"" + title + "\" successfully saved.");
+      //alert("Movie data for \"" + title + "\" successfully saved.");
       onClose();
     } else {
-      alert("Error saving movie data.");
+      //alert("Error saving movie data.");
     }
     setSaving(false);
   };
@@ -427,7 +427,7 @@ export default function EditMovieFormModal({ isOpen, onClose, onSaved, initialMo
           <button
             type="button"
             onClick={onClose}
-            className="px-6 py-2 rounded-full font-afacad text-white border border-white/30"
+            className="px-6 py-2 rounded-full font-afacad text-white border border-white/30 cursor-pointer hover:border-white/60 hover:underline"
           >
             Cancel
           </button>
@@ -435,7 +435,7 @@ export default function EditMovieFormModal({ isOpen, onClose, onSaved, initialMo
             type="button"
             onClick={onSave}
             disabled={isSaveDisabled()}
-            className="px-8 py-2 rounded-full font-afacad font-bold text-black"
+            className="px-8 py-2 rounded-full font-afacad font-bold text-black cursor-pointer hover:shadow-md hover:underline hover:shadow-acm-pink/50"
             style={{ background: "linear-gradient(to right, #FF478B, #FF5C33)", opacity: getSaveOpacity() }}
           >
             {getSaveButtonLabel()}

@@ -142,10 +142,6 @@ async function deleteExistingMovie(movieId: number) {
       throw new Error(`Failed to delete movie: ${response.status}`);
     }
     const responseText = await response.text();
-    if (!responseText.trim()) {
-      throw new Error('Empty response from server');
-    }
-
     const data = JSON.parse(responseText);
 
     return data;

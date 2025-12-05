@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useRegistration } from '@/contexts/RegistrationContext';
 import { authClient } from '@/clients/authClient';
 import AuthFormContainer from '@/components/common/auth/AuthFormContainer';
@@ -10,11 +10,13 @@ import PaymentSection from '@/components/specific/auth/PaymentSection';
 import PreferencesSection from '@/components/specific/auth/PreferencesSection';
 import { PaymentCard } from '@/contexts/RegistrationContext';
 
-export default function RegisterStep3Form() {
+function RegisterStep3FormContent() {
   const { data, updateData, clearData, isStepValid } = useRegistration();
   const [isLoading, setIsLoading] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectPath = searchParams.get('redirect');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -84,8 +86,11 @@ export default function RegisterStep3Form() {
         // Clear registration data
         clearData();
 
-        // Redirect to email verification page with registration flag
-        router.push('/auth/verify-email?from=registration');
+        // Redirect to email verification page with registration flag and redirect path
+        const verifyUrl = redirectPath 
+          ? `/auth/verify-email?from=registration&redirect=${encodeURIComponent(redirectPath)}`
+          : '/auth/verify-email?from=registration';
+        router.push(verifyUrl);
       } else {
         setSubmitError(response.message);
       }
@@ -98,7 +103,10 @@ export default function RegisterStep3Form() {
   };
 
   const handleGoBack = () => {
-    router.push('/auth/register/step2');
+    const step2Url = redirectPath 
+      ? `/auth/register/step2?redirect=${encodeURIComponent(redirectPath)}`
+      : '/auth/register/step2';
+    router.push(step2Url);
   };
 
   const handleSkip = () => {
@@ -153,6 +161,28 @@ export default function RegisterStep3Form() {
         />
       </form>
     </AuthFormContainer>
+  );
+}
+
+export default function RegisterStep3Form() {
+  return (
+    <Suspense
+      fallback={
+        <AuthFormContainer
+          stepNumber={3}
+          stepTitle="Payment & Preferences"
+          stepDescription="Step 3 of 3 - Complete your profile"
+          maxWidth="2xl"
+        >
+          <div className="text-center py-8">
+            <div className="inline-block w-8 h-8 border-2 border-white/30 border-t-acm-pink rounded-full animate-spin"></div>
+            <p className="mt-4 text-white/60">Loading...</p>
+          </div>
+        </AuthFormContainer>
+      }
+    >
+      <RegisterStep3FormContent />
+    </Suspense>
   );
 }
 

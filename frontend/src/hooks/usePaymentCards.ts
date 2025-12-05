@@ -4,6 +4,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { PaymentCard, PaymentCardFormData } from '@/types/payment';
 import { paymentClient } from '@/clients/paymentClient';
 
+import { useToast } from '@/contexts/ToastContext';
+
 /**
  * Payment Cards Hook - Manages payment cards with modal state
  * 
@@ -32,6 +34,8 @@ export function usePaymentCards(userId: number | null) {
   const [isOpen, setIsOpen] = useState(false);
   const [mode, setMode] = useState<'Add' | 'Edit'>('Add');
   const [editingCard, setEditingCard] = useState<PaymentCard | null>(null);
+
+  const { showToast } = useToast();
 
   // Fetch payment cards
   const fetchPaymentCards = useCallback(async () => {
@@ -96,10 +100,12 @@ export function usePaymentCards(userId: number | null) {
 
         // Refresh cards and close modal
         await fetchPaymentCards();
+        showToast(`Payment card successfully ${mode === 'Add' ? 'created' : 'updated'}.`, 'success', 8000);
         close();
       } catch (err) {
         console.error(`Error ${mode === 'Add' ? 'creating' : 'updating'} card:`, err);
         setError(`Failed to ${mode === 'Add' ? 'add' : 'update'} payment card`);
+        showToast(`Failed to ${mode === 'Add' ? 'add' : 'update'} payment card`, 'error', 8000);
       } finally {
         setIsSubmitting(false);
       }
@@ -120,9 +126,11 @@ export function usePaymentCards(userId: number | null) {
       try {
         await paymentClient.deleteCard(cardId);
         await fetchPaymentCards();
+        showToast('Successfully deleted payment card.', 'success', 8000);
       } catch (err) {
         console.error('Error deleting card:', err);
         setError('Failed to delete payment card');
+        showToast('Failed to delete payment card', 'error', 8000);
       } finally {
         setIsSubmitting(false);
       }

@@ -192,7 +192,7 @@ export default function OrderDetails({ promoDiscount = 0, promoType, onTotalCalc
                 sizes="80px"
               />
             ) : (
-              <span className="text-gray-400 text-xs">No Image</span>
+            <span className="text-gray-400 text-xs">No Image</span>
             )}
           </div>
           <div className="ml-4">

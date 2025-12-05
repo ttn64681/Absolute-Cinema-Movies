@@ -90,7 +90,7 @@ public class UserController {
     @GetMapping("/users")
     public ResponseEntity<?> getAllUsers() {
         try {
-            System.out.println("Getting all users");
+        System.out.println("Getting all users");
             List<User> users = userService.getAllUsers();
             System.out.println("Found " + users.size() + " users");
             return ResponseEntity.ok(users);
