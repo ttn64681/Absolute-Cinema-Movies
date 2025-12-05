@@ -199,10 +199,10 @@ export default function EditMovieFormModal({ isOpen, onClose, onSaved, initialMo
     if (editingStatus) {
       onSaved(updatedMovie);
       refreshMovie();
-      alert("Movie data for \"" + title + "\" successfully saved.");
+      //alert("Movie data for \"" + title + "\" successfully saved.");
       onClose();
     } else {
-      alert("Error saving movie data.");
+      //alert("Error saving movie data.");
     }
     setSaving(false);
   };

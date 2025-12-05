@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { AdminMovie, PaginatedMovieResponse } from '@/types/admin';
 import { getMovieDetails, createNewMovie, editExistingMovie, deleteExistingMovie } from '@/clients/adminMovieClient';
+import { useToast } from '@/contexts/ToastContext';
 
 // Dummy movie data to use when there isn't a selected movie
 const dummyMovie: AdminMovie = {
@@ -41,6 +42,7 @@ export function useAdminMovie(movieId: number) {
   const [selectedMovieLoading, setSelectedMovieLoading] = useState(false);
   const [selectedMovieError, setSelectedMovieError] = useState<string | null>(null);
   const [refreshFlag, setRefreshFlag] = useState(0); 
+  const { showToast } = useToast();
 
   // get ALL movie information when the admin selects a movie to edit
   const fetchMovieInfo = async (movieId: number) => {
@@ -74,6 +76,8 @@ export function useAdminMovie(movieId: number) {
       const createdMovie = await createNewMovie(movie);
       if (createdMovie) {
         console.log('Movie created successfully.');
+        // Show success message
+        showToast('Movie \"' + createdMovie.title + '\" with ID ' + createdMovie.movie_id +  ' created successfully.', 'success', 8000);
         return createdMovie.movie_id;
       }
 
@@ -81,6 +85,8 @@ export function useAdminMovie(movieId: number) {
       console.error('Error creating movie:', error);
       const errorMessage = error instanceof Error ? error.message : 'Failed to create movie';
       setSelectedMovieError(errorMessage);
+      // Show failure message
+      showToast('Error creating movie: ' + errorMessage, 'error');
       return null;
     } finally {
       setSelectedMovieLoading(false);
@@ -94,6 +100,8 @@ export function useAdminMovie(movieId: number) {
       const updatedMovie = await editExistingMovie(movie, movieId);
       if (updatedMovie) {
         console.log('Movie updated successfully.');
+        // Show success message
+        showToast('Info for movie \"' + updatedMovie.title + '\" with ID ' + updatedMovie.movie_id +  ' updated successfully.', 'success', 8000);
         return updatedMovie.movie_id;
       }
 
@@ -101,6 +109,8 @@ export function useAdminMovie(movieId: number) {
       console.error('Error updating movie:', error);
       const errorMessage = error instanceof Error ? error.message : 'Failed to update movie';
       setSelectedMovieError(errorMessage);
+      // Show failure message
+      showToast('Error creating movie: ' + errorMessage, 'error');
       return null;
     } finally {
       setSelectedMovieLoading(false);
@@ -111,7 +121,8 @@ export function useAdminMovie(movieId: number) {
   const deleteMovie = async (movieId: number) => {
     setSelectedMovieLoading(true);
     try {
-      const deleteStatus = await deleteExistingMovie(movieId);
+      await deleteExistingMovie(movieId);
+      showToast("Movie deleted.", 'success', 8000);
 
     } catch (error) {
       console.error('Error deleting movie:', error);

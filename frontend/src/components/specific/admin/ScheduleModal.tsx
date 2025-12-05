@@ -114,12 +114,12 @@ export default function ScheduleModal({
       }
 
       // Send the movie show to backend and await response
-      const movieShowStatus = await scheduleMovieShow(newMovieShow);
+      const movieShowStatus = await scheduleMovieShow(newMovieShow, movieTitle, selectedDate, selectedTime, selectedShowRoomId);
       if (movieShowStatus) {
-        alert("Movie show for \" " + movieTitle + "\"  on " + selectedDate + " at " + selectedTime + " in Showroom " + selectedShowRoomId + " successfully scheduled.");
-        onClose();
+        //alert("Movie show for \" " + movieTitle + "\"  on " + selectedDate + " at " + selectedTime + " in Showroom " + selectedShowRoomId + " successfully scheduled.");
+        //onClose();
       } else {
-        alert("Movie show schedule conflict. Check that there isn't another show at the same time in the same room.");
+        //alert("Movie show schedule conflict. Check that there isn't another show at the same time in the same room.");
       }
       
     }

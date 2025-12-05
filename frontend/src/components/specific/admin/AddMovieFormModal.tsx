@@ -188,11 +188,11 @@ export default function AddMovieFormModal({ isOpen, onClose, onSaved }: MovieFor
         
       onSaved(updatedMovie);
       refreshMovie(); // ensure the new movie data is fetched
-      alert("New movie \"" + title + "\" with ID " + newMovieId + " successfully created.");
+      //alert("New movie \"" + title + "\" with ID " + newMovieId + " successfully created.");
       onClose();
 
     } else {
-      alert("Error creating movie");
+      //alert("Error creating movie");
     }
     setSaving(false);
   };
