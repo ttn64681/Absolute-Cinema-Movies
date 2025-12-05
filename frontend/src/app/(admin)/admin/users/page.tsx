@@ -99,14 +99,14 @@ function AdminUsersPage() {
                         >
                           {user.accountStatus === 'suspended' ? 'Unsuspend' : 'Suspend'}
                         </button>
-                        <button
+                        {/* <button
                           title="Delete User"
                           type="button"
                           onClick={() => handleDeleteUser(user.id, `${user.firstName} ${user.lastName}`)}
                           className="px-3 py-1.5 rounded-md text-xs font-medium transition-colors border border-red-500/50 hover:border-red-500 text-red-400 hover:text-red-300 cursor-pointer"
                         >
                           <PiTrash className="text-base" />
-                        </button>
+                        </button> */}
                       </div>
                     </div>
                   ))

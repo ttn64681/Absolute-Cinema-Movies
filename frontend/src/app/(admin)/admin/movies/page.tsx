@@ -241,7 +241,7 @@ export default function AdminMoviesPage() {
                       >
                         <PiPencilSimple className="text-xl" />
                       </button>
-                      <button
+                      {/* <button
                         title={deleteButtonTitle}
                         className={deleteButtonClassName}
                         onClick={() => remove(movie.movie_id, movie.title)}
@@ -249,7 +249,7 @@ export default function AdminMoviesPage() {
                         style={{ background: 'none', border: 'none' }}
                       >
                         <PiX className="text-xl" />
-                      </button>
+                      </button> */}
                     </div>
                   </li>
                 );
