@@ -7,6 +7,7 @@ import Checkbox from '@/components/common/forms/Checkbox';
 import NavBar from '@/components/common/navBar/NavBar';
 import { useProfile } from '@/contexts/ProfileContext';
 import styles from './profile.module.css';
+import { useToast } from '@/contexts/ToastContext';
 
 // Hook to retrieve user from backend
 import { useUser } from '@/hooks/useUser';
@@ -45,7 +46,14 @@ export default function ProfilePage() {
   // Promotions subscription state
   const [subscribeToPromotions, setSubscribeToPromotions] = useState(false);
 
+
   const { setProfilePic, profilePicUrl, setProfilePicUrl } = useProfile();
+
+  const { showToast } = useToast();
+
+  // States for save button
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [savingPassword, setSavingPassword] = useState(false);
 
   const [userData, setUserData] = useState({
     email: '',
@@ -87,6 +95,8 @@ export default function ProfilePage() {
       if (user.profileImageLink) {
         setProfilePicUrl(user.profileImageLink);
       }
+      console.log(user.email);
+      console.log("Promotion status in component: " + user.enrolledForPromotions);
 
       //console.log("User data set");
     }
@@ -109,12 +119,12 @@ export default function ProfilePage() {
       });
 
       if (success) {
-        alert('Profile updated successfully.');
+        showToast('Profile updated successfully.','success',8000);
       } else {
-        alert('Failed to update user profile.');
+        showToast('Failed to update user profile.','error',8000);
       }
     } else {
-      alert('The phone number is invalid. Check that it contains only numbers.');
+      showToast('The phone number is invalid. Check that it contains only numbers.','error',8000);
     }
   };
 
@@ -132,14 +142,19 @@ export default function ProfilePage() {
 
       // Password was updated successfully
       if (success) {
-        alert('Password changed successfully.');
-        // Password was not updated: current password is incorrect
+        showToast('Password changed successfully.','success',8000);
       } else {
-        alert('Failed to update password. Check that your current password is correct.');
+        // Password was not updated: current password is incorrect
+        showToast('Failed to update password. Check that your current password is correct.','error',8000);
       }
     } else {
       // If the new password does not meet security requirements, tell the user why
-      alert(message);
+      if (message) {
+        showToast(message,'error',8000);
+      } else {
+        showToast('Unknown error','error',8000);
+      }
+      
     }
   };
 
@@ -153,6 +168,7 @@ export default function ProfilePage() {
       const reader = new FileReader();
       reader.onloadend = () => {
         const base64String = reader.result as string;
+        console.log(base64String);
         setUserData((prev) => ({ ...prev, profileImageLink: base64String }));
       };
       reader.readAsDataURL(file);
@@ -387,7 +403,7 @@ export default function ProfilePage() {
                 title="Save Changes"
                 type="button"
                 onClick={saveProfileChanges}
-                className="px-10 py-3 rounded-full font-afacad font-bold text-white cursor-pointer hover:shadow-lg hover:shadow-acm-pink/50 transition-all bg-gradient-to-r from-acm-pink to-acm-orange border-none"
+                className="px-10 py-3 rounded-full font-afacad font-bold text-white cursor-pointer hover:shadow-lg hover:underline hover:shadow-acm-pink/50 transition-all bg-gradient-to-r from-acm-pink to-acm-orange border-none"
               >
                 Save Changes
               </button>
@@ -432,7 +448,7 @@ export default function ProfilePage() {
                   title="Change Password"
                   type="button"
                   onClick={savePasswordChange}
-                  className="px-10 py-3 rounded-full font-afacad font-bold text-white cursor-pointer hover:shadow-lg hover:shadow-acm-pink/50 transition-all bg-gradient-to-r from-acm-pink to-acm-orange border-none"
+                  className="px-10 py-3 rounded-full font-afacad font-bold text-white cursor-pointer hover:shadow-lg hover:underline hover:shadow-acm-pink/50 transition-all bg-gradient-to-r from-acm-pink to-acm-orange border-none"
                 >
                   Change Password
                 </button>

@@ -49,24 +49,7 @@ async function getUserInfo(userId: number) {
     }
 
     // Process the JSON data
-    const profileData = (await response.json()) as {
-      user: {
-        id: number;
-        email: string;
-        firstName: string;
-        lastName: string;
-        phoneNumber: string;
-        enrolledForPromotions: boolean;
-        profileImageLink?: string;
-      };
-      homeAddress: {
-        street: string;
-        city: string;
-        state: string;
-        zip: string;
-        country: string;
-      } | null;
-    };
+    const profileData = (await response.json());
 
     // Combine user data with home address
 
@@ -77,13 +60,13 @@ async function getUserInfo(userId: number) {
       firstName: string;
       lastName: string;
       phoneNumber: string;
-      enrolledForPromotions: boolean;
+      //enrolledForPromotions: boolean;
       homeStreet?: string;
       homeCity?: string;
       homeState?: string;
       homeZip?: string;
       homeCountry?: string;
-      profileImageLink?: string;
+      //profileImageLink?: string;
     } = { ...profileData.user };
 
     // Address
@@ -95,8 +78,26 @@ async function getUserInfo(userId: number) {
       userData.homeCountry = profileData.homeAddress.country || 'US';
     }
 
+    // Promotion status
+    if (profileData.enrolledForPromotions) {
+      userData.enrolledForPromotions = profileData.enrolledForPromotions;
+    }
+
+    // Profile image link
+    if (profileData.profileImageLink) {
+      userData.profileImageLink = profileData.profileImageLink;
+    }
+
     // Return the combined user and address data
     console.log('Successfully retrieved user profile from backend');
+    console.log('Profile data in client: ');
+    console.log(profileData);
+    console.log(profileData.user.enrolledForPromotions);
+
+    console.log('User data in client: ');
+    console.log(userData);
+    console.log("Enrolled for promos " + userData.enrolledForPromotions);
+    console.log("Profile image link: " + userData.profileImageLink);
     return userData;
   } catch (error) {
     console.error('Fetch error:', error);
