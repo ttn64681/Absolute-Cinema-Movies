@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import NavBar from '@/components/common/navBar/NavBar';
 import AdminCard from '@/components/specific/admin/AdminCard';
+import AdminNavBar from '@/components/common/navBar/AdminNavBar';
 
 interface Movie {
   id: number;
@@ -96,7 +97,7 @@ export default function AdminHomePage() {
 
   return (
     <div className="text-white pb-16" style={{ backgroundColor: '#1C1C1C', minHeight: '100vh' }}>
-      <NavBar />
+      <AdminNavBar />
       <div className="h-30" />
 
       <div className="max-w-[70rem] mx-auto px-4 mt-6">
@@ -109,7 +110,7 @@ export default function AdminHomePage() {
         <AdminCard href="/admin/users" title="Manage Users" tooltip="Manage users" />
       </div>
 
-      <div className="max-w-[70rem] mx-auto px-4 mt-10 mb-16">
+      {<div className="max-w-[70rem] mx-auto px-4 mt-10 mb-16">
         <h2 className="text-xl font-afacad mb-3">Upcoming Showtimes</h2>
         <div className="rounded-md p-4 sm:p-6 overflow-y-auto" style={{ backgroundColor: '#242424', border: '1px solid #FF478B', maxHeight: '360px' }}>
           {upcomingShowtimes.length === 0 && (
@@ -128,7 +129,7 @@ export default function AdminHomePage() {
             </ul>
           )}
         </div>
-      </div>
+      </div>}
     </div>
   );
 }
