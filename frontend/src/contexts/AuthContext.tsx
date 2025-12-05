@@ -19,6 +19,7 @@ interface AuthContextType {
   adminLogin: (email: string, password: string, rememberMe?: boolean) => Promise<AuthResponse>;
   logout: () => Promise<void>;
   checkAuthStatus: () => void;
+  updateUser: (userData: Partial<User>) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -299,6 +300,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     console.log('Logout completed - user logged out instantly');
   }, []);
 
+  // Update user data in AuthContext (e.g., when profile is updated)
+  const updateUser = useCallback((userData: Partial<User>) => {
+    setUser((prevUser) => {
+      if (!prevUser) return prevUser;
+      return { ...prevUser, ...userData };
+    });
+  }, []);
+
   // CACHES: Context value object { user, isAuthenticated, isLoading, login, logout, checkAuthStatus } - persists across AuthProvider re-renders
   // CHANGES: When user, isLoading, or function references change - BUT will recreate if AuthProvider component unmounts/remounts
   // WITHOUT useMemo: New object every AuthProvider re-render -> all auth consumers re-render (NavBar, protected routes, etc.)
@@ -312,8 +321,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       adminLogin,
       logout,
       checkAuthStatus,
+      updateUser,
     }),
-    [user, isLoading, login, adminLogin, logout, checkAuthStatus]
+    [user, isLoading, login, adminLogin, logout, checkAuthStatus, updateUser]
   );
 
   return <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>;

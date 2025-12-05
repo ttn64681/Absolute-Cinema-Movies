@@ -13,16 +13,8 @@ import { useAdminMoviesList } from '@/hooks/useAdminMoviesList';
 import { useAdminMovie } from '@/hooks/useAdminMovie';
 
 export default function AdminMoviesPage() {
-
   // Paged movies and pagination controls from useAdminMovies hook
-  const {
-    adminMovies,
-    isLoading,
-    pagination,
-    goToNextPage,
-    goToPreviousPage,
-    goToThisPage,
-  } = useAdminMoviesList();
+  const { adminMovies, isLoading, pagination, goToNextPage, goToPreviousPage, goToThisPage } = useAdminMoviesList();
 
   const { deleteMovie } = useAdminMovie(0);
 
@@ -33,7 +25,6 @@ export default function AdminMoviesPage() {
   console.log("HasPreviousPage is " + pagination.hasNext );
   console.log("HasNextPage is " + pagination.hasNext );*/
 
-
   const [movies, setMovies] = useState(moviesList); // movies list
   const [showAddModal, setShowAddModal] = useState(false); // add movie popup visibility
   const [showEditModal, setShowEditModal] = useState(false); // edit movie popup visibility
@@ -41,22 +32,18 @@ export default function AdminMoviesPage() {
   const [showScheduleModal, setShowScheduleModal] = useState(false); // schedule movie show popup visibility
   const [schedulingMovie, setSchedulingMovie] = useState<Movie | null>(null); // movie currently being scheduled
   const [searchQuery, setSearchQuery] = useState(''); // user input for searching movies
-  const [currentPage, setCurrentPage] = useState(1); // current page of movies to show
-  const moviesPerPage = 10; // # of movies to display on one page
-
-  
 
   // Update movies list whenever movies from backend change
   useEffect(() => {
     if (typeof window === 'undefined') return;
-      setMovies(adminMovies && adminMovies.length > 0 ? adminMovies : []);
+    setMovies(adminMovies && adminMovies.length > 0 ? adminMovies : []);
   }, [adminMovies]);
 
   // Delete movie function
   const remove = async (movie_id: number, title: string) => {
     const movieToDelete = movies.find((movie) => movie.movie_id === movie_id);
     const deleteMovieStatus = movieToDelete?.status;
-    
+
     if (deleteMovieStatus == 'now_playing') {
       return;
     }
@@ -64,8 +51,8 @@ export default function AdminMoviesPage() {
     if (movie_id) {
       await deleteMovie(movie_id, title);
       //alert("Movie deleted.");
-    } 
-    
+    }
+
     const updatedMovies = movies.filter((movie) => movie.movie_id !== movie_id);
     setMovies(updatedMovies);
   };
@@ -84,11 +71,10 @@ export default function AdminMoviesPage() {
 
   // Function to update movies list with a new or edited movie
   const onMovieSaved = (savedMovie: AdminMovie) => {
-
     setMovies((prevMovies) => {
       const existingIndex = prevMovies.findIndex((m) => m.movie_id === savedMovie.movie_id);
       let updated: AdminMovie[];
-      
+
       if (existingIndex >= 0) {
         updated = [...prevMovies];
         updated[existingIndex] = savedMovie;
@@ -109,12 +95,12 @@ export default function AdminMoviesPage() {
       updated = [...prevMovies];
 
       if (scheduledMovie) {
-        scheduledMovie.status = "now_playing";
+        scheduledMovie.status = 'now_playing';
         updated[index] = scheduledMovie;
-      } 
+      }
       return updated;
     });
-  }
+  };
 
   // Function to open menu for scheduling movie shows
   const openScheduleModal = (movie: Movie) => {
@@ -122,22 +108,14 @@ export default function AdminMoviesPage() {
     setShowScheduleModal(true);
   };
 
-  const totalPages = Math.ceil(movies.length / moviesPerPage);
-  const startIndex = 0;
-  const endIndex = moviesPerPage;
-  const paginatedMovies = movies.slice(startIndex, endIndex);
-
-  const goToPage = (page: number) => {
-    if (page >= 0 && page <= totalPages) {
-      setCurrentPage(page);
-    }
-  };
+  // Use movies directly from backend pagination (no client-side slicing needed)
+  const paginatedMovies = movies;
 
   const getStatusLabel = (status: String) => {
-    if (status == "now_playing") {
-      return "Now Playing";
+    if (status == 'now_playing') {
+      return 'Now Playing';
     } else {
-      return "Upcoming";
+      return 'Upcoming';
     }
   };
 
@@ -183,31 +161,29 @@ export default function AdminMoviesPage() {
       </div>*/}
 
       {/* List of Movies Container */}
-      <div className="relative max-w-[80rem] mx-auto min-h">
-          
-          {/* Labels */}
-          <li className="flex items-center py-3 sm:py-4">
+      <div className="relative max-w-7xl mx-auto min-h">
+        {/* Labels */}
+        <li className="flex items-center py-3 sm:py-4">
+          <div
+            className="flex-1 text-gray-200 font-afacad px-25 min-h-6 text-xl"
+            style={{ textAlign: 'center', color: '#FF478B' }}
+          >
+            Movie
+          </div>
+          <div
+            className="flex-1 text-gray-200 font-afacad px-25 min-h-6 text-xl"
+            style={{ textAlign: 'center', color: '#FF478B' }}
+          >
+            Movie Status
+          </div>
+          <div
+            className="flex-1 text-gray-200 font-afacad px-25 min-h-6 text-xl"
+            style={{ textAlign: 'center', color: '#FF478B' }}
+          >
+            Controls
+          </div>
+        </li>
 
-            <div className="flex-1 text-gray-200 font-afacad px-25 min-h-[1.5rem] text-xl"
-              style={{textAlign: 'center', color: '#FF478B', }}
-            >
-              Movie
-            </div>
-            <div
-              className="flex-1 text-gray-200 font-afacad px-25 min-h-[1.5rem] text-xl"
-              style={{ textAlign: 'center', color: '#FF478B', }}
-            >
-              Movie Status
-            </div>
-            <div
-              className="flex-1 text-gray-200 font-afacad px-25 min-h-[1.5rem] text-xl"
-              style={{textAlign: 'center', color: '#FF478B', }}
-            >
-              Controls
-            </div>
-
-          </li>
-          
         <div
           className="border rounded-md p-4 sm:p-6 relative overflow-y-auto h-full"
           style={{
@@ -217,94 +193,92 @@ export default function AdminMoviesPage() {
             scrollbarColor: '#9CA3AF #E5E7EB',
           }}
         >
-
           {/* Movies List */}
           <ul className="h-[400px]">
-            {paginatedMovies.length === 0 ? (
-              <li className="text-center text-white/60 font-afacad py-8">
-                {searchQuery ? 'No movies found matching your search.' : 'Loading movies...'}
-              </li>
+            {isLoading ? (
+              <li className="text-center text-white/60 font-afacad py-8">Loading movies...</li>
+            ) : paginatedMovies.length === 0 ? (
+              <li className="text-center text-white/60 font-afacad py-8">No movies found.</li>
             ) : (
               paginatedMovies.map((movie) => {
-              
-              const hasShowtimes = movie.status == "now_playing";
+                const hasShowtimes = movie.status == 'now_playing';
 
-              const deleteButtonTitle = (hasShowtimes)
-                ? 'Cannot delete movie with scheduled showtimes.' 
-                : 'Remove';
-              const deleteButtonClassName = (hasShowtimes) 
-                ? 'transition-colors opacity-50' 
-                : 'transition-colors hover:text-white cursor-pointer';
+                const deleteButtonTitle = hasShowtimes ? 'Cannot delete movie with scheduled showtimes.' : 'Remove';
+                const deleteButtonClassName = hasShowtimes
+                  ? 'transition-colors opacity-50'
+                  : 'transition-colors hover:text-white cursor-pointer';
 
-              return (
-                <li key={movie.movie_id} className="flex items-center py-3 sm:py-4">
-                  <div className="flex-1 text-gray-200 font-afacad px-25 min-h-[1.5rem]">
-                    {movie.title}
-                  </div>
-                  <div
-                    className="absolute left-1/2 transform -translate-x-1/2 text-gray-300 hmovie_idden sm:block font-afacad"
-                    style={{ textAlign: 'center' }}
-                  >
-                    {getStatusLabel(movie.status)}
-                  </div>
-                  <div className="flex items-center gap-3 text-gray-300 px-25 ml-auto min-w-[4rem]">
-                    <button
-                      title="Schedule showtime"
-                      className="hover:text-white transition-colors text-sm font-afacad px-3 py-1 rounded border border-white/30 hover:bg-white/10"
-                      onClick={() => openScheduleModal(movie)}
-                      style={{ background: 'none', cursor: 'pointer' }}
+                return (
+                  <li key={movie.movie_id} className="flex items-center py-3 sm:py-4">
+                    <div className="flex-1 text-gray-200 font-afacad px-25 min-h-6">{movie.title}</div>
+                    <div
+                      className="absolute left-1/2 transform -translate-x-1/2 text-gray-300 hmovie_idden sm:block font-afacad"
+                      style={{ textAlign: 'center' }}
                     >
-                      Schedule
-                    </button>
-                    <button
-                      title="Edit movie"
-                      className="hover:text-white transition-colors"
-                      onClick={() => openEditModal(movie.movie_id)}
-                      style={{ background: 'none', border: 'none', cursor: 'pointer' }}
-                    >
-                      <PiPencilSimple className="text-xl" />
-                    </button>
-                    <button
-                      title={deleteButtonTitle}
-                      className={deleteButtonClassName}
-                      onClick={() => remove(movie.movie_id, movie.title)}
-                      disabled={hasShowtimes}
-                      style={{ background: 'none', border: 'none' }}
-                    >
-                      <PiX className="text-xl" />
-                    </button>
-                  </div>
-                </li>
-              );
-            })
+                      {getStatusLabel(movie.status)}
+                    </div>
+                    <div className="flex items-center gap-3 text-gray-300 px-25 ml-auto min-w-16">
+                      <button
+                        title="Schedule showtime"
+                        className="hover:text-white transition-colors text-sm font-afacad px-3 py-1 rounded border border-white/30 hover:bg-white/10"
+                        onClick={() => openScheduleModal(movie)}
+                        style={{ background: 'none', cursor: 'pointer' }}
+                      >
+                        Schedule
+                      </button>
+                      <button
+                        title="Edit movie"
+                        className="hover:text-white transition-colors"
+                        onClick={() => openEditModal(movie.movie_id)}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer' }}
+                      >
+                        <PiPencilSimple className="text-xl" />
+                      </button>
+                      <button
+                        title={deleteButtonTitle}
+                        className={deleteButtonClassName}
+                        onClick={() => remove(movie.movie_id, movie.title)}
+                        disabled={hasShowtimes}
+                        style={{ background: 'none', border: 'none' }}
+                      >
+                        <PiX className="text-xl" />
+                      </button>
+                    </div>
+                  </li>
+                );
+              })
             )}
           </ul>
         </div>
       </div>
 
-      {(
-        <div className="max-w-[65rem] mx-auto mt-4 px-4 flex items-center justify-center gap-4">
+      {/* Pagination Controls */}
+      {pagination.totalPages > 0 && (
+        <div className="max-w-7xl mx-auto mt-4 px-4 flex items-center justify-center gap-4">
           <button
             type="button"
             onClick={() => goToPreviousPage()}
-            className={!pagination.hasPrevious 
-              ? 'px-4 py-2 rounded-md font-afacad transition-colors bg-white/5 text-white/30'
-              : 'px-4 py-2 rounded-md font-afacad transition-colors bg-white/10 text-white hover:bg-white/20 cursor-pointer'
+            disabled={!pagination.hasPrevious}
+            className={
+              !pagination.hasPrevious
+                ? 'px-4 py-2 rounded-md font-afacad transition-colors bg-white/5 text-white/30 cursor-not-allowed'
+                : 'px-4 py-2 rounded-md font-afacad transition-colors bg-white/10 text-white hover:bg-white/20 cursor-pointer'
             }
             title="Previous page"
           >
             <PiCaretLeft className="text-xl" />
           </button>
           <span className="text-white font-afacad">
-            Page {pagination.currentPage+1}
+            Page {pagination.currentPage + 1} of {pagination.totalPages} ({pagination.totalElements} total)
           </span>
           <button
             type="button"
             onClick={() => goToNextPage()}
             disabled={!pagination.hasNext}
-            className={!pagination.hasNext
-              ? 'px-4 py-2 rounded-md font-afacad transition-colors bg-white/5 text-white/30'
-              : 'px-4 py-2 rounded-md font-afacad transition-colors bg-white/10 text-white hover:bg-white/20 cursor-pointer'
+            className={
+              !pagination.hasNext
+                ? 'px-4 py-2 rounded-md font-afacad transition-colors bg-white/5 text-white/30 cursor-not-allowed'
+                : 'px-4 py-2 rounded-md font-afacad transition-colors bg-white/10 text-white hover:bg-white/20 cursor-pointer'
             }
             title="Next page"
           >
@@ -333,11 +307,7 @@ export default function AdminMoviesPage() {
         initialMovieId={editingMovieId}
       />
 
-      <AddMovieFormModal
-        isOpen={showAddModal}
-        onClose={() => setShowAddModal(false)}
-        onSaved={onMovieSaved}
-      />
+      <AddMovieFormModal isOpen={showAddModal} onClose={() => setShowAddModal(false)} onSaved={onMovieSaved} />
 
       {schedulingMovie && (
         <ScheduleModal

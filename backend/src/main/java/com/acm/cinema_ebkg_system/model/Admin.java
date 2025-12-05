@@ -1,6 +1,9 @@
 package com.acm.cinema_ebkg_system.model;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import java.time.LocalDateTime;
 
 /**
@@ -17,6 +20,9 @@ import java.time.LocalDateTime;
  */
 @Entity
 @Table(name = "admin")
+@Getter
+@Setter
+@NoArgsConstructor
 public class Admin {
     // Primary key - auto-generated unique identifier
     @Id
@@ -41,9 +47,6 @@ public class Admin {
 
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
-
-    // Default constructor
-    public Admin() {}
 
     /**
      * Constructor for creating a new admin with basic required information
@@ -89,55 +92,5 @@ public class Admin {
     @PreUpdate
     protected void onUpdate() {
         this.updatedAt = LocalDateTime.now();
-    }
-
-    // Getters
-    public Long getId() {
-        return id;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public String getProfileImageLink() {
-        return profileImageLink;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
-    // Setters
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public void setProfileImageLink(String profileImageLink) {
-        this.profileImageLink = profileImageLink;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
     }
 }

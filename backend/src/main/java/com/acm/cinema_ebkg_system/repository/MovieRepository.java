@@ -43,7 +43,7 @@ public interface MovieRepository extends JpaRepository<Movie, Long> {
     // List<Movie> findByReleaseMonthDayYear(@Param("month") int month, @Param("day") int day, @Param("year") int year);
 
     /**
-     * Combined AND filters with optional parts and multi-genre OR (native Postgres).
+     * Combined AND filters w/ optional parts and multi-genre OR.
      * - title: substring (optional)
      * - genresCsv: comma-separated; ANY token match (optional)
      * - date parts: match against show_time (each part optional)
@@ -77,43 +77,43 @@ public interface MovieRepository extends JpaRepository<Movie, Long> {
                                  @Param("year") Integer year);
 
     /**
-     * now_playing ordered by earliest upcoming show_time (>= today).
-     * Shows ALL now_playing movies, even if they don't have showtimes yet.
+     * now_playing ordered by score (highest first).
      * Return: List<Movie>
      * Example JSON: [ { "movie_id": 2, "title": "Superman", ... }, { "movie_id": 5, ... } ]
      */
     @Query(value = """
       SELECT m.* FROM movie m
-      LEFT JOIN movie_show ms ON ms.movie_id = m.movie_id
-      LEFT JOIN show_time st ON st.movie_show_id = ms.id AND st.show_time >= CURRENT_DATE
-      WHERE m.status = 'now_playing'
+      INNER JOIN movie_show ms ON ms.movie_id = m.movie_id
+      INNER JOIN show_time st ON st.movie_show_id = ms.id
+      WHERE m.status = 'now_playing' AND st.show_time >= CURRENT_DATE
       GROUP BY m.movie_id
-      ORDER BY MIN(st.show_time) ASC NULLS LAST, m.release_date ASC
+      ORDER BY m.score DESC
     """, nativeQuery = true)
     List<Movie> findNowPlayingOrderedByNextShowDate();
     
     /**
-     * Paginated NOW_PLAYING ordered by earliest show_time (>= today).
-     * Shows ALL now_playing movies, even if they don't have showtimes yet.
+     * Paginated NOW_PLAYING ordered by score (highest first).
      * Pattern: Repository Pattern. Cached at service layer.
      */
     @Query(value = """
       SELECT m.* FROM movie m
-      LEFT JOIN movie_show ms ON ms.movie_id = m.movie_id
-      LEFT JOIN show_time st ON st.movie_show_id = ms.id AND st.show_time >= CURRENT_DATE
-      WHERE m.status = 'now_playing'
+      INNER JOIN movie_show ms ON ms.movie_id = m.movie_id
+      INNER JOIN show_time st ON st.movie_show_id = ms.id
+      WHERE m.status = 'now_playing' AND st.show_time >= CURRENT_DATE
       GROUP BY m.movie_id
-      ORDER BY MIN(st.show_time) ASC NULLS LAST, m.release_date ASC
+      ORDER BY m.score DESC
     """, 
     countQuery = """
       SELECT COUNT(DISTINCT m.movie_id) FROM movie m
-      WHERE m.status = 'now_playing'
+      INNER JOIN movie_show ms ON ms.movie_id = m.movie_id
+      INNER JOIN show_time st ON st.movie_show_id = ms.id
+      WHERE m.status = 'now_playing' AND st.show_time >= CURRENT_DATE
     """,
     nativeQuery = true)
     Page<Movie> findNowPlayingOrderedByNextShowDate(Pageable pageable);
 
     /**
-     * upcoming ordered by first show_time (> today).
+     * upcoming ordered by score (highest first).
      * Return: List<Movie>
      * Example JSON: [ { "movie_id": 9, "title": "Oldboy", ... }, { "movie_id": 12, ... } ]
      */
@@ -121,18 +121,19 @@ public interface MovieRepository extends JpaRepository<Movie, Long> {
       SELECT m.* FROM movie m
       WHERE m.status = 'upcoming'
       GROUP BY m.movie_id
+      ORDER BY m.score DESC
     """, nativeQuery = true)
     List<Movie> findUpcoming();
 
     /**
-     * Paginated UPCOMING ordered by release_date.
+     * Paginated UPCOMING ordered by score (highest first).
      * Pattern: Repository Pattern. Cached at service layer.
      */
     @Query(value = """
       SELECT m.* FROM movie m
       WHERE m.status = 'upcoming'
       GROUP BY m.movie_id
-      ORDER BY m.release_date ASC
+      ORDER BY m.score DESC
     """, 
     countQuery = """
       SELECT COUNT(DISTINCT m.movie_id) FROM movie m
@@ -142,13 +143,13 @@ public interface MovieRepository extends JpaRepository<Movie, Long> {
     Page<Movie> findUpcoming(Pageable pageable);
 
     /**
-     * Paginated movies (regardless of status) ordered by release_date.
+     * Paginated movies (regardless of status) ordered by score (highest first).
      * Pattern: Repository Pattern. Cached at service layer.
      */
     @Query(value = """
       SELECT m.* FROM movie m
       GROUP BY m.movie_id
-      ORDER BY m.release_date ASC
+      ORDER BY m.score DESC
     """, 
     countQuery = """
       SELECT COUNT(DISTINCT m.movie_id) FROM movie m
@@ -157,15 +158,14 @@ public interface MovieRepository extends JpaRepository<Movie, Long> {
     Page<Movie> findAllMovies(Pageable pageable);
 
     /**
-     * Search now_playing ordered by earliest show_time.
-     * Shows ALL now_playing movies matching filters, even if they don't have showtimes.
+     * Search now_playing ordered by score (highest first).
      * Filters: AND across title/genres/date; OR within multiple genres.
      * Return: List<Movie>
      * Example JSON: [ { "movie_id": 2, "status": "now_playing", ... }, ... ]
      */
     @Query(value = """
       SELECT m.* FROM movie m
-      LEFT JOIN movie_show ms ON ms.movie_id = m.movie_id
+      INNER JOIN movie_show ms ON ms.movie_id = m.movie_id
       LEFT JOIN show_time st ON st.movie_show_id = ms.id
       WHERE m.status = 'now_playing'
         AND (:title IS NULL OR LOWER(m.title) LIKE LOWER(CONCAT('%', :title, '%')))
@@ -185,7 +185,7 @@ public interface MovieRepository extends JpaRepository<Movie, Long> {
           )
         )
       GROUP BY m.movie_id, m.title, m.status, m.genres, m.release_date, m.rating, m.synopsis, m.trailer_link, m.poster_link, m.cast_names, m.directors, m.producers, m.score, m.duration
-      ORDER BY MIN(st.show_time) ASC NULLS LAST, m.release_date ASC
+      ORDER BY m.score DESC
     """, nativeQuery = true)
     List<Movie> searchNowPlayingOrdered(@Param("title") String title,
                                         @Param("genresCsv") String genresCsv,
@@ -194,13 +194,12 @@ public interface MovieRepository extends JpaRepository<Movie, Long> {
                                         @Param("year") Integer year);
 
     /**
-     * Paginated search NOW_PLAYING ordered by earliest show_time.
-     * Shows ALL now_playing movies matching filters, even if they don't have showtimes.
+     * Paginated search NOW_PLAYING ordered by score (highest first).
      * Pattern: Repository Pattern. Cached at service layer.
      */
     @Query(value = """
       SELECT m.* FROM movie m
-      LEFT JOIN movie_show ms ON ms.movie_id = m.movie_id
+      INNER JOIN movie_show ms ON ms.movie_id = m.movie_id
       LEFT JOIN show_time st ON st.movie_show_id = ms.id
       WHERE m.status = 'now_playing'
         AND (:title IS NULL OR LOWER(m.title) LIKE LOWER(CONCAT('%', :title, '%')))
@@ -220,10 +219,12 @@ public interface MovieRepository extends JpaRepository<Movie, Long> {
           )
         )
       GROUP BY m.movie_id, m.title, m.status, m.genres, m.release_date, m.rating, m.synopsis, m.trailer_link, m.poster_link, m.cast_names, m.directors, m.producers, m.score, m.duration
-      ORDER BY MIN(st.show_time) ASC NULLS LAST, m.release_date ASC
+      ORDER BY m.score DESC
     """,
     countQuery = """
       SELECT COUNT(DISTINCT m.movie_id) FROM movie m
+      INNER JOIN movie_show ms ON ms.movie_id = m.movie_id
+      LEFT JOIN show_time st ON st.movie_show_id = ms.id
       WHERE m.status = 'now_playing'
         AND (:title IS NULL OR LOWER(m.title) LIKE LOWER(CONCAT('%', :title, '%')))
         AND (:genresCsv IS NULL OR EXISTS (
@@ -251,7 +252,7 @@ public interface MovieRepository extends JpaRepository<Movie, Long> {
                                         Pageable pageable);
 
     /**
-     * Search upcoming ordered by earliest show_time.
+     * Search upcoming ordered by score (highest first).
      * Filters: AND across title/genres/date; OR within multiple genres.
      * Return: List<Movie>
      * Example JSON: [ { "movie_id": 12, "status": "upcoming", ... }, ... ]
@@ -276,12 +277,7 @@ public interface MovieRepository extends JpaRepository<Movie, Long> {
               AND (:year IS NULL OR EXTRACT(YEAR FROM st.show_time) = :year)
           )
         )
-      ORDER BY (
-        SELECT MIN(st.show_time) 
-        FROM show_time st 
-        INNER JOIN movie_show ms3 ON st.movie_show_id = ms3.id
-        WHERE ms3.movie_id = m.movie_id
-      ) ASC
+      ORDER BY m.score DESC
     """, nativeQuery = true)
     List<Movie> searchUpcomingOrdered(@Param("title") String title,
                                       @Param("genresCsv") String genresCsv,
@@ -290,12 +286,14 @@ public interface MovieRepository extends JpaRepository<Movie, Long> {
                                       @Param("year") Integer year);
 
     /**
-     * Paginated search UPCOMING ordered by earliest show_time.
+     * Paginated search UPCOMING ordered by score (highest first).
      * Pattern: Repository Pattern. Cached at service layer.
+     * Uses LEFT JOIN to include movies without movie_show records.
      */
     @Query(value = """
       SELECT m.* FROM movie m
-      INNER JOIN movie_show ms ON ms.movie_id = m.movie_id
+      LEFT JOIN movie_show ms ON ms.movie_id = m.movie_id
+      LEFT JOIN show_time st ON st.movie_show_id = ms.id
       WHERE m.status = 'upcoming'
         AND (:title IS NULL OR LOWER(m.title) LIKE LOWER(CONCAT('%', :title, '%')))
         AND (:genresCsv IS NULL OR EXISTS (
@@ -305,24 +303,19 @@ public interface MovieRepository extends JpaRepository<Movie, Long> {
         AND (
           (:month IS NULL AND :day IS NULL AND :year IS NULL) OR
           EXISTS (
-            SELECT 1 FROM show_time st 
-            INNER JOIN movie_show ms2 ON st.movie_show_id = ms2.id
+            SELECT 1 FROM show_time st2 
+            INNER JOIN movie_show ms2 ON st2.movie_show_id = ms2.id
             WHERE ms2.movie_id = m.movie_id 
-              AND (:month IS NULL OR EXTRACT(MONTH FROM st.show_time) = :month)
-              AND (:day IS NULL OR EXTRACT(DAY FROM st.show_time) = :day)
-              AND (:year IS NULL OR EXTRACT(YEAR FROM st.show_time) = :year)
+              AND (:month IS NULL OR EXTRACT(MONTH FROM st2.show_time) = :month)
+              AND (:day IS NULL OR EXTRACT(DAY FROM st2.show_time) = :day)
+              AND (:year IS NULL OR EXTRACT(YEAR FROM st2.show_time) = :year)
           )
         )
-      ORDER BY (
-        SELECT MIN(st.show_time) 
-        FROM show_time st 
-        INNER JOIN movie_show ms3 ON st.movie_show_id = ms3.id
-        WHERE ms3.movie_id = m.movie_id
-      ) ASC
+      GROUP BY m.movie_id, m.title, m.status, m.genres, m.release_date, m.rating, m.synopsis, m.trailer_link, m.poster_link, m.cast_names, m.directors, m.producers, m.score, m.duration
+      ORDER BY m.score DESC
     """,
     countQuery = """
       SELECT COUNT(DISTINCT m.movie_id) FROM movie m
-      INNER JOIN movie_show ms ON ms.movie_id = m.movie_id
       WHERE m.status = 'upcoming'
         AND (:title IS NULL OR LOWER(m.title) LIKE LOWER(CONCAT('%', :title, '%')))
         AND (:genresCsv IS NULL OR EXISTS (

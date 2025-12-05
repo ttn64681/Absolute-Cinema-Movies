@@ -14,6 +14,8 @@ import java.time.LocalDate;
 
 import com.acm.cinema_ebkg_system.enums.TicketType;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import lombok.Getter;
+import lombok.Setter;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -37,6 +39,8 @@ import jakarta.validation.constraints.NotNull;
  */
 @Entity
 @Table(name = "movie")
+@Getter
+@Setter
 public class Movie {
     @Id // identifies below 'movie_id' as primary key
     @GeneratedValue(strategy = GenerationType.IDENTITY) // generates unique val for primary key
@@ -84,118 +88,4 @@ public class Movie {
 
     // Default constructor
     public Movie() {}
-
-    // Getters
-    public Long getMovie_id() {
-        return movie_id;
-    }
-
-    public String getTitle() {
-        return title;
-    }
-
-    public MovieStatus getStatus() {
-        return status;
-    }
-
-    public String getGenres() {
-        return genres;
-    }
-
-    public String getRating() {
-        return rating;
-    }
-
-    public LocalDate getRelease_date() {
-        return release_date;
-    }
-
-    public String getSynopsis() {
-        return synopsis;
-    }
-
-    public String getTrailer_link() {
-        return trailer_link;
-    }
-
-    public String getPoster_link() {
-        return poster_link;
-    }
-
-    public String getCast_names() {
-        return cast_names;
-    }
-
-    public String getDirectors() {
-        return directors;
-    }
-
-    public String getProducers() {
-        return producers;
-    }
-
-    public int getScore() {
-        return score;
-    }
-
-    public int getDuration() {
-        return duration;
-    }
-
-    // Setters
-    public void setMovie_id(Long movie_id) {
-        this.movie_id = movie_id;
-    }
-
-    public void setTitle(String title) {
-        this.title = title;
-    }
-
-    public void setStatus(MovieStatus status) {
-        this.status = status;
-    }
-
-    public void setGenres(String genres) {
-        this.genres = genres;
-    }
-
-    public void setRating(String rating) {
-        this.rating = rating;
-    }
-
-    public void setRelease_date(LocalDate release_date) {
-        this.release_date = release_date;
-    }
-
-    public void setSynopsis(String synopsis) {
-        this.synopsis = synopsis;
-    }
-
-    public void setTrailer_link(String trailer_link) {
-        this.trailer_link = trailer_link;
-    }
-
-    public void setPoster_link(String poster_link) {
-        this.poster_link = poster_link;
-    }
-
-    public void setCast_names(String cast_names) {
-        this.cast_names = cast_names;
-    }
-
-    public void setDirectors(String directors) {
-        this.directors = directors;
-    }
-
-    public void setProducers(String producers) {
-        this.producers = producers;
-    }
-
-    public void setScore(int score) {
-        this.score = score;
-    }
-
-    public void setDuration(int duration) {
-        this.duration = duration;
-    }
 }

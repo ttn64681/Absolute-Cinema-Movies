@@ -1,7 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { PiPencilSimple } from 'react-icons/pi';
+import { ticketCategoryClient, TicketCategory } from '@/clients/ticketCategoryClient';
+import { useToast } from '@/contexts/ToastContext';
+import Spinner from '@/components/common/Spinner';
 
 interface TicketPrices {
   child: number;
@@ -10,17 +13,63 @@ interface TicketPrices {
 }
 
 interface TicketPriceEditorProps {
-  prices: TicketPrices;
-  onSave: (prices: TicketPrices) => void;
+  prices?: TicketPrices;
+  onSave?: (prices: TicketPrices) => void;
 }
 
 const formatCurrency = (amount: number) => {
   return `$${amount.toFixed(2)}`;
 };
 
-export default function TicketPriceEditor({ prices, onSave }: TicketPriceEditorProps) {
+export default function TicketPriceEditor({ prices: propPrices, onSave: propOnSave }: TicketPriceEditorProps) {
   const [isEditing, setIsEditing] = useState(false);
-  const [localPrices, setLocalPrices] = useState(prices);
+  const [localPrices, setLocalPrices] = useState<TicketPrices>({
+    child: 0,
+    adult: 0,
+    senior: 0,
+  });
+  const [categories, setCategories] = useState<TicketCategory[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const { showToast } = useToast();
+
+  // Fetch ticket categories from backend
+  useEffect(() => {
+    const fetchCategories = async () => {
+      setIsLoading(true);
+      try {
+        const fetchedCategories = await ticketCategoryClient.getAllTicketCategories();
+        setCategories(fetchedCategories);
+
+        // Map categories to prices object
+        const pricesMap: TicketPrices = {
+          child: 0,
+          adult: 0,
+          senior: 0,
+        };
+
+        fetchedCategories.forEach((cat) => {
+          const name = cat.name.toLowerCase();
+          if (name === 'child' || name === 'adult' || name === 'senior') {
+            pricesMap[name as keyof TicketPrices] = Number(cat.price);
+          }
+        });
+
+        setLocalPrices(pricesMap);
+      } catch (error) {
+        console.error('Error fetching ticket categories:', error);
+        showToast('Failed to load ticket prices', 'error');
+        // Fallback to prop prices if provided
+        if (propPrices) {
+          setLocalPrices(propPrices);
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchCategories();
+  }, [propPrices, showToast]);
 
   const handleChange = (type: 'child' | 'adult' | 'senior', value: string) => {
     const numValue = parseFloat(value);
@@ -32,15 +81,87 @@ export default function TicketPriceEditor({ prices, onSave }: TicketPriceEditorP
     }
   };
 
-  const handleSave = () => {
-    setIsEditing(false);
-    onSave(localPrices);
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      // Update each category in backend
+      const updatePromises = categories.map(async (cat) => {
+        const name = cat.name.toLowerCase();
+        if (name === 'child' || name === 'adult' || name === 'senior') {
+          const newPrice = localPrices[name as keyof TicketPrices];
+          if (cat.price !== newPrice) {
+            return ticketCategoryClient.updateTicketCategory(cat.id, {
+              name: cat.name,
+              price: newPrice,
+            });
+          }
+        }
+        return Promise.resolve(cat);
+      });
+
+      await Promise.all(updatePromises);
+
+      // Refresh categories from backend
+      const updatedCategories = await ticketCategoryClient.getAllTicketCategories();
+      setCategories(updatedCategories);
+
+      // Update local prices
+      const pricesMap: TicketPrices = {
+        child: 0,
+        adult: 0,
+        senior: 0,
+      };
+      updatedCategories.forEach((cat) => {
+        const name = cat.name.toLowerCase();
+        if (name === 'child' || name === 'adult' || name === 'senior') {
+          pricesMap[name as keyof TicketPrices] = Number(cat.price);
+        }
+      });
+      setLocalPrices(pricesMap);
+
+      setIsEditing(false);
+      showToast('Ticket prices updated successfully', 'success');
+
+      // Call prop onSave if provided (for backward compatibility)
+      if (propOnSave) {
+        propOnSave(pricesMap);
+      }
+    } catch (error) {
+      console.error('Error saving ticket prices:', error);
+      showToast('Failed to update ticket prices', 'error');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleCancel = () => {
     setIsEditing(false);
-    setLocalPrices(prices);
+    // Reset to current categories prices
+    const pricesMap: TicketPrices = {
+      child: 0,
+      adult: 0,
+      senior: 0,
+    };
+    categories.forEach((cat) => {
+      const name = cat.name.toLowerCase();
+      if (name === 'child' || name === 'adult' || name === 'senior') {
+        pricesMap[name as keyof TicketPrices] = Number(cat.price);
+      }
+    });
+    setLocalPrices(pricesMap);
   };
+
+  if (isLoading) {
+    return (
+      <div className="mb-8">
+        <div className="font-afacad text-xl sm:text-2xl mb-4">Ticket Prices</div>
+        <div className="flex items-center justify-center py-8">
+          <Spinner size="md" color="pink" />
+          <span className="ml-4 text-white/60">Loading ticket prices...</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -95,10 +216,11 @@ export default function TicketPriceEditor({ prices, onSave }: TicketPriceEditorP
               title="Save"
               type="button"
               onClick={handleSave}
+              disabled={isSaving}
               className="text-black px-5 py-2 rounded-full transition-colors hover:opacity-90 font-afacad font-bold bg-gradient-to-r 
-              from-[#FF478B] to-[#FF5C33]"
+              from-[#FF478B] to-[#FF5C33] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
-              Save
+              {isSaving ? 'Saving...' : 'Save'}
             </button>
           </>
         ) : (
@@ -125,4 +247,3 @@ export default function TicketPriceEditor({ prices, onSave }: TicketPriceEditorP
     </>
   );
 }
-

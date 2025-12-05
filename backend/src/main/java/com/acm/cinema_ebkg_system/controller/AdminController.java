@@ -40,7 +40,6 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/api/admin")
-@CrossOrigin(origins = {"http://localhost:3000", "http://localhost:3001"})
 public class AdminController {
 
     // ========== DEPENDENCY INJECTION ==========
@@ -246,6 +245,27 @@ public class AdminController {
             System.err.println("AdminController.unsuspendUser - Error: " + e.getMessage());
             e.printStackTrace();
             AuthResponse response = new AuthResponse(false, "Failed to unsuspend user: " + e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
+    /**
+     * Deletes user along with user-tied data
+     * 
+     * @param userId User ID to delete
+     * @return ResponseEntity with success message
+     */
+    @DeleteMapping("/users/{userId}")
+    public ResponseEntity<?> deleteUser(@PathVariable Long userId) {
+        try {
+            System.out.println("AdminController.deleteUser - userId: " + userId);
+            adminService.deleteUser(userId);
+            System.out.println("AdminController.deleteUser - Success: User " + userId + " deleted");
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            System.err.println("AdminController.deleteUser - Error: " + e.getMessage());
+            e.printStackTrace();
+            AuthResponse response = new AuthResponse(false, "Failed to delete user: " + e.getMessage());
             return ResponseEntity.badRequest().body(response);
         }
     }

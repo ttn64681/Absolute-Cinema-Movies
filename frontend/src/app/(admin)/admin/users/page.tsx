@@ -1,144 +1,22 @@
 'use client';
 
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
 import AdminNavBar from '@/components/common/navBar/AdminNavBar';
-import api, { buildUrl, endpoints } from '@/config/api';
-import { BackendUser } from '@/types/user';
-
-interface UserWithStatus extends BackendUser {
-  accountStatus: 'active' | 'inactive' | 'suspended';
-}
-
-interface Admin {
-  id: number;
-  email: string;
-  profileImageLink?: string;
-}
+import { useAdminUsers } from '@/hooks/useAdminUsers';
+import { useToast } from '@/contexts/ToastContext';
+import { PiTrash } from 'react-icons/pi';
+import Spinner from '@/components/common/Spinner';
 
 function AdminUsersPage() {
-  const [adminList, setAdminList] = useState<Admin[]>([]);
-  const [memberList, setMemberList] = useState<UserWithStatus[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { adminList, memberList, isLoading, error, toggleUserSuspension, deleteUser } = useAdminUsers();
+  const { showToast } = useToast();
 
-  // Fetch admins and users from backend
-  useEffect(() => {
-    const fetchData = async () => {
-        setIsLoading(true);
-        setError(null);
-      
-      let adminsSuccess = false;
-      let usersSuccess = false;
-        
-        // Fetch admins
-      try {
-        const adminsResponse = await api.get<Admin[]>(endpoints.admin.getAllAdmins);
-        console.log('Admins response:', adminsResponse.data);
-        setAdminList(adminsResponse.data);
-        adminsSuccess = true;
-      } catch (adminErr: any) {
-        console.error('Error fetching admins:', adminErr);
-        console.error('Admin error details:', {
-          status: adminErr.response?.status,
-          statusText: adminErr.response?.statusText,
-          data: adminErr.response?.data,
-          message: adminErr.message,
-          userMessage: adminErr.userMessage,
-        });
-        setAdminList([]);
-      }
-        
-        // Fetch users
-      try {
-        const usersResponse = await api.get<BackendUser[]>(endpoints.users.getAllUsers);
-        console.log('Users response:', usersResponse.data);
-        const users = usersResponse.data.map((user) => ({
-          ...user,
-          accountStatus: (user.accountStatus || 'inactive') as 'active' | 'inactive' | 'suspended',
-        }));
-        setMemberList(users);
-        usersSuccess = true;
-      } catch (userErr: any) {
-        console.error('Error fetching users:', userErr);
-        console.error('User error details:', {
-          status: userErr.response?.status,
-          statusText: userErr.response?.statusText,
-          data: userErr.response?.data,
-          message: userErr.message,
-          userMessage: userErr.userMessage,
-        });
-        
-        // Check if it's an authentication/authorization error
-        if (userErr.response?.status === 401 || userErr.response?.status === 403) {
-          console.error('Authentication/Authorization error - Admin token may be missing or invalid');
-          console.error('Checking for adminToken:', {
-            localAdminToken: typeof window !== 'undefined' ? localStorage.getItem('adminToken') : 'N/A',
-            sessionAdminToken: typeof window !== 'undefined' ? sessionStorage.getItem('adminToken') : 'N/A',
-          });
-        }
-        
-        setMemberList([]);
-      }
-      
-      // Set error only if both failed
-      if (!adminsSuccess && !usersSuccess) {
-        setError('Failed to load data. Please check your connection and try again.');
-      } else if (!adminsSuccess) {
-        setError('Failed to load administrators. Users loaded successfully.');
-      } else if (!usersSuccess) {
-        const errorMsg = 'Failed to load users. Administrators loaded successfully.';
-        setError(errorMsg);
-        console.error(errorMsg);
-      }
-      
-      setIsLoading(false);
-    };
-
-    fetchData();
-  }, []);
-
-  // Function to suspend/unsuspend a user
-  const toggleUserSuspension = async (userId: number, currentStatus: 'active' | 'inactive' | 'suspended') => {
-    try {
-      const isSuspended = currentStatus === 'suspended';
-      const endpoint = isSuspended 
-        ? endpoints.admin.unsuspendUser(userId)
-        : endpoints.admin.suspendUser(userId);
-      
-      console.log(`Attempting to ${isSuspended ? 'unsuspend' : 'suspend'} user ${userId} via ${endpoint}`);
-      
-      const response = await api.put<BackendUser>(endpoint, {});
-      const updatedUser = response.data;
-      
-      console.log('Response received:', updatedUser);
-      console.log('Account status from response:', updatedUser.accountStatus);
-      
-      // Update the user in the list
-      setMemberList((prev) =>
-        prev.map((user) => {
-          if (user.id === userId) {
-            const newStatus = updatedUser.accountStatus || (isSuspended ? 'active' : 'suspended');
-            console.log(`Updating user ${userId} status from ${user.accountStatus} to ${newStatus}`);
-            return {
-              ...user,
-              accountStatus: newStatus as 'active' | 'inactive' | 'suspended',
-            };
-          }
-          return user;
-        })
-      );
-    } catch (err: any) {
-      console.error('Error updating user status:', err);
-      const errorMessage = err.response?.data?.message || err.response?.data?.error || err.message || 'Unknown error';
-      console.error('Full error details:', {
-        status: err.response?.status,
-        statusText: err.response?.statusText,
-        data: err.response?.data,
-        message: errorMessage
-      });
-      alert(`Failed to ${currentStatus === 'suspended' ? 'unsuspend' : 'suspend'} user: ${errorMessage}`);
+  const handleDeleteUser = async (userId: number, userName: string) => {
+    // Use browser confirm for critical delete action (better UX than toast for confirmation)
+    if (!confirm(`Are you sure you want to delete ${userName}? This will permanently delete all associated data including bookings, payment cards, and addresses.`)) {
+      return;
     }
+    await deleteUser(userId);
   };
 
 
@@ -168,76 +46,94 @@ function AdminUsersPage() {
         </Link>
       </div>
 
-      <div className="flex flex-row gap-20 max-w-360 justify-center mx-auto px-4">
+      <div className="max-w-7xl mx-auto px-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
 
-        {/* Members */}
-        <div className="mb-16">
-          <h2 className="text-xl mb-3">Members</h2>
-          {isLoading ? (
-            <div className="text-center py-8 text-white/60">Loading...</div>
-          ) : error ? (
-            <div className="text-center py-8 text-red-400">{error}</div>
-          ) : (
-            <div className="rounded-md overflow-hidden w-100 h-[60vh] overflow-y-auto" style={{ backgroundColor: '#242424' }}>
-              {memberList.length === 0 ? (
-                <div className="text-center py-8 text-white/60">No members found</div>
-              ) : (
-                memberList.map((user) => (
-                  <div key={user.id} className="flex items-center justify-between px-5 py-4 border-b border-white/10">
-                    <div className="flex-1 flex items-center gap-3">
-                      <span>{user.firstName} {user.lastName}</span>
-                      <span
-                        className={`text-sm px-2 py-1 rounded ${
-                          user.accountStatus === 'active'
-                            ? 'bg-green-500/20 text-green-400'
-                            : user.accountStatus === 'suspended'
-                            ? 'bg-red-500/20 text-red-400'
-                            : 'bg-gray-500/20 text-gray-400'
-                        }`}
-                      >
-                        {user.accountStatus.charAt(0).toUpperCase() + user.accountStatus.slice(1)}
-                      </span>
-                    </div>
-                    <div className="flex items-center">
-                      <button
-                        title={user.accountStatus === 'suspended' ? 'Unsuspend User' : 'Suspend User'}
-                        type="button"
-                        onClick={() => toggleUserSuspension(user.id, user.accountStatus)}
-                        className="px-4 py-2 rounded-md text-sm font-medium transition-colors border border-white/10 hover:border-white/20 text-white"
-                      >
-                        {user.accountStatus === 'suspended' ? 'Unsuspend' : 'Suspend'}
-                      </button>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* Administrators */}
-          <div className="mb-10">
-            <h2 className="text-xl mb-3">Administrators</h2>
+          {/* Members */}
+          <div className="mb-16">
+            <h2 className="text-xl font-afacad mb-4">Members</h2>
             {isLoading ? (
-              <div className="text-center py-8 text-white/60">Loading...</div>
+              <div className="flex flex-col items-center justify-center py-12 bg-[#242424] rounded-md">
+                <Spinner size="md" color="pink" />
+                <span className="mt-4 text-white/60">Loading members...</span>
+              </div>
             ) : error ? (
-              <div className="text-center py-8 text-red-400">{error}</div>
+              <div className="text-center py-8 text-red-400 bg-[#242424] rounded-md">{error}</div>
             ) : (
-              <div className="rounded-md overflow-hidden w-100 h-[60vh] overflow-y-auto" style={{ backgroundColor: '#242424' }}>
-                {adminList.length === 0 ? (
-                  <div className="text-center py-8 text-white/60">No administrators found</div>
+              <div className="rounded-md overflow-hidden h-[60vh] overflow-y-auto bg-[#242424] border border-white/10">
+                {memberList.length === 0 ? (
+                  <div className="text-center py-8 text-white/60">No members found</div>
                 ) : (
-                  adminList.map((admin) => (
-                    <div key={admin.id} className="flex items-center justify-between px-5 py-4 border-b border-white/10">
-                      <div className="flex-1">
-                        <span>{admin.email}</span>
+                  memberList.map((user) => (
+                    <div key={user.id} className="flex items-center justify-between px-6 py-4 border-b border-white/10 hover:bg-white/5 transition-colors">
+                      <div className="flex-1 flex items-center gap-4 min-w-0">
+                        <div className="flex flex-col min-w-0">
+                          <span className="font-afacad text-white truncate">{user.firstName} {user.lastName}</span>
+                          <span className="text-sm text-white/60 truncate">{user.email}</span>
+                        </div>
+                        <span
+                          className={`text-xs px-2 py-1 rounded flex-shrink-0 ${
+                            user.accountStatus === 'active'
+                              ? 'bg-green-500/20 text-green-400'
+                              : user.accountStatus === 'suspended'
+                              ? 'bg-red-500/20 text-red-400'
+                              : 'bg-gray-500/20 text-gray-400'
+                          }`}
+                        >
+                          {user.accountStatus.charAt(0).toUpperCase() + user.accountStatus.slice(1)}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 flex-shrink-0 ml-4">
+                        <button
+                          title={user.accountStatus === 'suspended' ? 'Unsuspend User' : 'Suspend User'}
+                          type="button"
+                          onClick={() => toggleUserSuspension(user.id, user.accountStatus)}
+                          className="px-3 py-1.5 rounded-md text-xs font-medium transition-colors border border-white/10 hover:border-white/20 text-white cursor-pointer whitespace-nowrap"
+                        >
+                          {user.accountStatus === 'suspended' ? 'Unsuspend' : 'Suspend'}
+                        </button>
+                        <button
+                          title="Delete User"
+                          type="button"
+                          onClick={() => handleDeleteUser(user.id, `${user.firstName} ${user.lastName}`)}
+                          className="px-3 py-1.5 rounded-md text-xs font-medium transition-colors border border-red-500/50 hover:border-red-500 text-red-400 hover:text-red-300 cursor-pointer"
+                        >
+                          <PiTrash className="text-base" />
+                        </button>
                       </div>
                     </div>
                   ))
                 )}
               </div>
-              
             )}
+          </div>
+
+          {/* Administrators */}
+          <div className="mb-16">
+            <h2 className="text-xl font-afacad mb-4">Administrators</h2>
+            {isLoading ? (
+              <div className="flex flex-col items-center justify-center py-12 bg-[#242424] rounded-md">
+                <Spinner size="md" color="pink" />
+                <span className="mt-4 text-white/60">Loading administrators...</span>
+              </div>
+            ) : error ? (
+              <div className="text-center py-8 text-red-400 bg-[#242424] rounded-md">{error}</div>
+            ) : (
+              <div className="rounded-md overflow-hidden h-[60vh] overflow-y-auto bg-[#242424] border border-white/10">
+                {adminList.length === 0 ? (
+                  <div className="text-center py-8 text-white/60">No administrators found</div>
+                ) : (
+                  adminList.map((admin) => (
+                    <div key={admin.id} className="flex items-center justify-between px-6 py-4 border-b border-white/10 hover:bg-white/5 transition-colors">
+                      <div className="flex-1 min-w-0">
+                        <span className="font-afacad text-white truncate block">{admin.email}</span>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
       <div style={{ height: '80px' }}></div>

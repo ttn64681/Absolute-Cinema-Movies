@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import { buildUrl } from '@/config/api';
 import { movieClient } from '@/clients/movieClient';
+import { bookingFeeClient, BookingFee } from '@/clients/bookingFeeClient';
 
 interface TicketCategory {
   id: number;
@@ -24,6 +25,9 @@ export default function OrderDetails({ promoDiscount = 0, promoType, onTotalCalc
   const [isLoadingPrices, setIsLoadingPrices] = useState(true);
   const [posterUrl, setPosterUrl] = useState<string | null>(null);
   const [isLoadingPoster, setIsLoadingPoster] = useState(false);
+  const [onlineFee, setOnlineFee] = useState<number>(2.5); // Default fallback
+  const [salesTaxRate, setSalesTaxRate] = useState<number>(0.08); // Default fallback (8%)
+  const [isLoadingFees, setIsLoadingFees] = useState(true);
 
   // Get booking details from URL params
   const title = searchParams.get('title') || '';
@@ -41,10 +45,10 @@ export default function OrderDetails({ promoDiscount = 0, promoType, onTotalCalc
       try {
         const response = await fetch(buildUrl('/api/ticket-categories'));
         if (!response.ok) throw new Error('Failed to fetch ticket prices');
-        
+
         const categories: TicketCategory[] = await response.json();
         const prices: { [key: string]: number } = {};
-        
+
         categories.forEach((cat) => {
           // Handle both number and string price formats
           // The API returns price as a number (BigDecimal serialized as number)
@@ -63,9 +67,11 @@ export default function OrderDetails({ promoDiscount = 0, promoType, onTotalCalc
             priceValue = 0;
           }
           prices[cat.name] = priceValue;
-          console.log(`Loaded ${cat.name} ticket price: $${priceValue.toFixed(2)} (raw from API: ${JSON.stringify(cat.price)})`);
+          console.log(
+            `Loaded ${cat.name} ticket price: $${priceValue.toFixed(2)} (raw from API: ${JSON.stringify(cat.price)})`
+          );
         });
-        
+
         console.log('All ticket prices loaded:', prices);
         console.log('Adult price specifically:', prices.adult);
         setTicketPrices(prices);
@@ -80,6 +86,44 @@ export default function OrderDetails({ promoDiscount = 0, promoType, onTotalCalc
 
     fetchTicketPrices();
   }, []);
+
+  // Fetch booking fees (online fee and sales tax rate) - only once on mount
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchBookingFees = async () => {
+      try {
+        const fees = await bookingFeeClient.getAllBookingFees();
+
+        if (!isMounted) return;
+
+        fees.forEach((fee: BookingFee) => {
+          if (fee.name === 'Online Fee') {
+            setOnlineFee(typeof fee.price === 'number' ? fee.price : parseFloat(String(fee.price)) || 2.5);
+          } else if (fee.name === 'Sales Tax') {
+            setSalesTaxRate(typeof fee.price === 'number' ? fee.price : parseFloat(String(fee.price)) || 0.08);
+          }
+        });
+      } catch (error) {
+        console.error('Error fetching booking fees:', error);
+        if (isMounted) {
+          // Use defaults if fetch fails
+          setOnlineFee(2.5);
+          setSalesTaxRate(0.08);
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoadingFees(false);
+        }
+      }
+    };
+
+    fetchBookingFees();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []); // Empty dependency array - only fetch once
 
   // Fetch movie poster
   useEffect(() => {
@@ -110,7 +154,7 @@ export default function OrderDetails({ promoDiscount = 0, promoType, onTotalCalc
   const adultPrice = ticketPrices.adult ?? 0;
   const childPrice = ticketPrices.child ?? 0;
   const seniorPrice = ticketPrices.senior ?? 0;
-  
+
   // Debug logging
   useEffect(() => {
     if (Object.keys(ticketPrices).length > 0) {
@@ -124,20 +168,22 @@ export default function OrderDetails({ promoDiscount = 0, promoType, onTotalCalc
   const seniorSubtotal = seniorPrice * seniorCount;
   const subtotal = adultSubtotal + childSubtotal + seniorSubtotal;
 
-  // Tax (8% of subtotal)
-  const tax = subtotal * 0.08;
+  // Tax (rate from backend)
+  const tax = subtotal * salesTaxRate;
 
-  // Online fees ($2.50 per ticket)
+  // Online fees (per ticket from backend)
   const totalTickets = adultCount + childCount + seniorCount;
-  const onlineFees = totalTickets * 2.5;
+  const onlineFees = totalTickets * onlineFee;
 
-  // Promo discount
+  // Promo discount - ensure promoDiscount is a number
+  const numericPromoDiscount =
+    typeof promoDiscount === 'number' ? promoDiscount : parseFloat(String(promoDiscount)) || 0;
   let promoDiscountAmount = 0;
-  if (promoDiscount > 0 && promoType) {
+  if (numericPromoDiscount > 0 && promoType) {
     if (promoType === 'percentage') {
-      promoDiscountAmount = (subtotal + tax + onlineFees) * (promoDiscount / 100);
+      promoDiscountAmount = (subtotal + tax + onlineFees) * (numericPromoDiscount / 100);
     } else {
-      promoDiscountAmount = promoDiscount;
+      promoDiscountAmount = numericPromoDiscount;
     }
   }
 
@@ -147,10 +193,10 @@ export default function OrderDetails({ promoDiscount = 0, promoType, onTotalCalc
 
   // Notify parent of total calculation
   useEffect(() => {
-    if (onTotalCalculated && !isLoadingPrices) {
+    if (onTotalCalculated && !isLoadingPrices && !isLoadingFees) {
       onTotalCalculated(total);
     }
-  }, [total, isLoadingPrices, onTotalCalculated]);
+  }, [total, isLoadingPrices, isLoadingFees, onTotalCalculated]);
 
   // Build ticket list
   const tickets: Array<{ name: string; price: number }> = [];
@@ -164,7 +210,7 @@ export default function OrderDetails({ promoDiscount = 0, promoType, onTotalCalc
     tickets.push({ name: 'senior', price: seniorPrice });
   }
 
-  if (isLoadingPrices) {
+  if (isLoadingPrices || isLoadingFees) {
     return (
       <div className="p-[3px] rounded-2xl bg-gradient-to-r from-acm-orange to-acm-pink">
         <div className="flex flex-col p-6 bg-black text-white rounded-2xl shadow-md w-full h-full">
@@ -180,19 +226,13 @@ export default function OrderDetails({ promoDiscount = 0, promoType, onTotalCalc
         <h2 className="text-2xl font-extrabold mb-4">Order Details</h2>
 
         <div className="flex items-start mb-4">
-          <div className="w-20 h-28 bg-gray-800 rounded-md border border-white flex items-center justify-center overflow-hidden relative flex-shrink-0">
+          <div className="w-20 h-28 bg-gray-800 rounded-md border border-white flex items-center justify-center overflow-hidden relative shrink-0">
             {isLoadingPoster ? (
               <span className="text-gray-400 text-xs">Loading...</span>
             ) : posterUrl ? (
-              <Image
-                src={posterUrl}
-                alt={title || 'Movie poster'}
-                fill
-                className="object-cover"
-                sizes="80px"
-              />
+              <Image src={posterUrl} alt={title || 'Movie poster'} fill className="object-cover" sizes="80px" />
             ) : (
-            <span className="text-gray-400 text-xs">No Image</span>
+              <span className="text-gray-400 text-xs">No Image</span>
             )}
           </div>
           <div className="ml-4">
@@ -234,9 +274,9 @@ export default function OrderDetails({ promoDiscount = 0, promoType, onTotalCalc
           <span>Online Fees</span>
           <span>${onlineFees.toFixed(2)}</span>
         </div>
-        {promoDiscountAmount > 0 && (
+        {numericPromoDiscount > 0 && promoType && (
           <div className="flex justify-between text-green-400 text-sm mb-2 px-6">
-            <span>Promo Discount</span>
+            <span>Promo Discount {promoType === 'percentage' ? `(${numericPromoDiscount}%)` : ''}</span>
             <span>-${promoDiscountAmount.toFixed(2)}</span>
           </div>
         )}

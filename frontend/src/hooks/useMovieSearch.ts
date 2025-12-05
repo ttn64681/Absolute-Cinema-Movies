@@ -167,7 +167,7 @@ export function useMovieSearch() {
         }
       }
     },
-    [buildSearchQuery]
+    [buildSearchQuery, searchParams]
   );
 
   // Reset pages when search params change

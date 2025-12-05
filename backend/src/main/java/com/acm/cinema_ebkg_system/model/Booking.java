@@ -2,13 +2,14 @@ package com.acm.cinema_ebkg_system.model;
 
 import jakarta.persistence.*;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 import java.util.List;
 
 /**
  * Booking Entity - Represents a user's booking for a movie show
  * 
- * TODO: Uncomment when fully implementing the booking system
  * This entity maps to the 'booking' table in the database and contains
  * booking information including user, payment, and associated tickets.
  * 
@@ -21,9 +22,9 @@ import java.util.List;
 @Entity
 @Table(name = "booking")
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
-// TODO: Uncomment entire class when implementing the booking system
+@Data
+@NoArgsConstructor
 public class Booking {
-    // TODO: Uncomment all fields when implementing the booking system
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -74,9 +75,6 @@ public class Booking {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    // Default constructor
-    public Booking() {}
-    
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
@@ -86,87 +84,5 @@ public class Booking {
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
-    }
-
-    // Getters
-    public Long getBookingId() {
-        return bookingId;
-    }
-
-    public User getUser() {
-        return user;
-    }
-
-    public Long getMovieId() {
-        return movieId;
-    }
-
-    public Promotion getPromotion() {
-        return promotion;
-    }
-
-    public Long getPaymentId() {
-        return paymentId;
-    }
-
-    public Integer getNumTickets() {
-        return numTickets;
-    }
-
-    public java.math.BigDecimal getTotalAmount() {
-        return totalAmount;
-    }
-
-    public List<Ticket> getTickets() {
-        return tickets;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
-    // Setters
-    public void setBookingId(Long bookingId) {
-        this.bookingId = bookingId;
-    }
-
-    public void setUser(User user) {
-        this.user = user;
-    }
-
-    public void setMovieId(Long movieId) {
-        this.movieId = movieId;
-    }
-
-    public void setPromotion(Promotion promotion) {
-        this.promotion = promotion;
-    }
-
-    public void setPaymentId(Long paymentId) {
-        this.paymentId = paymentId;
-    }
-
-    public void setNumTickets(Integer numTickets) {
-        this.numTickets = numTickets;
-    }
-
-    public void setTotalAmount(java.math.BigDecimal totalAmount) {
-        this.totalAmount = totalAmount;
-    }
-
-    public void setTickets(List<Ticket> tickets) {
-        this.tickets = tickets;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
     }
 }

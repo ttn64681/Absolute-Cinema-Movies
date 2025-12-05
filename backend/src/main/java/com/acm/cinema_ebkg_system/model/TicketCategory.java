@@ -1,17 +1,16 @@
 package com.acm.cinema_ebkg_system.model;
 
 import jakarta.persistence.*;
+import lombok.Data;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /**
  * Ticket Category Entity - Represents ticket types and pricing in the cinema booking system
- * 
- * This entity maps to the 'ticket_category' table in the database and contains
- * ticket type information with associated pricing.
  */
 @Entity
 @Table(name = "ticket_category")
+@Data
 public class TicketCategory {
     // Primary key - auto-generated unique identifier
     @Id
@@ -43,59 +42,5 @@ public class TicketCategory {
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
-    }
-
-    // Default constructor
-    public TicketCategory() {}
-
-    // Constructor
-    public TicketCategory(Long id, String name, BigDecimal price, LocalDateTime createdAt, LocalDateTime updatedAt) {
-        this.id = id;
-        this.name = name;
-        this.price = price;
-        this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
-    }
-
-    // Getters
-    public Long getId() {
-        return id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public BigDecimal getPrice() {
-        return price;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
-    // Setters
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public void setPrice(BigDecimal price) {
-        this.price = price;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
     }
 }

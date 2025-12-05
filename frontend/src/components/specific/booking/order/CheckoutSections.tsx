@@ -313,17 +313,21 @@ export default function CheckoutSections({
 
       const data = await response.json();
       if (data.valid) {
+        // Ensure discountValue is a number (BigDecimal from backend serializes as number)
+        const discountValue = typeof data.discountValue === 'number' 
+          ? data.discountValue 
+          : parseFloat(data.discountValue) || 0;
         const promo = {
           code: formData.promoCode.trim().toUpperCase(),
-          discount: data.discountValue,
+          discount: discountValue,
           type: data.discountType,
           promotionId: data.promotionId,
         };
         updateFormData('appliedPromo', promo);
         if (onPromoApplied) {
-          onPromoApplied(data.discountValue, data.discountType, data.promotionId);
+          onPromoApplied(discountValue, data.discountType, data.promotionId);
         }
-        showToast(`Promo code "${promo.code}" applied successfully!`, 'success');
+        showToast(`Promo code "${promo.code}" applied successfully! ${data.discountType === 'percentage' ? `${discountValue}% off` : `$${discountValue.toFixed(2)} off`}`, 'success');
       } else {
         showToast(data.error || 'Invalid or expired promo code', 'error');
       }
