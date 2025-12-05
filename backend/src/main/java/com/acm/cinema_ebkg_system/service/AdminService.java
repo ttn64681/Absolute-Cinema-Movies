@@ -4,11 +4,16 @@ import com.acm.cinema_ebkg_system.dto.auth.AuthResponse;
 import com.acm.cinema_ebkg_system.dto.auth.LoginRequest;
 import com.acm.cinema_ebkg_system.mapper.UserDtoFactory;
 import com.acm.cinema_ebkg_system.model.Admin;
+import com.acm.cinema_ebkg_system.model.User;
 import com.acm.cinema_ebkg_system.repository.AdminRepository;
+import com.acm.cinema_ebkg_system.repository.UserRepository;
+import com.acm.cinema_ebkg_system.repository.PaymentCardRepository;
+import com.acm.cinema_ebkg_system.repository.BookingRepository;
 import com.acm.cinema_ebkg_system.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -41,6 +46,15 @@ public class AdminService {
 
     @Autowired
     private JwtUtil jwtUtil;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private PaymentCardRepository paymentCardRepository;
+
+    @Autowired
+    private BookingRepository bookingRepository;
 
     // ========== AUTHENTICATION METHODS ==========
     
@@ -195,5 +209,31 @@ public class AdminService {
         AuthResponse response = new AuthResponse(true, "Admin login successful", token, refreshToken, adminDto);
         response.setRole("ADMIN");
         return response;
+    }
+
+    // ========== USER MANAGEMENT METHODS ==========
+
+    /**
+     * Deletes a user along with associated user data:
+     * 1. PaymentCards (removes foreign key constraints on billing addresses)
+     * 2. Bookings (cascades to tickets via JPA cascade)
+     * 3. User (cascades to all addresses - home & billing - via cascade = CascadeType.ALL)
+     * 
+     * @param userId User ID to delete
+     * @throws RuntimeException if user not found
+     */
+    @Transactional
+    public void deleteUser(Long userId) {
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
+
+        // Delete payment cards first (removes foreign key constraints on billing addresses)
+        paymentCardRepository.findByUserIdOrderByIsDefaultDesc(userId).forEach(paymentCardRepository::delete);
+
+        // Delete bookings (cascades to tickets via JPA cascade = CascadeType.ALL)
+        bookingRepository.findByUserIdOrderByCreatedAtDesc(userId).forEach(bookingRepository::delete);
+
+        // Delete user (cascades to all addresses - home & billing - via cascade = CascadeType.ALL)
+        userRepository.delete(user);
     }
 }

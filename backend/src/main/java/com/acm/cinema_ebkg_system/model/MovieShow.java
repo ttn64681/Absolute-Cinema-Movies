@@ -3,7 +3,9 @@ package com.acm.cinema_ebkg_system.model;
 import jakarta.persistence.*;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
-
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -16,6 +18,9 @@ import java.util.List;
 @Entity
 @JsonIgnoreProperties
 @Table(name = "movie_show")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class MovieShow {
     
     @Id
@@ -63,86 +68,6 @@ public class MovieShow {
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
-    }
-
-    // Default constructor
-    public MovieShow() {}
-
-    // Constructor
-    public MovieShow(Long id, Movie movie, ShowRoom showRoom, Integer availableSeats, List<ShowSeat> seats, LocalDateTime createdAt, LocalDateTime updatedAt) {
-        this.id = id;
-        this.movie = movie;
-        this.showRoom = showRoom;
-        this.availableSeats = availableSeats;
-        this.seats = seats;
-        this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
-    }
-
-    // Getters
-    public Long getId() {
-        return id;
-    }
-
-    public Movie getMovie() {
-        return movie;
-    }
-
-    public ShowRoom getShowRoom() {
-        return showRoom;
-    }
-
-    public ShowTime getShowTime() {
-        return showTime;
-    }
-
-    public Integer getAvailableSeats() {
-        return availableSeats;
-    }
-
-    public List<ShowSeat> getSeats() {
-        return seats;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
-    // Setters
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public void setMovie(Movie movie) {
-        this.movie = movie;
-    }
-
-    public void setShowRoom(ShowRoom showRoom) {
-        this.showRoom = showRoom;
-    }
-
-    public void setShowTime(ShowTime showTime) {
-        this.showTime = showTime;
-    }
-
-    public void setAvailableSeats(Integer availableSeats) {
-        this.availableSeats = availableSeats;
-    }
-
-    public void setSeats(List<ShowSeat> seats) {
-        this.seats = seats;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
     }
 }
 

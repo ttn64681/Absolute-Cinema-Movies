@@ -2,21 +2,14 @@ package com.acm.cinema_ebkg_system.model;
 
 import jakarta.persistence.*;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 import java.util.List;
 
 /**
  * Show Seat Entity - Represents individual seats for each movie show
- * 
- * This entity maps to the 'show_seats' table in the database and contains
- * information about individual seats within a movie showing.
- * 
- * Key Features:
- * - Each seat belongs to a specific movie show
- * - Tracks seat availability (is_available)
- * - Records seat position (row and number)
- * - Has seat type (standard, premium, luxury)
- * - Cascade delete when show is deleted
  */
 @Entity
 @Table(name = "show_seats", 
@@ -24,6 +17,9 @@ import java.util.List;
            columnNames = {"show_id", "seat_row", "seat_number"}
        ))
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class ShowSeat {
     
     @Id
@@ -72,22 +68,6 @@ public class ShowSeat {
     @Column(name = "reserved_at")
     private LocalDateTime reservedAt;
     
-    // Default constructor
-    public ShowSeat() {}
-    
-    // Constructor
-    public ShowSeat(Long id, MovieShow movieShow, String seatRow, String seatNumber, String seatType, Boolean isAvailable, LocalDateTime createdAt, LocalDateTime updatedAt, LocalDateTime reservedAt) {
-        this.id = id;
-        this.movieShow = movieShow;
-        this.seatRow = seatRow;
-        this.seatNumber = seatNumber;
-        this.seatType = seatType;
-        this.isAvailable = isAvailable;
-        this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
-        this.reservedAt = reservedAt;
-    }
-    
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
@@ -97,88 +77,6 @@ public class ShowSeat {
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
-    }
-
-    // Getters
-    public Long getId() {
-        return id;
-    }
-
-    public MovieShow getMovieShow() {
-        return movieShow;
-    }
-
-    public String getSeatRow() {
-        return seatRow;
-    }
-
-    public String getSeatNumber() {
-        return seatNumber;
-    }
-
-    public String getSeatType() {
-        return seatType;
-    }
-
-    public Boolean getIsAvailable() {
-        return isAvailable;
-    }
-
-    public List<Ticket> getTickets() {
-        return tickets;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public LocalDateTime getReservedAt() {
-        return reservedAt;
-    }
-
-    // Setters
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public void setMovieShow(MovieShow movieShow) {
-        this.movieShow = movieShow;
-    }
-
-    public void setSeatRow(String seatRow) {
-        this.seatRow = seatRow;
-    }
-
-    public void setSeatNumber(String seatNumber) {
-        this.seatNumber = seatNumber;
-    }
-
-    public void setSeatType(String seatType) {
-        this.seatType = seatType;
-    }
-
-    public void setIsAvailable(Boolean isAvailable) {
-        this.isAvailable = isAvailable;
-    }
-
-    public void setTickets(List<Ticket> tickets) {
-        this.tickets = tickets;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
-    }
-
-    public void setReservedAt(LocalDateTime reservedAt) {
-        this.reservedAt = reservedAt;
     }
 }
 

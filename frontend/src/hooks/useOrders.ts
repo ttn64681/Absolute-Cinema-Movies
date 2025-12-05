@@ -4,15 +4,16 @@ import { useState, useEffect, useCallback } from 'react';
 import { buildUrl, endpoints } from '@/config/api';
 import { getAuthToken } from '@/utils/auth';
 import { OrderRow } from '@/types/order';
+import { bookingFeeClient } from '@/clients/bookingFeeClient';
 
 /**
  * Orders Hook - Manages user order history
- * 
+ *
  * Follows the same pattern as usePaymentCards:
  * - Single hook for all order operations
  * - Uses direct API calls (no separate client needed for now)
  * - Handles loading and error states
- * 
+ *
  * @param userId - User ID for fetching orders
  * @returns Orders state & operations
  */
@@ -20,6 +21,35 @@ export function useOrders(userId: number | null) {
   const [orders, setOrders] = useState<OrderRow[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [onlineFee, setOnlineFee] = useState<number>(2.5); // Default fallback
+
+  // Fetch booking fees once on mount
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchFees = async () => {
+      try {
+        const fees = await bookingFeeClient.getAllBookingFees();
+
+        if (!isMounted) return;
+
+        const onlineFeeObj = fees.find((f) => f.name === 'Online Fee');
+        if (onlineFeeObj) {
+          setOnlineFee(
+            typeof onlineFeeObj.price === 'number' ? onlineFeeObj.price : parseFloat(String(onlineFeeObj.price)) || 2.5
+          );
+        }
+      } catch (error) {
+        console.error('Error fetching booking fees:', error);
+        // Use default if fetch fails (already set in useState)
+      }
+    };
+    fetchFees();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []); // Empty dependency array - only fetch once
 
   // Fetch user orders
   const fetchOrders = useCallback(async () => {
@@ -45,40 +75,38 @@ export function useOrders(userId: number | null) {
       }
 
       const data = await response.json();
-      
+
       // Transform backend OrderResponseDTO to frontend OrderRow
       const transformedOrders: OrderRow[] = data.map((order: any) => {
         // Get ticket prices (we'll use default prices for display, but use backend totalAmount for final total)
         const adultPrice = 12.5;
         const childPrice = 8.0;
         const seniorPrice = 10.0;
-        
-        // Calculate booking fee (approximate: $2.50 per ticket)
-        const bookingFee = order.numTickets * 2.5;
-        
+
+        // Calculate booking fee (per ticket from backend)
+        const bookingFee = order.numTickets * onlineFee;
+
         // Format order date
         const orderDateObj = new Date(order.orderDate);
         const orderDate = `${orderDateObj.getMonth() + 1}/${orderDateObj.getDate()}/${orderDateObj.getFullYear().toString().slice(-2)}`;
-        
+
         // Format showtime string
         const showDateTime = new Date(order.showDateTime);
         const showtime = `${order.showDate} ${order.showTime}-${showDateTime.getHours() + 2}:${String(showDateTime.getMinutes()).padStart(2, '0')}${showDateTime.getHours() >= 12 ? 'PM' : 'AM'}`;
-        
+
         // Use backend totalAmount (includes discount) - convert from BigDecimal/string to number
-        const totalAmount = typeof order.totalAmount === 'number' 
-          ? order.totalAmount 
-          : parseFloat(order.totalAmount || '0');
-        
+        const totalAmount =
+          typeof order.totalAmount === 'number' ? order.totalAmount : parseFloat(order.totalAmount || '0');
+
         // Format ticket numbers - show individual ticket IDs
-        const ticketNumbers = order.ticketIds && order.ticketIds.length > 0
-          ? order.ticketIds.map(id => id.toString()).join(', ')
-          : order.bookingId.toString(); // Fallback to booking ID if ticket IDs not available
-        
+        const ticketNumbers =
+          order.ticketIds && order.ticketIds.length > 0
+            ? order.ticketIds.map((id: number) => id.toString()).join(', ')
+            : order.bookingId.toString(); // Fallback to booking ID if ticket IDs not available
+
         // Get seats from backend (list of seat identifiers like ["A1", "A2", "B3"])
-        const seats = order.seats && order.seats.length > 0
-          ? order.seats
-          : []; // Empty array if no seats available
-        
+        const seats = order.seats && order.seats.length > 0 ? order.seats : []; // Empty array if no seats available
+
         return {
           id: order.bookingId.toString(),
           date: order.showDate,
@@ -101,7 +129,7 @@ export function useOrders(userId: number | null) {
           promotionName: order.promotionName || null, // Promotion name if applied
         };
       });
-      
+
       setOrders(transformedOrders);
     } catch (err) {
       console.error('Error fetching orders:', err);
@@ -110,7 +138,7 @@ export function useOrders(userId: number | null) {
     } finally {
       setIsLoading(false);
     }
-  }, [userId]);
+  }, [userId, onlineFee]);
 
   // Fetch orders when userId changes
   useEffect(() => {
@@ -124,4 +152,3 @@ export function useOrders(userId: number | null) {
     refetch: fetchOrders,
   };
 }
-

@@ -1,10 +1,8 @@
 /**
  * Authentication Client - Facade for authentication API operations
  *
- * Centralizes all auth-related API calls with standardized error handling
+ * Centralizes all auth-related API calls w/ standardized error handling
  * and request configuration.
- *
- * Follows Facade pattern: Single interface to complex auth API subsystem
  *
  * Responsibilities:
  * - HTTP requests to auth endpoints
@@ -14,6 +12,8 @@
  * Delegates to:
  * - /utils/auth.ts for token retrieval/parsing
  * - AuthContext for state management
+ *
+ * Used by: useLogin, useRegister, useLogout, useCheckEmail, useAdminLogin
  *
  * Usage:
  *   const response = await authClient.login({ email, password });
@@ -55,7 +55,7 @@ export interface AuthResponse {
   message: string;
   token?: string;
   refreshToken?: string;
-  role?: 'USER' | 'ADMIN';
+  role?: string;
   user?: {
     id: number;
     email: string;
@@ -75,7 +75,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/a
 /**
  * Authentication Client API
  *
- * Provides methods for all authentication operations:
+ * Provides methods for all authN operations:
  * - Login (user & admin)
  * - Registration
  * - Token refresh

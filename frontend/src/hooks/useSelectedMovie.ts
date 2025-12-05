@@ -17,8 +17,8 @@ import { MovieSummary, BackendMovie } from '@/types/movie';
  * Delegates to:
  * - movieClient (Facade): API calls
  *
- * Virtual Proxy pattern:
- * - Receives MovieSummary (lightweight) from parent
+ * Virtual Proxy:
+ * - Receives MovieSummary (lightweight) from parent component (MovieCard)
  * - Fetches full Movie entity (w/ cast/directors/producers) on mount
  * - Falls back to MovieSummary if fetch fails
  *
@@ -74,4 +74,8 @@ export function useSelectedMovie(movie: MovieSummary) {
     setSelectedShowtime,
   };
 }
+
+
+
+
 

@@ -105,9 +105,9 @@ export default function AdminHomePage() {
       </div>
 
       <div className="max-w-[70rem] mx-auto px-4 mt-8 grid grid-cols-1 sm:grid-cols-3 gap-5">
-        <AdminCard href="/admin/movies" title="Manage Movies" />
-        <AdminCard href="/admin/pricing" title="Manage Promotions" />
-        <AdminCard href="/admin/users" title="Manage Users" />
+        <AdminCard href="/admin/movies" title="Manage Movies" tooltip="Manage movies and scheduling" />
+        <AdminCard href="/admin/pricing" title="Manage Pricing" tooltip="Manage pricing, fees, and discounts" />
+        <AdminCard href="/admin/users" title="Manage Users" tooltip="Manage users" />
       </div>
 
       {<div className="max-w-[70rem] mx-auto px-4 mt-10 mb-16">

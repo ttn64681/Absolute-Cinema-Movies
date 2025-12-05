@@ -133,9 +133,6 @@ export default function UserMenu({ onMenuToggle }: UserMenuProps) {
                 <MenuItem href="/admin/pricing" onClick={handleMenuItemClick}>
                   Manage Pricing
                 </MenuItem>
-                <MenuItem href="/admin/promotions" onClick={handleMenuItemClick}>
-                  Manage Promotions
-                </MenuItem>
               </>
             ) : (
               <>

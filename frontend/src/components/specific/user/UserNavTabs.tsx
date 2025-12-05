@@ -11,9 +11,10 @@ export default function UserNavTabs({ activeTab }: UserNavTabsProps) {
     <div className="flex items-center justify-center gap-10 mt-2 mb-18 font-red-rose text-[30px]">
       <Link
         href="/user/profile"
-        className={`font-bold transition-colors relative ${
+        className={`font-bold transition-colors relative cursor-pointer ${
           activeTab === 'profile' ? 'text-acm-pink' : 'text-gray-300 hover:text-white'
         }`}
+        title="View and edit your account information"
       >
         Account Info
         {activeTab === 'profile' && (
@@ -22,9 +23,10 @@ export default function UserNavTabs({ activeTab }: UserNavTabsProps) {
       </Link>
       <Link
         href="/user/payments"
-        className={`font-bold transition-colors relative ${
+        className={`font-bold transition-colors relative cursor-pointer ${
           activeTab === 'payments' ? 'text-acm-pink' : 'text-gray-300 hover:text-white'
         }`}
+        title="Manage your payment methods"
       >
         Payment
         {activeTab === 'payments' && (
@@ -33,9 +35,10 @@ export default function UserNavTabs({ activeTab }: UserNavTabsProps) {
       </Link>
       <Link
         href="/user/orders"
-        className={`font-bold transition-colors relative ${
+        className={`font-bold transition-colors relative cursor-pointer ${
           activeTab === 'orders' ? 'text-acm-pink' : 'text-gray-300 hover:text-white'
         }`}
+        title="View your order history"
       >
         Order History
         {activeTab === 'orders' && (

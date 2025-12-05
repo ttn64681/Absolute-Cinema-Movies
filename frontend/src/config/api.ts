@@ -63,6 +63,7 @@ export const apiConfig = {
       getAllAdmins: '/api/admin/all',
       suspendUser: (userId: number) => `/api/admin/users/${userId}/suspend`,
       unsuspendUser: (userId: number) => `/api/admin/users/${userId}/unsuspend`,
+      deleteUser: (userId: number) => `/api/admin/users/${userId}`,
     },
 
     // ADDRESS ENDPOINTS
@@ -122,6 +123,20 @@ export const apiConfig = {
     // MOVIE SHOW ENDPOINTS
     movieShows: {
       getAuditorium: (movieShowId: number) => `/api/movie-shows/${movieShowId}/auditorium`,
+    },
+
+    // TICKET CATEGORY ENDPOINTS
+    ticketCategories: {
+      getAll: '/api/ticket-categories',
+      getByName: (name: string) => `/api/ticket-categories/name/${name}`,
+      create: '/api/ticket-categories',
+      update: (ticketCategoryId: number) => `/api/ticket-categories/${ticketCategoryId}`,
+      delete: (ticketCategoryId: number) => `/api/ticket-categories/${ticketCategoryId}`,
+    },
+    bookingFees: {
+      getAll: '/api/booking-fees',
+      getByName: (name: string) => `/api/booking-fees/name/${name}`,
+      update: (bookingFeeId: number) => `/api/booking-fees/${bookingFeeId}`,
     },
   },
 

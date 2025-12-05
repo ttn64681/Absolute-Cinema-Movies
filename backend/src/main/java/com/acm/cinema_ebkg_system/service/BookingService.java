@@ -25,6 +25,7 @@ import com.acm.cinema_ebkg_system.util.PaymentEncryptionUtil;
 import com.acm.cinema_ebkg_system.repository.PromotionRepository;
 import com.acm.cinema_ebkg_system.repository.MovieRepository;
 import com.acm.cinema_ebkg_system.service.EmailService;
+import com.acm.cinema_ebkg_system.service.BookingFeeService;
 import com.acm.cinema_ebkg_system.dto.booking.OrderResponseDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -233,6 +234,9 @@ public class BookingService {
     @Autowired
     private EmailService emailService;
     
+    @Autowired
+    private BookingFeeService bookingFeeService;
+    
     /**
      * Complete payment for a booking
      * Updates payment_info and applies promotion if provided
@@ -290,14 +294,15 @@ public class BookingService {
         BigDecimal ticketSubtotal = booking.getTotalAmount(); // Start with ticket prices only
         System.out.println("Payment completion - Starting with ticket subtotal: " + ticketSubtotal);
         
-        // Add tax (8% of subtotal)
-        BigDecimal tax = ticketSubtotal.multiply(new BigDecimal("0.08"));
-        System.out.println("Tax (8%): " + tax);
+        // Add tax (rate from database)
+        BigDecimal taxRate = bookingFeeService.getSalesTaxRate();
+        BigDecimal tax = ticketSubtotal.multiply(taxRate);
+        System.out.println("Tax (" + taxRate.multiply(new BigDecimal(100)) + "%): " + tax);
         
-        // Add online fees ($2.50 per ticket)
-        BigDecimal onlineFeePerTicket = new BigDecimal("2.50");
+        // Add online fees (per ticket from database)
+        BigDecimal onlineFeePerTicket = bookingFeeService.getOnlineFee();
         BigDecimal onlineFees = onlineFeePerTicket.multiply(new BigDecimal(booking.getNumTickets()));
-        System.out.println("Online fees ($2.50 x " + booking.getNumTickets() + " tickets): " + onlineFees);
+        System.out.println("Online fees ($" + onlineFeePerTicket + " x " + booking.getNumTickets() + " tickets): " + onlineFees);
         
         // Calculate total before discount
         BigDecimal totalBeforeDiscount = ticketSubtotal.add(tax).add(onlineFees);
