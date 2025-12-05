@@ -126,21 +126,28 @@ export default function AdminMoviesPage() {
 
       {/* Tabs */}
       <div className="flex items-center justify-center gap-10 text-[30px] font-red-rose mt-2 mb-18">
-        <Link href="/admin/movies" className="relative" style={{ color: '#FF478B', fontWeight: 'bold' }}>
+        <Link
+          href="/admin/movies"
+          className="relative cursor-pointer"
+          style={{ color: '#FF478B', fontWeight: 'bold' }}
+          title="Manage movies and scheduling"
+        >
           Manage Movies
           <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-acm-pink rounded-full" />
         </Link>
         <Link
           href="/admin/pricing"
-          className="text-gray-300 hover:text-white transition-colors"
+          className="text-gray-300 hover:text-white transition-colors cursor-pointer"
           style={{ fontWeight: 'bold' }}
+          title="Manage pricing, fees, and discounts"
         >
-          Manage Promotions
+          Manage Pricing
         </Link>
         <Link
           href="/admin/users"
-          className="text-gray-300 hover:text-white transition-colors"
+          className="text-gray-300 hover:text-white transition-colors cursor-pointer"
           style={{ fontWeight: 'bold' }}
+          title="Manage users"
         >
           Manage Users
         </Link>

@@ -148,14 +148,26 @@ export default function AdminPricingPage() {
       <div className="h-[120px]" />
 
       <div className="flex items-center justify-center gap-10 text-[30px] font-red-rose mt-2 mb-18">
-        <Link href="/admin/movies" className="text-gray-300 hover:text-white transition-colors font-bold">
+        <Link 
+          href="/admin/movies" 
+          className="text-gray-300 hover:text-white transition-colors font-bold cursor-pointer"
+          title="Manage movies and scheduling"
+        >
           Manage Movies
         </Link>
-        <Link href="/admin/pricing" className="relative text-[#FF478B] font-bold">
-          Manage Promotions
+        <Link 
+          href="/admin/pricing" 
+          className="relative text-[#FF478B] font-bold cursor-pointer"
+          title="Manage pricing, fees, and discounts"
+        >
+          Manage Pricing
           <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-acm-pink rounded-full" />
         </Link>
-        <Link href="/admin/users" className="text-gray-300 hover:text-white transition-colors font-bold">
+        <Link 
+          href="/admin/users" 
+          className="text-gray-300 hover:text-white transition-colors font-bold cursor-pointer"
+          title="Manage users"
+        >
           Manage Users
         </Link>
       </div>
