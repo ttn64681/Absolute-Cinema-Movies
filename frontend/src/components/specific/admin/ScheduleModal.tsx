@@ -117,7 +117,7 @@ export default function ScheduleModal({
       const movieShowStatus = await scheduleMovieShow(newMovieShow, movieTitle, selectedDate, selectedTime, selectedShowRoomId);
       if (movieShowStatus) {
         //alert("Movie show for \" " + movieTitle + "\"  on " + selectedDate + " at " + selectedTime + " in Showroom " + selectedShowRoomId + " successfully scheduled.");
-        //onClose();
+        onClose();
       } else {
         //alert("Movie show schedule conflict. Check that there isn't another show at the same time in the same room.");
       }
@@ -126,47 +126,6 @@ export default function ScheduleModal({
   };
 
   if (!isOpen) return null;
-
-  // Hardcoded date options (mid-December to early January)
-  // TODO: Replace with dates from backend
-  const generateDateOptions = () => {
-    return [
-      "2025-12-15",
-      "2025-12-16",
-      "2025-12-17",
-      "2025-12-18",
-      "2025-12-19",
-      "2025-12-20",
-      "2025-12-21",
-      "2025-12-22",
-      "2025-12-23",
-      "2025-12-24",
-      "2025-12-25",
-      "2025-12-26",
-      "2025-12-27",
-      "2025-12-28",
-      "2025-12-29",
-      "2025-12-30",
-      "2025-12-31",
-    ];
-  };
-
-  // Generate time options
-  const generateTimeOptions = () => {
-    const times: string[] = [];
-    for (let hour = 10; hour <= 22; hour++) {
-      for (let minute = 0; minute < 60; minute += 15) {
-        const h = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour;
-        const m = String(minute).padStart(2, "0");
-        const ampm = hour >= 12 ? "PM" : "AM";
-        times.push(`${h}:${m} ${ampm}`);
-      }
-    }
-    return times;
-  };
-
-  const dateOptions = generateDateOptions();
-  const timeOptions = generateTimeOptions();
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
@@ -228,32 +187,20 @@ export default function ScheduleModal({
           <div>
             <label className="block text-sm mb-3 font-afacad text-white">Add New Showtime</label>
           </div>
+
           {/* Select Date */}
           <div>
             <label className="block text-sm mb-2 font-afacad text-white">Show Date</label>
             <div className="relative">
-              <select
-                value={selectedDate}
+              <input
+                type="date"
                 onChange={(e) => {
                   setSelectedDate(e.target.value);
                   console.log("Date:" + selectedDate);
-                  setSelectedTime("");
-                  setSelectedShowRoomId(null);
                 }}
-                className="w-full pl-4 pr-10 py-3 rounded-md bg-white/10 border border-white/20 text-white focus:outline-none focus:ring-1 focus:ring-[#FF478B] focus:border-transparent appearance-none cursor-pointer font-afacad"
+                className="w-full pl-4 pr-2 py-3 rounded-md bg-white/10 border border-white/20 text-white focus:outline-none focus:ring-1 focus:ring-[#FF478B] focus:border-transparent appearance-none cursor-text font-afacad"
               >
-                <option value="">-Select Date-</option>
-                {dateOptions.map((date) => (
-                  <option key={date} value={date} className="bg-[#242424]">
-                    {date}
-                  </option>
-                ))}
-              </select>
-              <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                <svg className="w-4 h-4 text-white/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </div>
+              </input>
             </div>
           </div>
 
@@ -261,8 +208,8 @@ export default function ScheduleModal({
           <div>
             <label className="block text-sm mb-2 font-afacad text-white">Show Time</label>
             <div className="relative">
-              <select
-                value={selectedTime}
+              <input
+                type="time"
                 onChange={(e) => {
                   setSelectedTime(e.target.value);
                   console.log("Time:" + selectedTime);
@@ -270,21 +217,10 @@ export default function ScheduleModal({
                 }}
                 disabled={!selectedDate}
                 className={`w-full pl-4 pr-10 py-3 rounded-md bg-white/10 border border-white/20 text-white focus:outline-none focus:ring-1 focus:ring-[#FF478B] focus:border-transparent appearance-none font-afacad ${
-                  !selectedDate ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
+                  !selectedDate ? "opacity-50 cursor-not-allowed" : "cursor-text"
                 }`}
               >
-                <option value="">-Select Time-</option>
-                {timeOptions.map((time) => (
-                  <option key={time} value={time} className="bg-[#242424]">
-                    {time}
-                  </option>
-                ))}
-              </select>
-              <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                <svg className="w-4 h-4 text-white/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </div>
+              </input>
             </div>
           </div>
 
