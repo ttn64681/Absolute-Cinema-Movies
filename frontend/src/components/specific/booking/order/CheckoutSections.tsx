@@ -112,7 +112,7 @@ export default function CheckoutSections({
       setIsLoadingCards(true);
       try {
         // Request unmasked card numbers for checkout auto-fill
-        const cards = await paymentClient.getCards(userId, true);
+        const cards = await paymentClient.getCards(userId);
         setSavedPaymentCards(cards);
       } catch (error) {
         console.error('Error fetching saved payment cards:', error);
@@ -479,15 +479,17 @@ export default function CheckoutSections({
   const renderBillingForm = () => (
     <div className="grid gap-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {[
-          { label: 'First Name', key: 'billingFirstName' },
-          { label: 'Last Name', key: 'billingLastName' },
-        ].map(({ label, key }) => (
+        {(
+          [
+            { label: 'First Name', key: 'billingFirstName' as const },
+            { label: 'Last Name', key: 'billingLastName' as const },
+          ] as const
+        ).map(({ label, key }) => (
           <FormField
             key={key}
             label={label}
-            value={formData[key as keyof CheckoutFormData]}
-            onChange={(value) => updateFormData(key as keyof CheckoutFormData, value)}
+            value={formData[key]}
+            onChange={(value) => updateFormData(key, value)}
           />
         ))}
       </div>
@@ -669,7 +671,7 @@ export default function CheckoutSections({
           type="button"
           onClick={handleApplyPromo}
           disabled={isValidatingPromo || !formData.promoCode.trim()}
-          className="px-6 py-3 rounded-md font-afacad font-bold text-white bg-gradient-to-r from-acm-pink to-acm-orange hover:brightness-110 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+          className="px-6 py-3 rounded-md font-afacad font-bold text-white bg-linear-to-r from-acm-pink to-acm-orange hover:brightness-110 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
           title="Apply promo code"
         >
           {isValidatingPromo ? 'Validating...' : 'Apply'}

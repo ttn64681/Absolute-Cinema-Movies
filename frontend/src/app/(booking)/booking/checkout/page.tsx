@@ -137,7 +137,7 @@ function CheckoutPageContent() {
           />
         </div>
 
-        <div className="w-96 flex-shrink-0 flex flex-col">
+        <div className="w-96 shrink-0 flex flex-col">
           <div className="w-full pb-6">
             <div className="max-w-4xl mx-auto invisible pointer-events-none">
               <StepTracker steps={checkoutSteps} currentStep={currentStep} ghost />
@@ -159,6 +159,7 @@ type Step = { number: number; label: string };
 interface StepTrackerProps {
   steps: Step[];
   currentStep: number;
+  ghost?: boolean;
 }
 
 function StepTracker({ steps, currentStep }: StepTrackerProps) {

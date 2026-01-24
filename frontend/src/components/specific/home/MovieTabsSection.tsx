@@ -96,8 +96,9 @@ export default function MovieTabsSection({
             <button
               key={i}
               type="button"
+              title={`Go to page ${i + 1}`}
               onClick={() => goToPage(i)}
-              className={`w-2 h-2 rounded-full transition-all ${
+              className={`w-2 h-2 rounded-full transition-all duration-200 cursor-pointer ${
                 i === pagination.currentPage ? 'bg-acm-pink w-8' : 'bg-gray-600 hover:bg-gray-500'
               }`}
               aria-label={`Page ${i + 1}`}

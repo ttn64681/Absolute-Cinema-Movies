@@ -124,7 +124,7 @@ function SeatingPageContent() {
       console.log('Selected seats:', selectedSeats);
       // Reserve seats before navigating
       try {
-        const success = await reserveSelectedSeats(showId);
+        const success = await reserveSelectedSeats();
         if (success) {
           // Start reservation timer immediately after successfully reserving seats
           // Pass navigation params so we can navigate back to seat selection when canceling
@@ -180,7 +180,7 @@ function SeatingPageContent() {
           </div>
         </div>
 
-          <main className="flex-grow p-6">
+          <main className="grow p-6">
             <div className="max-w-5xl mx-auto">
               {loading && (
                 <div className="text-white text-center py-8">Loading seats...</div>
