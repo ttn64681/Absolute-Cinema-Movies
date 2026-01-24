@@ -229,15 +229,15 @@ export default function TicketPriceEditor({ prices: propPrices, onSave: propOnSa
               title="Edit"
               type="button"
               onClick={() => setIsEditing(true)}
-              className="text-gray-300 hover:text-white transition-colors"
+              className="text-gray-300 hover:text-white transition-colors cursor-pointer"
             >
               <PiPencilSimple className="text-2xl" />
             </button>
             <button
               title="Add"
               type="button"
-              className="text-black px-5 py-2 rounded-full transition-colors hover:opacity-90 font-afacad font-bold bg-gradient-to-r 
-              from-[#FF478B] to-[#FF5C33]"
+              className="text-black hover:text-white px-5 py-2 rounded-full transition-colors hover:opacity-90 font-afacad font-bold bg-gradient-to-r 
+              from-[#FF478B] to-[#FF5C33] cursor-pointer"
             >
               Add +
             </button>

@@ -1,7 +1,7 @@
 'use client';
 
-import Link from 'next/link';
 import AdminNavBar from '@/components/common/navBar/AdminNavBar';
+import AdminTabs from '@/components/specific/admin/AdminTabs';
 import { useAdminUsers } from '@/hooks/useAdminUsers';
 import { useToast } from '@/contexts/ToastContext';
 import { PiTrash } from 'react-icons/pi';
@@ -25,33 +25,7 @@ function AdminUsersPage() {
       <AdminNavBar />
       <div style={{ height: '120px' }} />
 
-      <div className="flex items-center justify-center gap-10 text-[30px] font-red-rose mt-2 mb-18">
-        <Link
-          href="/admin/movies"
-          className="text-gray-300 hover:text-white transition-colors cursor-pointer"
-          style={{ fontWeight: 'bold' }}
-          title="Manage movies and scheduling"
-        >
-          Manage Movies
-        </Link>
-        <Link
-          href="/admin/pricing"
-          className="text-gray-300 hover:text-white transition-colors cursor-pointer"
-          style={{ fontWeight: 'bold' }}
-          title="Manage pricing, fees, and discounts"
-        >
-          Manage Pricing
-        </Link>
-        <Link 
-          href="/admin/users" 
-          className="relative cursor-pointer" 
-          style={{ color: '#FF478B', fontWeight: 'bold' }}
-          title="Manage users"
-        >
-          Manage Users
-          <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-acm-pink rounded-full" />
-        </Link>
-      </div>
+      <AdminTabs activeTab="users" />
 
       <div className="max-w-7xl mx-auto px-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">

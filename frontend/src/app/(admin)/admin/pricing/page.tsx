@@ -1,9 +1,9 @@
 'use client';
 
-import Link from 'next/link';
 import { PiPencilSimple, PiPlus } from 'react-icons/pi';
 import { useEffect, useState } from 'react';
 import AdminNavBar from '@/components/common/navBar/AdminNavBar';
+import AdminTabs from '@/components/specific/admin/AdminTabs';
 import PromotionModal from '@/components/specific/admin/PromotionModal';
 import TicketPriceEditor from '@/components/specific/admin/TicketPriceEditor';
 import BookingFeeEditor from '@/components/specific/admin/BookingFeeEditor';
@@ -147,32 +147,9 @@ export default function AdminPricingPage() {
       <AdminNavBar />
       <div className="h-[120px]" />
 
-      <div className="flex items-center justify-center gap-10 text-[30px] font-red-rose mt-2 mb-18">
-        <Link 
-          href="/admin/movies" 
-          className="text-gray-300 hover:text-white transition-colors font-bold cursor-pointer"
-          title="Manage movies and scheduling"
-        >
-          Manage Movies
-        </Link>
-        <Link 
-          href="/admin/pricing" 
-          className="relative text-[#FF478B] font-bold cursor-pointer"
-          title="Manage pricing, fees, and discounts"
-        >
-          Manage Pricing
-          <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-acm-pink rounded-full" />
-        </Link>
-        <Link 
-          href="/admin/users" 
-          className="text-gray-300 hover:text-white transition-colors font-bold cursor-pointer"
-          title="Manage users"
-        >
-          Manage Users
-        </Link>
-      </div>
+      <AdminTabs activeTab="pricing" />
 
-      <div className="max-w-[65rem] mx-auto px-4">
+      <div className="max-w-260 mx-auto px-4">
         <TicketPriceEditor />
         <BookingFeeEditor />
 
@@ -211,7 +188,7 @@ export default function AdminPricingPage() {
                           type="button"
                           onClick={() => sendPromotion(promo)}
                           className="text-black px-4 py-1 rounded-full transition-colors hover:opacity-90 font-afacad font-bold text-sm 
-                          bg-gradient-to-r from-[#FF478B] to-[#FF5C33]"
+                          bg-linear-to-r from-[#FF478B] to-[#FF5C33] cursor-pointer"
                         >
                           Send
                         </button>
@@ -221,8 +198,8 @@ export default function AdminPricingPage() {
                         type="button"
                         className={
                           promo.status == PromotionStatus.active
-                            ? 'transition-colors text-gray-500 opacity-50'
-                            : 'transition-colors hover:text-white'
+                            ? 'transition-colors text-gray-500 opacity-50 cursor-not-allowed'
+                            : 'transition-colors hover:text-white cursor-pointer'
                         }
                         onClick={() => promo.status == PromotionStatus.inactive && editPromotion(promo)}
                         disabled={promo.status == PromotionStatus.active}

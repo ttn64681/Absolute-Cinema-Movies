@@ -12,7 +12,7 @@ export default function MenuItem({
   href,
   onClick,
   children,
-  className = 'block px-4 py-3 text-white text-sm transition-all duration-200 hover:bg-white/10 hover:text-acm-pink',
+  className = 'block px-4 py-3 text-white text-sm transition-all duration-200 hover:bg-white/10 hover:text-acm-pink cursor-pointer',
 }: MenuItemProps) {
   const baseStyle = { color: 'white' };
 

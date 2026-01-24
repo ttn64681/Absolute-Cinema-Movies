@@ -16,7 +16,7 @@ export default function AdminNavBar() {
           <div className="flex items-center">
             <Link
               href="/"
-              className="text-2xl sm:text-3xl lg:text-4xl acm-gradient font-pacifico leading-none transform -translate-y-1"
+              className="text-2xl sm:text-3xl lg:text-4xl acm-gradient font-pacifico leading-none transform -translate-y-1 transition-all duration-200 hover:drop-shadow-[0_0_25px_rgba(255,71,139,1)] hover:-translate-y-1.5 cursor-pointer"
             >
               acm
             </Link>

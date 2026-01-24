@@ -1,9 +1,9 @@
 'use client';
 
-import Link from 'next/link';
 import { PiPencilSimple, PiX, PiMagnifyingGlass, PiCaretLeft, PiCaretRight } from 'react-icons/pi';
 import { useState, useEffect } from 'react';
 import AdminNavBar from '@/components/common/navBar/AdminNavBar';
+import AdminTabs from '@/components/specific/admin/AdminTabs';
 import { Movie } from '@/types/admin';
 import EditMovieFormModal, { AdminMovie } from '@/components/specific/admin/EditMovieFormModal';
 import AddMovieFormModal from '@/components/specific/admin/AddMovieFormModal';
@@ -20,10 +20,6 @@ export default function AdminMoviesPage() {
 
   // Use adminMovies if available; otherwise, fall back to fallbackMoviesList
   const moviesList = adminMovies && adminMovies.length > 0 ? adminMovies : [];
-  /*console.log(moviesList);
-  console.log(pagination.currentPage);
-  console.log("HasPreviousPage is " + pagination.hasNext );
-  console.log("HasNextPage is " + pagination.hasNext );*/
 
   const [movies, setMovies] = useState(moviesList); // movies list
   const [showAddModal, setShowAddModal] = useState(false); // add movie popup visibility
@@ -124,51 +120,10 @@ export default function AdminMoviesPage() {
       <AdminNavBar />
       <div style={{ height: '120px' }} />
 
-      {/* Tabs */}
-      <div className="flex items-center justify-center gap-10 text-[30px] font-red-rose mt-2 mb-18">
-        <Link
-          href="/admin/movies"
-          className="relative cursor-pointer"
-          style={{ color: '#FF478B', fontWeight: 'bold' }}
-          title="Manage movies and scheduling"
-        >
-          Manage Movies
-          <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-acm-pink rounded-full" />
-        </Link>
-        <Link
-          href="/admin/pricing"
-          className="text-gray-300 hover:text-white transition-colors cursor-pointer"
-          style={{ fontWeight: 'bold' }}
-          title="Manage pricing, fees, and discounts"
-        >
-          Manage Pricing
-        </Link>
-        <Link
-          href="/admin/users"
-          className="text-gray-300 hover:text-white transition-colors cursor-pointer"
-          style={{ fontWeight: 'bold' }}
-          title="Manage users"
-        >
-          Manage Users
-        </Link>
-      </div>
-
-      {/* Search Bar */}
-      {/*<div className="max-w-[65rem] mx-auto mb-4 px-4 flex justify-center">
-        <div className="relative max-w-md w-full">
-          <input
-            type="text"
-            placeholder="Search movies..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-white/10 backdrop-blur-md border border-white/30 text-white/30 placeholder-white/30 px-3 py-1.5 sm:px-4 sm:py-2 pl-8 sm:pl-10 rounded-lg focus:outline-none focus:ring-1 focus:ring-white/30 focus:border-white/30 transition-all text-sm sm:text-base"
-          />
-          <PiMagnifyingGlass className="absolute left-2 top-1/2 transform -translate-y-1/2 text-white/30 text-2xl pointer-events-none" />
-        </div>
-      </div>*/}
+      <AdminTabs activeTab="movies" />
 
       {/* List of Movies Container */}
-      <div className="relative max-w-7xl mx-auto min-h">
+      <div className="relative max-w-7xl mx-auto">
         {/* Labels */}
         <li className="flex items-center py-3 sm:py-4">
           <div
