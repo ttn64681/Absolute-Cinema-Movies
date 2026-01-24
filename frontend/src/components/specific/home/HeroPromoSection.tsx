@@ -16,7 +16,8 @@ import { heroPromotions } from '@/constants/movieData';
  * Displays featured promotions in a carousel format
  *
  * Responsibilities:
- * - Display hero promotions from hook / fallback to placeholders
+ * - Display hero promotions from hook / fallback to placeholder promos when backend has none
+ * - On fallback promos, show "This offer is no longer available" in description (different color)
  * - Render carousel UI with animations
  *
  * Delegates to:
@@ -25,10 +26,9 @@ import { heroPromotions } from '@/constants/movieData';
  */
 export default function HeroPromoSection() {
   const { heroPromos, isLoading } = useHomePromotions();
-  // Use backend promotions if available, otherwise use placeholder promotions
   const displayPromos = heroPromos.length > 0 ? heroPromos : heroPromotions;
+  const isUsingFallback = heroPromos.length === 0;
 
-  // Carousel logic extracted to custom hook
   const {
     currentIndex,
     currentItem: currentPromo,
@@ -38,12 +38,11 @@ export default function HeroPromoSection() {
     goToIndex,
   } = useCarousel(displayPromos, 5000);
 
-  // Show loading skeleton while fetching (only if no placeholders to show)
   if (isLoading && displayPromos.length === 0) {
     return (
       <section className="relative -mt-40 z-20 px-4">
         <div className="mx-auto flex flex-row w-full max-w-5xl grid-cols-1 gap-10 rounded-xl p-5 md:grid-cols-2">
-          <SkeletonBlock className="relative aspect-[16/10] w-full overflow-hidden rounded-lg" />
+          <SkeletonBlock className="relative aspect-16/10 w-full overflow-hidden rounded-lg" />
           <div className="flex flex-col w-[80vw] justify-center content-start gap-3 text-white">
             <SkeletonBlock className="h-8 w-3/4 rounded-lg" />
             <SkeletonBlock className="h-4 w-2/3 rounded-lg" />
@@ -54,9 +53,8 @@ export default function HeroPromoSection() {
     );
   }
 
-  // Always render - use placeholders if no backend promotions
   if (displayPromos.length === 0 || !currentPromo) {
-    return null; // Should never happen due to fallback, but safety check
+    return null;
   }
 
   // Variants for slide animations
@@ -95,7 +93,7 @@ export default function HeroPromoSection() {
       {/* Main Content Container - Slightly smaller to avoid touching arrows */}
       <div className="mx-auto flex flex-col lg:flex-row w-[95%] max-w-[95%] gap-8 lg:gap-12 rounded-xl p-6 lg:p-8">
         {/* Image Section - overflow-visible to allow border animations */}
-        <div className="relative aspect-[16/10] w-full lg:w-1/2 overflow-visible">
+        <div className="relative aspect-16/10 w-full lg:w-1/2 overflow-visible">
           {isLoading ? (
             <div className="w-full h-full bg-gray-800 animate-pulse rounded-lg"></div>
           ) : (
@@ -154,17 +152,31 @@ export default function HeroPromoSection() {
             <h3 className="font-redRose text-acm-pink text-3xl lg:text-4xl font-bold">{currentPromo.title}</h3>
             <WhiteSeparator />
             <p className="text-base lg:text-lg text-white/90">{currentPromo.description}</p>
+            {isUsingFallback && (
+              <p className="text-sm font-semibold text-amber-600 mt-2" title="Promotion unavailable">
+                ( This offer is no longer available )
+              </p>
+            )}
             <div className="pt-2">
+              {!isUsingFallback ? (
               <Link
                 href={currentPromo.link}
                 aria-label={currentPromo.ctaText}
-                className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-acm-pink to-acm-orange px-5 py-2.5 text-white font-semibold shadow-lg ring-1 ring-white/20 hover:brightness-110 hover:-translate-y-0.5 active:translate-y-0 transition-transform drop-shadow-lg"
+                className="inline-flex items-center gap-2 rounded-full bg-linear-to-r from-acm-pink to-acm-orange px-5 py-2.5 text-white font-semibold shadow-lg ring-1 ring-white/20 hover:brightness-110 hover:-translate-y-0.5 active:translate-y-0 transition-transform drop-shadow-lg"
               >
                 <span>{currentPromo.ctaText}</span>
                 <span className="text-xl leading-none">
                   <RxDoubleArrowRight />
                 </span>
               </Link>
+              ) : (
+                <button disabled className="inline-flex items-center gap-2 rounded-full bg-linear-to-r from-acm-pink/50 to-acm-orange/50 px-5 py-2.5 text-white/50 font-semibold shadow-lg ring-1 ring-white/20 active:translate-y-0 transition-transform drop-shadow-lg cursor-not-allowed">
+                  <span>{currentPromo.ctaText}</span>
+                  <span className="text-xl leading-none">
+                    <RxDoubleArrowRight />
+                  </span>
+                </button>
+              )}
             </div>
           </motion.div>
         </AnimatePresence>

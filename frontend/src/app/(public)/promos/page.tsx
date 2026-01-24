@@ -1,7 +1,6 @@
 'use client';
 
 import PromoCard from '@/components/common/promos/PromoCard';
-import { BackendPromotion, DiscountType, PromotionStatus } from '@/types/promotion';
 import { useHomePromotions } from '@/hooks/useHomePromotions';
 import NavBar from '@/components/common/navBar/NavBar';
 import dynamic from 'next/dynamic';
@@ -24,15 +23,22 @@ export default function PromosPage() {
       <main className="relative flex-1">
         <div className="max-w-6xl mx-auto px-8 pb-16 -mt-20 relative z-10">
           <section className="flex flex-col gap-6">
-            {(isLoading) ? (
-
+            {isLoading ? (
               <div className="flex justify-center content-center">
                 <Spinner size="xl" color="pink" />
               </div>
-            ) : 
-            fullPromos.map((promotion) => (
-              <PromoCard key={promotion.id} promotion={promotion} />
-            ))}
+            ) : fullPromos.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
+                <p className="text-white/60 text-lg mb-2">No promotions available at the moment.</p>
+                <p className="text-white/40 text-sm">
+                  Check back later for new offers and deals.
+                </p>
+              </div>
+            ) : (
+              fullPromos.map((promotion) => (
+                <PromoCard key={promotion.id} promotion={promotion} />
+              ))
+            )}
           </section>
         </div>
       </main>
