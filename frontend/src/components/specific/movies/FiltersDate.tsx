@@ -45,6 +45,7 @@ export default function FiltersDate({ text, value, onChange }: FiltersDateProps)
                 </select>
                 <ChevronDownIcon />
             </label> */}
+        {/* Month dropdown */}
         <select
           className="appearance-none w-full p-2 border-2 border-acm-pink bg-black/20 rounded-lg outline-0 text-white/60 font-medium basis-1/3 cursor-pointer"
           value={value.month}
@@ -60,6 +61,8 @@ export default function FiltersDate({ text, value, onChange }: FiltersDateProps)
             </option>
           ))}
         </select>
+
+        {/* Day dropdown */}
         <select
           className="appearance-none w-full p-2 border-2 border-acm-pink bg-black/20 rounded-lg outline-0 text-white/60 font-medium basis-1/6 cursor-pointer"
           value={value.day}
@@ -76,6 +79,7 @@ export default function FiltersDate({ text, value, onChange }: FiltersDateProps)
           ))}
         </select>
 
+        {/* Year dropdown */}
         <select
           className="appearance-none w-full p-2 border-2 border-acm-pink bg-black/20 rounded-lg outline-0 text-white/60 font-medium basis-1/4 cursor-pointer"
           value={value.year}

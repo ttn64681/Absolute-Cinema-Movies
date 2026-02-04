@@ -16,15 +16,6 @@ import java.time.LocalDateTime;
 
 /**
  * Promotion Entity - Represents promotional offers and discounts
- * 
- * TODO: Uncomment when fully implementing the promotion system
- * This entity maps to the 'promotions' table in the database and contains
- * promotional information including codes, discounts, and validity periods.
- * 
- * Key Features:
- * - Tracks promotional codes and discounts
- * - Can be applied to bookings
- * - Tracks expiration dates and usage limits
  */
 @Data
 //@NoArgsConstructor
@@ -32,9 +23,7 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "promotion")
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
-// TODO: Uncomment entire class when implementing the promotion system
 public class Promotion {
-    // TODO: Uncomment all fields when implementing the promotion system
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

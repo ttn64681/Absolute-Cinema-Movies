@@ -19,8 +19,7 @@ export default function NavBar() {
   const { isAuthenticated, user } = useAuth();
 
   const isAdmin =
-    typeof window !== 'undefined' &&
-    (localStorage.getItem('adminToken') || sessionStorage.getItem('adminToken'));
+    typeof window !== 'undefined' && (localStorage.getItem('adminToken') || sessionStorage.getItem('adminToken'));
 
   // When user clicks search button or presses Enter, build URL with all search parameters
   const handleSearch = () => {
@@ -59,7 +58,7 @@ export default function NavBar() {
           {/* Left Section: Logo and Search */}
           <div className="flex items-center space-x-2 sm:space-x-4 flex-1">
             {/* Brand Logo */}
-            <div className="flex-shrink-0 flex items-center">
+            <div className="shrink-0 flex items-center">
               {isAdmin ? (
                 <span className="text-2xl sm:text-3xl lg:text-4xl acm-gradient font-pacifico leading-none transform -translate-y-1 transition-all duration-200 cursor-default select-none">
                   acm
@@ -99,7 +98,7 @@ export default function NavBar() {
             </div>
 
             {/* Filter Button - Always visible */}
-            <div className="flex-shrink-0">
+            <div className="shrink-0">
               <button
                 title="Filter"
                 type="button"

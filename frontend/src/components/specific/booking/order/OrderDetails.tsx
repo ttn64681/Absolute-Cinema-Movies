@@ -212,7 +212,7 @@ export default function OrderDetails({ promoDiscount = 0, promoType, onTotalCalc
 
   if (isLoadingPrices || isLoadingFees) {
     return (
-      <div className="p-[3px] rounded-2xl bg-gradient-to-r from-acm-orange to-acm-pink">
+      <div className="p-[3px] rounded-2xl bg-linear-to-r from-acm-orange to-acm-pink">
         <div className="flex flex-col p-6 bg-black text-white rounded-2xl shadow-md w-full h-full">
           <div className="text-center py-8">Loading prices...</div>
         </div>
@@ -221,7 +221,7 @@ export default function OrderDetails({ promoDiscount = 0, promoType, onTotalCalc
   }
 
   return (
-    <div className="p-[3px] rounded-2xl bg-gradient-to-r from-acm-orange to-acm-pink">
+    <div className="p-[3px] rounded-2xl bg-linear-to-r from-acm-orange to-acm-pink">
       <div className="flex flex-col p-6 bg-black text-white rounded-2xl shadow-md w-full h-full">
         <h2 className="text-2xl font-extrabold mb-4">Order Details</h2>
 

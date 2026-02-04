@@ -47,7 +47,7 @@ export default function SelectedMovieInfo({ movie }: SelectedMovieInfoProps) {
         </div>
 
         {/* Darker gradient overlay - darker at bottom */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent rounded-l-3xl pointer-events-none" />
+        <div className="absolute inset-0 bg-linear-to-t from-black via-black/60 to-transparent rounded-l-3xl pointer-events-none" />
       </div>
 
       {/* Content positioned at bottom - No blur applied here */}

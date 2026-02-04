@@ -96,16 +96,13 @@ export default function MovieCard({ movie }: MovieCardProps) {
                 {/* Genres */}
                 <div className="flex flex-wrap gap-1">
                   {genresArray.slice(0, 4).map((genre, index) => (
-                    <span
-                      key={index}
-                      className="text-xs bg-white/20 backdrop-blur-sm px-2 py-1 rounded-full flex-shrink-0"
-                    >
+                    <span key={index} className="text-xs bg-white/20 backdrop-blur-sm px-2 py-1 rounded-full shrink-0">
                       {genre}
                     </span>
                   ))}
                   {genresArray.length > 4 && (
                     <span
-                      className="text-xs bg-white/15 backdrop-blur-sm px-2 py-1 rounded-full flex-shrink-0"
+                      className="text-xs bg-white/15 backdrop-blur-sm px-2 py-1 rounded-full shrink-0"
                       title={genresArray.slice(4).join(', ')}
                     >
                       +{genresArray.length - 4}

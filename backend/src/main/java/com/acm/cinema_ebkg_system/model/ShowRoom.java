@@ -7,9 +7,6 @@ import java.time.LocalDateTime;
 
 /**
  * Show Room Entity - Represents cinema auditoriums/screening rooms in the cinema booking system
- * 
- * This entity maps to the 'show_room' table in the database and contains
- * auditorium information including name and seating capacity.
  */
 @Entity
 @Table(name = "show_room")

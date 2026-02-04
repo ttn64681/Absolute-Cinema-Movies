@@ -18,6 +18,9 @@ PG_URL='url'
 DB_USERNAME=
 DB_PASSWORD=
 
+# AES_KEY is the key for the AES encryption algorithm to encrypt and decrypt card numbers
+AES_KEY=631F270CE7828460F301A5993A199758
+
 # JWT Configuration for authentication
 JWT_SECRET=
 # JWT Access Expiration: 30 minutes
@@ -43,6 +46,7 @@ if [[ "$OS" == "Linux" ]] || [[ "$OS" == "Darwin" ]]; then
     export PG_DATABASE_URL="$PG_URL"
     export DATABASE_USERNAME="$DB_USERNAME"
     export DATABASE_PASSWORD="$DB_PASSWORD"
+    export AES_KEY="$AES_KEY"
     export JWT_SECRET="$JWT_SECRET"
     export JWT_ACCESS_TOKEN_EXPIRATION="$JWT_ACCESS_TOKEN_EXPIRATION"
     export JWT_REFRESH_TOKEN_EXPIRATION="$JWT_REFRESH_TOKEN_EXPIRATION"
@@ -55,6 +59,7 @@ if [[ "$OS" == "Linux" ]] || [[ "$OS" == "Darwin" ]]; then
     echo "PG_DATABASE_URL is: $PG_URL"
     echo "DATABASE_USERNAME is: $DB_USERNAME"
     echo "DATABASE_PASSWORD is: $DB_PASSWORD"
+    echo "AES_KEY is: $AES_KEY"
     echo "JWT_SECRET is: $JWT_SECRET"
     echo "JWT_ACCESS_TOKEN_EXPIRATION is: 1800000"
     echo "JWT_REFRESH_TOKEN_EXPIRATION is: 1209600000"
@@ -69,6 +74,7 @@ elif [[ "$OS" == *'NT'* ]]; then
     export PG_DATABASE_URL="$PG_URL"
     export DATABASE_USERNAME="$DB_USERNAME"
     export DATABASE_PASSWORD="$DB_PASSWORD"
+    export AES_KEY="$AES_KEY"
     export JWT_SECRET="$JWT_SECRET"
     export JWT_ACCESS_TOKEN_EXPIRATION="$JWT_ACCESS_TOKEN_EXPIRATION"
     export JWT_REFRESH_TOKEN_EXPIRATION="$JWT_REFRESH_TOKEN_EXPIRATION"
@@ -81,6 +87,7 @@ elif [[ "$OS" == *'NT'* ]]; then
     echo "PG_DATABASE_URL is: $PG_DATABASE_URL"
     echo "DATABASE_USERNAME is: $DATABASE_USERNAME"
     echo "DATABASE_PASSWORD is: $DATABASE_PASSWORD"
+    echo "AES_KEY is: $AES_KEY"
     echo "JWT_SECRET is: $JWT_SECRET"
     echo "JWT_ACCESS_TOKEN_EXPIRATION is: 1800000"
     echo "JWT_REFRESH_TOKEN_EXPIRATION is: 1209600000"

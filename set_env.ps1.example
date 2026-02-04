@@ -14,6 +14,9 @@ $PG_URL = 'postgresql://host:port/dbname'
 $DB_USERNAME = 'user'
 $DB_PASSWORD = 'pass'
 
+# AES Key
+$AES_KEY = 'key'
+
 # JWT Configuration for authentication
 $JWT_SECRET = 'jwt-long-random-generated-secret'
 # JWT Access Expiration: 30 minutes

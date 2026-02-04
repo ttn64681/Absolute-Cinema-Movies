@@ -13,33 +13,25 @@ import { getAuthToken } from '@/utils/auth';
  */
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const token = getAuthToken();
-  const url = buildUrl(path);
 
-  try {
-    const response = await fetch(url, {
-      headers: {
-        'Content-Type': 'application/json',
-        ...(token && { Authorization: `Bearer ${token}` }),
-        ...options.headers,
-      },
-      ...options,
-    });
+  const response = await fetch(buildUrl(path), {
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token && { Authorization: `Bearer ${token}` }),
+      ...options.headers,
+    },
+    ...options,
+  });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`[promotionClient] API Error [${response.status}]:`, errorText);
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-    }
-
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    console.error(`[promotionClient] Request failed for ${url}:`, error);
-    if (error instanceof TypeError && error.message.includes('fetch')) {
-      throw new Error(`Network error: Unable to reach backend at ${url}.... breh`);
-    }
-    throw error;
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error(`API Error [${response.status}]:`, errorText);
+    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
   }
+
+  const data = await response.json();
+  console.log('API Response:', path, data);
+  return data;
 }
 
 /**
@@ -55,6 +47,8 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 export const promotionClient = {
   /**
    * Get all promotions
+   *
+   * @returns Array of all promotions
    */
   async getAllPromotions(): Promise<BackendPromotion[]> {
     return request<BackendPromotion[]>(endpoints.promotions.getPromotions());
@@ -62,6 +56,9 @@ export const promotionClient = {
 
   /**
    * Get promotion by ID
+   *
+   * @param promotionId - Promotion ID
+   * @returns Promotion details
    */
   async getPromotionById(promotionId: number): Promise<BackendPromotion> {
     // Note: getPromotions() returns '/api/promotion/', so we need to append promotionId
@@ -72,6 +69,9 @@ export const promotionClient = {
 
   /**
    * Create a new promotion (admin only)
+   *
+   * @param promotion - Promotion data (without id)
+   * @returns Created promotion
    */
   async createPromotion(promotion: Omit<BackendPromotion, 'id'>): Promise<BackendPromotion> {
     return request<BackendPromotion>(endpoints.promotions.addPromotion(), {
@@ -82,6 +82,10 @@ export const promotionClient = {
 
   /**
    * Update an existing promotion (admin only)
+   *
+   * @param promotionId - Promotion ID
+   * @param promotion - Partial promotion data to update
+   * @returns Updated promotion
    */
   async updatePromotion(promotionId: number, promotion: Partial<BackendPromotion>): Promise<BackendPromotion> {
     return request<BackendPromotion>(endpoints.promotions.updatePromotion(promotionId), {
@@ -94,8 +98,26 @@ export const promotionClient = {
    * Delete a promotion (admin only)
    */
   async deletePromotion(promotionId: number): Promise<void> {
-    await request<void>(endpoints.promotions.deletePromotion(promotionId), {
-      method: 'DELETE',
-    });
+    try {
+      const response = await fetch(buildUrl(endpoints.promotions.deletePromotion(promotionId)), {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(getAuthToken() && { Authorization: `Bearer ${getAuthToken()}` }),
+        },
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Delete promotion error:', errorText);
+        throw new Error(errorText || `HTTP ${response.status}: ${response.statusText}`);
+      }
+    } catch (error) {
+      console.error('Error deleting promotion:', error);
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error('Unknown error occurred while deleting promotion');
+    }
   },
 };

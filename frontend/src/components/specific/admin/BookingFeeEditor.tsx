@@ -228,7 +228,7 @@ export default function BookingFeeEditor() {
               type="button"
               onClick={handleSave}
               disabled={isSaving}
-              className="text-black px-5 py-2 rounded-full transition-colors hover:opacity-90 font-afacad font-bold bg-gradient-to-r 
+              className="text-black px-5 py-2 rounded-full transition-colors hover:opacity-90 font-afacad font-bold bg-linear-to-r 
               from-[#FF478B] to-[#FF5C33] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
               {isSaving ? 'Saving...' : 'Save'}

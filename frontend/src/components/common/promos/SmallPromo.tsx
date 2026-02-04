@@ -10,7 +10,7 @@ interface SmallPromoProps {
 export default function SmallPromo({ discount, promo, imageUrl }: SmallPromoProps) {
   return (
     <motion.div
-      className="bg-black border-2 border-white/60 flex flex-row rounded-xl max-h-40 w-[400px] flex-shrink-0 overflow-hidden group cursor-pointer transition-transform duration-200 ease-out"
+      className="bg-black border-2 border-white/60 flex flex-row rounded-xl max-h-40 w-[400px] shrink-0 overflow-hidden group cursor-pointer transition-transform duration-200 ease-out"
       whileHover={{ borderColor: '#ec4899', scale: 1.05 }}
       transition={{ duration: 0.2, ease: 'easeOut' }}
     >

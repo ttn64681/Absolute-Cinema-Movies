@@ -42,10 +42,12 @@ export default function Genre({ text, imageUrl }: GenreProps) {
           priority
           sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 20vw"
         />
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/40 via-black/60 to-black group-hover:bg-black/60" />
+        <div className="pointer-events-none absolute inset-0 bg-linear-to-b from-black/40 via-black/60 to-black group-hover:bg-black/60" />
         <div className="absolute inset-0 flex items-center justify-center z-10 group-hover:scale-102 transition-all">
           <div className="backdrop-blur-md bg-white/20 group-hover:bg-acm-pink/20 px-4 py-2 rounded-lg transition-colors duration-200">
-            <h3 className="text-xl font-bold text-white group-hover:text-acm-pink drop-shadow-lg transition-colors duration-200">{text}</h3>
+            <h3 className="text-xl font-bold text-white group-hover:text-acm-pink drop-shadow-lg transition-colors duration-200">
+              {text}
+            </h3>
           </div>
         </div>
       </button>

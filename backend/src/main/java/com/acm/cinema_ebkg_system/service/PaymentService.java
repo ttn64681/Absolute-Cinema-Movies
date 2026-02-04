@@ -18,7 +18,7 @@ import com.acm.cinema_ebkg_system.util.PaymentEncryptionUtil;
  * 
  * Handles CRUD operations for user payment information.
  * 
- * Currently not fully optimized, will handle in the future
+ * NOT BEING USED (PaymentCardService is being used instead)
  */
 @Service
 public class PaymentService {

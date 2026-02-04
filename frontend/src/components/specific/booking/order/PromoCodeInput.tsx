@@ -5,7 +5,12 @@ import { useToast } from '@/contexts/ToastContext';
 import { buildUrl } from '@/config/api';
 
 interface PromoCodeInputProps {
-  onPromoApplied: (promoCode: string, discount: number, discountType: 'percentage' | 'fixed', promotionId: number) => void;
+  onPromoApplied: (
+    promoCode: string,
+    discount: number,
+    discountType: 'percentage' | 'fixed',
+    promotionId: number
+  ) => void;
   onPromoRemoved: () => void;
   isLoading?: boolean;
 }
@@ -13,7 +18,12 @@ interface PromoCodeInputProps {
 export default function PromoCodeInput({ onPromoApplied, onPromoRemoved, isLoading = false }: PromoCodeInputProps) {
   const [promoCode, setPromoCode] = useState('');
   const [isValidating, setIsValidating] = useState(false);
-  const [appliedPromo, setAppliedPromo] = useState<{ code: string; discount: number; type: 'percentage' | 'fixed'; promotionId: number } | null>(null);
+  const [appliedPromo, setAppliedPromo] = useState<{
+    code: string;
+    discount: number;
+    type: 'percentage' | 'fixed';
+    promotionId: number;
+  } | null>(null);
   const { showToast } = useToast();
 
   const handleApply = async () => {
@@ -24,12 +34,15 @@ export default function PromoCodeInput({ onPromoApplied, onPromoRemoved, isLoadi
 
     setIsValidating(true);
     try {
-      const response = await fetch(buildUrl(`/api/promotion/validate?promoCode=${encodeURIComponent(promoCode.trim())}`), {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+      const response = await fetch(
+        buildUrl(`/api/promotion/validate?promoCode=${encodeURIComponent(promoCode.trim())}`),
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ error: 'Invalid promo code' }));
@@ -72,7 +85,7 @@ export default function PromoCodeInput({ onPromoApplied, onPromoRemoved, isLoadi
         <div>
           <p className="text-green-400 font-semibold">{appliedPromo.code}</p>
           <p className="text-green-300 text-sm">
-            {appliedPromo.type === 'percentage' 
+            {appliedPromo.type === 'percentage'
               ? `${appliedPromo.discount}% off`
               : `$${appliedPromo.discount.toFixed(2)} off`}
           </p>
@@ -110,7 +123,7 @@ export default function PromoCodeInput({ onPromoApplied, onPromoRemoved, isLoadi
           type="button"
           onClick={handleApply}
           disabled={isLoading || isValidating || !promoCode.trim()}
-          className="px-6 py-3 rounded-md font-afacad font-bold text-white bg-gradient-to-r from-acm-pink to-acm-orange hover:brightness-110 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+          className="px-6 py-3 rounded-md font-afacad font-bold text-white bg-linear-to-r from-acm-pink to-acm-orange hover:brightness-110 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
           title="Apply promo code"
         >
           {isValidating ? 'Validating...' : 'Apply'}
@@ -119,4 +132,3 @@ export default function PromoCodeInput({ onPromoApplied, onPromoRemoved, isLoadi
     </div>
   );
 }
-

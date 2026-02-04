@@ -186,7 +186,7 @@ export default function ProfileForm({
           <button
             title="Saving"
             type="button"
-            className="px-10 py-3 rounded-full font-afacad font-bold text-white cursor-not-allowed transition-all bg-gradient-to-r from-acm-pink to-acm-orange border-none"
+            className="px-10 py-3 rounded-full font-afacad font-bold text-white cursor-not-allowed transition-all bg-linear-to-r from-acm-pink to-acm-orange border-none"
           >
             Saving...
           </button>
@@ -197,7 +197,7 @@ export default function ProfileForm({
             title="Save Changes"
             type="button"
             onClick={onSaveProfile}
-            className="px-10 py-3 rounded-full font-afacad font-bold text-white cursor-pointer hover:shadow-lg hover:underline hover:shadow-acm-pink/50 transition-all bg-gradient-to-r from-acm-pink to-acm-orange border-none"
+            className="px-10 py-3 rounded-full font-afacad font-bold text-white cursor-pointer hover:shadow-lg hover:underline hover:shadow-acm-pink/50 transition-all bg-linear-to-r from-acm-pink to-acm-orange border-none"
           >
             Save Changes
           </button>
@@ -245,7 +245,7 @@ export default function ProfileForm({
             <button
               title="Saving"
               type="button"
-              className="px-10 py-3 rounded-full font-afacad font-bold text-white cursor-not-allowed transition-all bg-gradient-to-r from-acm-pink to-acm-orange border-none"
+              className="px-10 py-3 rounded-full font-afacad font-bold text-white cursor-not-allowed transition-all bg-linear-to-r from-acm-pink to-acm-orange border-none"
             >
               Saving...
             </button>
@@ -256,7 +256,7 @@ export default function ProfileForm({
               title="Save Changes"
               type="button"
               onClick={onSavePassword}
-              className="px-10 py-3 rounded-full font-afacad font-bold text-white cursor-pointer hover:shadow-lg hover:underline hover:shadow-acm-pink/50 transition-all bg-gradient-to-r from-acm-pink to-acm-orange border-none"
+              className="px-10 py-3 rounded-full font-afacad font-bold text-white cursor-pointer hover:shadow-lg hover:underline hover:shadow-acm-pink/50 transition-all bg-linear-to-r from-acm-pink to-acm-orange border-none"
             >
               Change Password
             </button>
@@ -266,4 +266,3 @@ export default function ProfileForm({
     </section>
   );
 }
-
