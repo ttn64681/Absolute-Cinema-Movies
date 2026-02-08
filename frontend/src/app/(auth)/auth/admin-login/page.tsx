@@ -45,14 +45,11 @@ export default function AdminLoginPage() {
   };
 
   return (
-    <AuthFormContainer
-      title="Admin Login"
-      subtitle="Sign in to access the admin portal"
-      maxWidth="md"
-    >
+    <AuthFormContainer title="Admin Login" subtitle="Sign in to access the admin portal" maxWidth="md">
       {error && (
         <div className="mb-6 p-4 bg-red-900/50 border border-red-500 rounded-md">
-          <p className="text-red-200 text-sm">{error}</p>
+          <p className="text-red-200 text-sm font-semibold mb-2">Please fix the following errors:</p>
+          <ul className="list-disc list-inside text-red-200 text-sm space-y-1">{error && <li>{error}</li>}</ul>
         </div>
       )}
 

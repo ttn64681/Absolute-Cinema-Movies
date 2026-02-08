@@ -72,6 +72,18 @@ export interface ValidationError {
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api';
 
+/** Parse JSON from response; on failure return a fallback error payload. */
+async function parseJsonOrError(response: Response, fallbackMessage: string): Promise<AuthResponse> {
+  const text = await response.text();
+  try {
+    const data = text ? JSON.parse(text) : {};
+    if (data && typeof data.success === 'boolean') return data as AuthResponse;
+    return { success: false, message: (data as { message?: string })?.message || fallbackMessage };
+  } catch {
+    return { success: false, message: fallbackMessage };
+  }
+}
+
 /**
  * Authentication Client API
  *
@@ -91,21 +103,12 @@ export const authClient = {
    */
   async login(credentials: LoginRequest): Promise<AuthResponse> {
     try {
-      console.log('authClient.login - Making request to:', `${API_BASE_URL}/auth/login`);
-      console.log('authClient.login - Credentials:', { ...credentials, password: '[HIDDEN]' });
-
       const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(credentials),
       });
-
-      console.log('authClient.login - Response status:', response.status);
-      const data = await response.json();
-      console.log('authClient.login - Response data:', data);
-      return data;
+      return parseJsonOrError(response, 'Network error. Please try again.');
     } catch (error) {
       console.error('authClient.login - Login API error:', error);
       return {
@@ -125,14 +128,10 @@ export const authClient = {
     try {
       const response = await fetch(`${API_BASE_URL}/auth/register`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(userData),
       });
-
-      const data = await response.json();
-      return data;
+      return parseJsonOrError(response, 'Network error. Please try again.');
     } catch (error) {
       console.error('Registration API error:', error);
       return {
@@ -160,21 +159,11 @@ export const authClient = {
         };
       }
 
-      console.log(
-        'authClient.refreshToken - Making request to:',
-        `${API_BASE_URL}/auth/refresh?refreshToken=${encodeURIComponent(refreshToken)}`
-      );
       const response = await fetch(`${API_BASE_URL}/auth/refresh?refreshToken=${encodeURIComponent(refreshToken)}`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
       });
-
-      console.log('authClient.refreshToken - Response status:', response.status);
-      const data = await response.json();
-      console.log('authClient.refreshToken - Response data:', data);
-      return data;
+      return parseJsonOrError(response, 'Token refresh failed');
     } catch (error) {
       console.error('authClient.refreshToken - Token refresh error:', error);
       return {
@@ -193,19 +182,12 @@ export const authClient = {
     try {
       const response = await fetch(`${API_BASE_URL}/auth/logout`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
       });
-
-      const data = await response.json();
-      return data;
+      return parseJsonOrError(response, 'Logout failed');
     } catch (error) {
       console.error('Logout error:', error);
-      return {
-        success: false,
-        message: 'Logout failed',
-      };
+      return { success: false, message: 'Logout failed' };
     }
   },
 
@@ -219,14 +201,10 @@ export const authClient = {
     try {
       const response = await fetch(`${API_BASE_URL}/auth/check-email`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: `email=${encodeURIComponent(email)}`,
       });
-
-      const data = await response.json();
-      return data;
+      return parseJsonOrError(response, 'Network error. Please try again.');
     } catch (error) {
       console.error('Email check error:', error);
       return {
@@ -244,21 +222,12 @@ export const authClient = {
    */
   async adminLogin(credentials: LoginRequest): Promise<AuthResponse> {
     try {
-      console.log('authClient.adminLogin - Making request to:', `${API_BASE_URL}/admin/login`);
-      console.log('authClient.adminLogin - Credentials:', { ...credentials, password: '[HIDDEN]' });
-
       const response = await fetch(`${API_BASE_URL}/admin/login`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(credentials),
       });
-
-      console.log('authClient.adminLogin - Response status:', response.status);
-      const data = await response.json();
-      console.log('authClient.adminLogin - Response data:', data);
-      return data;
+      return parseJsonOrError(response, 'Network error. Please try again.');
     } catch (error) {
       console.error('authClient.adminLogin - Admin login API error:', error);
       return {
