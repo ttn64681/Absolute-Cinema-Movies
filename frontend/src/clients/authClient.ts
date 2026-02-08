@@ -70,9 +70,13 @@ export interface ValidationError {
   message: string;
 }
 
-// Ensure base URL always ends with /api so paths like /auth/login become /api/auth/login (CORS is on /api/**)
-const raw = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080').replace(/\/+$/, '');
-const API_BASE_URL = raw.endsWith('/api') ? raw : `${raw}/api`;
+// Always use /api base so auth paths hit /api/auth/login (CORS only allows /api/**). Strip any trailing /api from env to avoid /api/api.
+function getAuthApiBase(): string {
+  const raw = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080').replace(/\/+$/, '');
+  const origin = raw.replace(/\/api\/?$/i, '');
+  return `${origin}/api`;
+}
+const API_BASE_URL = getAuthApiBase();
 
 /** Parse JSON from response; on failure return a fallback error payload. */
 async function parseJsonOrError(response: Response, fallbackMessage: string): Promise<AuthResponse> {
