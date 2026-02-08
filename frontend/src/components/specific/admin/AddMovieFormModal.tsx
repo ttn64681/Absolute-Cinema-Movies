@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import { formatDateInput, formatTimeInput, parseScore } from "@/components/specific/admin/movieFormUtils";
+import { useEffect, useState } from 'react';
+import { formatDateInput, formatTimeInput, parseScore } from '@/components/specific/admin/movieFormUtils';
 import { useAdminMovie } from '@/hooks/useAdminMovie';
 
 export type AdminMovie = {
@@ -19,7 +19,7 @@ export type AdminMovie = {
   producers: string;
   score: number;
   duration: number;
-}
+};
 
 interface MovieFormModalProps {
   isOpen: boolean;
@@ -29,71 +29,68 @@ interface MovieFormModalProps {
 
 // Add/edit movie form
 export default function AddMovieFormModal({ isOpen, onClose, onSaved }: MovieFormModalProps) {
-
   // Hook call for sending the new movie to the backend
-  const {selectedMovie, addMovie, refreshMovie } = useAdminMovie(0);
+  const { selectedMovie, addMovie, refreshMovie } = useAdminMovie(0);
 
   // Saving state
   const [saving, setSaving] = useState(false);
 
   // Movie info fields
-  const [title, setTitle] = useState("");
-  const [status, setStatus] = useState("upcoming");
-  const [genres, setGenres] = useState("");
-  const [poster_link, setPosterLink] = useState("");
-  const [trailer_link, setTrailerLink] = useState("");
-  const [synopsis, setSynopsis] = useState("");
-  const [directors, setDirectors] = useState("");
-  const [producers, setProducers] = useState("");
-  const [cast_names, setCastNames] = useState("");
-  const [rating, setRating] = useState("");
+  const [title, setTitle] = useState('');
+  const [status, setStatus] = useState('upcoming');
+  const [genres, setGenres] = useState('');
+  const [poster_link, setPosterLink] = useState('');
+  const [trailer_link, setTrailerLink] = useState('');
+  const [synopsis, setSynopsis] = useState('');
+  const [directors, setDirectors] = useState('');
+  const [producers, setProducers] = useState('');
+  const [cast_names, setCastNames] = useState('');
+  const [rating, setRating] = useState('');
   const [duration, setDuration] = useState(0);
   const [score, setScore] = useState(0);
-  const [release_date, setReleaseDate] = useState("");
-
+  const [release_date, setReleaseDate] = useState('');
 
   // Set all info fields to be empty every time the form is re-opened
   useEffect(() => {
     if (!isOpen) return;
 
-      setTitle("");
-      setStatus("upcoming");
-      setGenres("");
-      setPosterLink("");
-      setTrailerLink("");
-      setSynopsis("");
-      setDirectors("");
-      setProducers("");
-      setCastNames("");
-      setRating("");
-      setScore(0);
-      setDuration(0);
-      setReleaseDate("");
-      console.log("Selected movie data was not set");
-  
+    setTitle('');
+    setStatus('upcoming');
+    setGenres('');
+    setPosterLink('');
+    setTrailerLink('');
+    setSynopsis('');
+    setDirectors('');
+    setProducers('');
+    setCastNames('');
+    setRating('');
+    setScore(0);
+    setDuration(0);
+    setReleaseDate('');
+    console.log('Selected movie data was not set');
   }, [isOpen]);
 
-  // Display helpers 
+  // Display helpers
 
   const getHeaderTitle = () => {
-    return "Add Movie";
+    return 'Add Movie';
   };
 
   const getStatusLabel = (status: String) => {
-    if (status == "now_playing") {
-      return "Now Playing";
+    if (status == 'now_playing') {
+      return 'Now Playing';
     } else {
-      return "Upcoming";
+      return 'Upcoming';
     }
   };
 
   const getPosterNameClass = () => {
-    if (poster_link) return "text-white";
-    return "opacity-80";
+    if (poster_link) return 'text-white';
+    return 'opacity-80';
   };
   const getPosterDisplayText = () => {
     if (poster_link) return poster_link;
-    return "Select File";
+    return 'Select File';
   };
   const isSaveDisabled = () => {
     if (saving) return true;
@@ -105,13 +102,25 @@ export default function AddMovieFormModal({ isOpen, onClose, onSaved }: MovieFor
     return 1;
   };
   const getSaveButtonLabel = () => {
-    if (saving) return "Saving...";
-    return "Save";
+    if (saving) return 'Saving...';
+    return 'Save';
   };
 
   // Validate that all fields of the form are filled
   const formComplete = () => {
-    if (!title || !genres || !synopsis || !cast_names || !directors || !producers || !score || !rating || !release_date || !trailer_link || !poster_link ) 
+    if (
+      !title ||
+      !genres ||
+      !synopsis ||
+      !cast_names ||
+      !directors ||
+      !producers ||
+      !score ||
+      !rating ||
+      !release_date ||
+      !trailer_link ||
+      !poster_link
+    )
       return false;
     return true;
   };
@@ -127,12 +136,12 @@ export default function AddMovieFormModal({ isOpen, onClose, onSaved }: MovieFor
     const durationRegex = /^-?\d+(\.\d+)?$/;
     const validDuration = durationRegex.test(duration.toString());
 
-    if (!validDate) return "Check that the release date is in the correct format.";
-    if (!validScore) return "Check that the score is a number between 1 and 100.";
-    if (!validDuration) return "Check that the duration is a number.";
+    if (!validDate) return 'Check that the release date is in the correct format.';
+    if (!validScore) return 'Check that the score is a number between 1 and 100.';
+    if (!validDuration) return 'Check that the duration is a number.';
 
     return null;
-  }
+  };
 
   // Save the new movie
   const onSave = async () => {
@@ -160,9 +169,9 @@ export default function AddMovieFormModal({ isOpen, onClose, onSaved }: MovieFor
       directors,
       producers,
       duration,
-      score
+      score,
     };
-  
+
     // Send new movie data to backend
     // backend returns the new movie ID if the request is successful
     const newMovieId = await addMovie(backendMovieRequest);
@@ -183,14 +192,13 @@ export default function AddMovieFormModal({ isOpen, onClose, onSaved }: MovieFor
         directors,
         producers,
         duration,
-        score
+        score,
       };
-        
+
       onSaved(updatedMovie);
       refreshMovie(); // ensure the new movie data is fetched
       //alert("New movie \"" + title + "\" with ID " + newMovieId + " successfully created.");
       onClose();
-
     } else {
       //alert("Error creating movie");
     }
@@ -215,7 +223,7 @@ export default function AddMovieFormModal({ isOpen, onClose, onSaved }: MovieFor
         <div className="mb-4 text-white font-red-rose text-2xl">{getHeaderTitle()}</div>
 
         <div className="grid grid-cols-1 sm:grid-cols-[2fr_1fr] gap-6 mb-6">
-          {/* Title */ }
+          {/* Title */}
           <div>
             <label className="block text-sm mb-2 font-afacad text-white">Movie Title</label>
             <input
@@ -224,25 +232,25 @@ export default function AddMovieFormModal({ isOpen, onClose, onSaved }: MovieFor
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Enter movie title"
               className="w-full px-4 py-3 rounded-md bg-white/10 border border-white/20 text-white placeholder-white/60 focus:outline-none focus:ring-1 focus:ring-[#FF478B] focus:border-transparent"
-              style={{ fontSize: "16px" }}
+              style={{ fontSize: '16px' }}
             />
           </div>
 
-          {/* Status */ }
+          {/* Status */}
           <div>
             <label className="block text-sm mb-2 font-afacad text-white">Status</label>
             <div className="relative cursor-not-allowed">
               <p
-              className="w-full px-4 py-3 rounded-md bg-white/10 border border-white/20 text-white placeholder-white/60 focus:outline-none focus:ring-1 focus:ring-[#FF478B] focus:border-transparent"
-              style={{ fontSize: "16px" }}
+                className="w-full px-4 py-3 rounded-md bg-white/10 border border-white/20 text-white placeholder-white/60 focus:outline-none focus:ring-1 focus:ring-[#FF478B] focus:border-transparent"
+                style={{ fontSize: '16px' }}
               >
-              {getStatusLabel(status)}
-            </p>
+                {getStatusLabel(status)}
+              </p>
             </div>
           </div>
         </div>
 
-        {/* Genres */ }
+        {/* Genres */}
         <div className="grid grid-cols-1 sm:grid-cols-[2fr_1fr] gap-6 mb-6">
           <div>
             <label className="block text-sm mb-2 font-afacad text-white">Genres</label>
@@ -253,12 +261,12 @@ export default function AddMovieFormModal({ isOpen, onClose, onSaved }: MovieFor
                 onChange={(e) => setGenres(e.target.value)}
                 placeholder="Enter genres"
                 className="w-full px-4 py-3 rounded-md bg-white/10 border border-white/20 text-white placeholder-white/60 focus:outline-none focus:ring-1 focus:ring-[#FF478B] focus:border-transparent"
-                style={{ fontSize: "16px" }}
+                style={{ fontSize: '16px' }}
               />
             </div>
           </div>
 
-        {/* Rating */ }
+          {/* Rating */}
           <div>
             <label className="block text-sm mb-2 font-afacad text-white">Rating</label>
             <div className="relative">
@@ -281,12 +289,10 @@ export default function AddMovieFormModal({ isOpen, onClose, onSaved }: MovieFor
               </div>
             </div>
           </div>
-    
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-6">
-
-          {/* Release Date */ }
+          {/* Release Date */}
           <div>
             <label className="block text-sm mb-2 font-afacad text-white">Release Date</label>
             <div className="flex items-center gap-2">
@@ -300,7 +306,7 @@ export default function AddMovieFormModal({ isOpen, onClose, onSaved }: MovieFor
             </div>
           </div>
 
-          {/* Score */ }
+          {/* Score */}
           <div>
             <label className="block text-sm mb-2 font-afacad text-white">Score (1-100%)</label>
             <div className="flex items-center gap-2">
@@ -318,7 +324,7 @@ export default function AddMovieFormModal({ isOpen, onClose, onSaved }: MovieFor
             </div>
           </div>
 
-          {/* Duration */ }
+          {/* Duration */}
           <div>
             <label className="block text-sm mb-2 font-afacad text-white">Duration (minutes)</label>
             <div className="flex items-center gap-2">
@@ -335,22 +341,21 @@ export default function AddMovieFormModal({ isOpen, onClose, onSaved }: MovieFor
               <span className="text-white/80"></span>
             </div>
           </div>
-
         </div>
 
-        {/* Poster link */ }
-          <div className="mb-6">
-            <label className="block text-sm mb-2 font-afacad text-white">Poster URL</label>
-              <input
-                type="url"
-                value={poster_link}
-                onChange={(e) => setPosterLink(e.target.value)}
-                placeholder="Enter poster link (embed)"
-                className="w-full px-4 py-3 rounded-md bg-white/10 border border-white/20 text-white placeholder-white/60 focus:outline-none focus:ring-1 focus:ring-[#FF478B] focus:border-transparent"
-              />
-          </div>
+        {/* Poster link */}
+        <div className="mb-6">
+          <label className="block text-sm mb-2 font-afacad text-white">Poster URL</label>
+          <input
+            type="url"
+            value={poster_link}
+            onChange={(e) => setPosterLink(e.target.value)}
+            placeholder="Enter poster link (embed)"
+            className="w-full px-4 py-3 rounded-md bg-white/10 border border-white/20 text-white placeholder-white/60 focus:outline-none focus:ring-1 focus:ring-[#FF478B] focus:border-transparent"
+          />
+        </div>
 
-        {/* Trailer link */ }
+        {/* Trailer link */}
         <div className="mb-6">
           <label className="block text-sm mb-2 font-afacad text-white">Trailer URL</label>
           <input
@@ -362,7 +367,7 @@ export default function AddMovieFormModal({ isOpen, onClose, onSaved }: MovieFor
           />
         </div>
 
-        {/* Synopsis */ }
+        {/* Synopsis */}
         <div className="mb-6">
           <label className="block text-sm mb-2 font-afacad text-white">Synopsis</label>
           <textarea
@@ -371,7 +376,7 @@ export default function AddMovieFormModal({ isOpen, onClose, onSaved }: MovieFor
             placeholder="Enter movie synopsis"
             rows={4}
             className="w-full px-4 py-3 rounded-md bg-white/10 border border-white/20 text-white placeholder-white/60 focus:outline-none focus:ring-1 focus:ring-[#FF478B] focus:border-transparent resize-none"
-            style={{ scrollbarWidth: "thin", scrollbarColor: "#6B7280 #374151", lineHeight: "1.5" }}
+            style={{ scrollbarWidth: 'thin', scrollbarColor: '#6B7280 #374151', lineHeight: '1.5' }}
           />
         </div>
 
@@ -406,7 +411,7 @@ export default function AddMovieFormModal({ isOpen, onClose, onSaved }: MovieFor
             placeholder="Enter cast members"
             rows={4}
             className="w-full px-4 py-3 rounded-md bg-white/10 border border-white/20 text-white placeholder-white/60 focus:outline-none focus:ring-1 focus:ring-[#FF478B] focus:border-transparent resize-none"
-            style={{ scrollbarWidth: "thin", scrollbarColor: "#6B7280 #374151" }}
+            style={{ scrollbarWidth: 'thin', scrollbarColor: '#6B7280 #374151' }}
           />
         </div>
 
@@ -423,7 +428,7 @@ export default function AddMovieFormModal({ isOpen, onClose, onSaved }: MovieFor
             onClick={onSave}
             disabled={isSaveDisabled()}
             className="px-8 py-2 rounded-full font-afacad font-bold text-black hover:shadow-md hover:underline hover:shadow-acm-pink/50"
-            style={{ background: "linear-gradient(to right, #FF478B, #FF5C33)", opacity: getSaveOpacity() }}
+            style={{ background: 'linear-gradient(to right, #FF478B, #FF5C33)', opacity: getSaveOpacity() }}
           >
             {getSaveButtonLabel()}
           </button>
@@ -432,5 +437,3 @@ export default function AddMovieFormModal({ isOpen, onClose, onSaved }: MovieFor
     </div>
   );
 }
-
-

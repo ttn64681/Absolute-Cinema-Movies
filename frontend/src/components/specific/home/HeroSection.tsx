@@ -48,7 +48,7 @@ export default function HeroSection() {
         sizes="100vw"
       />
       <div className="pointer-events-none absolute inset-0 bg-black/40" />
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-transparent to-[#0a0a0a]" />
+      <div className="pointer-events-none absolute inset-0 bg-linear-to-b from-transparent to-[#0a0a0a]" />
 
       <div className="relative z-10 flex h-full flex-col items-center justify-center text-center px-4">
         <motion.h1
@@ -79,7 +79,8 @@ export default function HeroSection() {
           </span>
           <div className="flex items-center justify-center gap-2">
             <Link
-              href="#"
+              href="https://youtu.be/92fEVh5wNyI"
+              target="_blank"
               title="YouTube"
               aria-label="YouTube"
               className="text-white/40 hover:text-acm-pink transition-colors cursor-pointer text-2xl"
@@ -87,7 +88,8 @@ export default function HeroSection() {
               <IoLogoYoutube />
             </Link>
             <Link
-              href="#"
+              href="https://github.com/ttn64681/Absolute-Cinema-Movies"
+              target="_blank"
               title="GitHub"
               aria-label="GitHub"
               className="text-white/40 hover:text-acm-pink transition-colors cursor-pointer text-2xl"

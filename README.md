@@ -6,10 +6,11 @@ A full-stack cinema booking application built with Next.js frontend and Spring B
 
 ## Project Links
 
-- **Frontend Deployment**: [Vercel](https://vercel.com) _(Coming Soon)_
+- **Frontend Deployment**: [Vercel](acm-movies.vercel.app)
 - **Backend API**: [TBD] _(Coming Soon)_
-- **Project Management**: [Jira](https://atlassian.com) _(Coming Soon)_
-- **Design System**: [Figma](https://figma.com) _(Coming Soon)_
+- **Project Management**: [Jira](https://csci-4050-mmbbfc.atlassian.net/jira/software/projects/SCRUM/summary?atlOrigin=eyJpIjoiNzk4MzY3MjBjNzBjNGI3N2FhYjkxZDNlYTRhOTQ5NGYiLCJwIjoiaiJ9)
+- **Design System**: [Figma](https://www.figma.com/community/file/1602290226089410310)
+- **Video Demo**" [YouTube](https://youtu.be/92fEVh5wNyI)
 
 ## Tech Stack
 
@@ -85,7 +86,7 @@ A full-stack cinema booking application built with Next.js frontend and Spring B
    ./mvnw spring-boot:run  # macOS/Linux
    # mvnw spring-boot:run  # Windows
    ```
-   
+
    **Important**: If running from IDE (IntelliJ, Eclipse, VS Code), make sure to configure environment variables in IDE settings
 
 ### Application URLs

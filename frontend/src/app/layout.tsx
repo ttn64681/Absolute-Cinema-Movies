@@ -15,7 +15,7 @@ export const metadata: Metadata = {
   description:
     'Cinema E-booking System: Book your movie tickets online (Proof of Concept - Under the University of Georgia)',
   icons: {
-    icon: '/favicon.ico',
+    icon: '/favicon.svg',
   },
 };
 
