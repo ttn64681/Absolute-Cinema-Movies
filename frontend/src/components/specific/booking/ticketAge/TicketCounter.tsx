@@ -1,5 +1,5 @@
 'use client';
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { IoAdd, IoRemove } from 'react-icons/io5';
 import styles from '../../../../app/(booking)/booking/ticket-age/ticket-age.module.css';
 

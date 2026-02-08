@@ -19,7 +19,7 @@ DB_USERNAME=
 DB_PASSWORD=
 
 # AES_KEY is the key for the AES encryption algorithm to encrypt and decrypt card numbers
-AES_KEY=631F270CE7828460F301A5993A199758
+AES_KEY=
 
 # JWT Configuration for authentication
 JWT_SECRET=

@@ -65,8 +65,10 @@ public class SecurityConfig {
         }
         
         configuration.setAllowedOrigins(allowedOrigins);
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(Arrays.asList("*"));
+        // All HTTP methods used by frontend: GET, POST, PUT, DELETE + OPTIONS for preflight
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+        // With allowCredentials=true, browser forbids Allow-Headers: *; list explicitly (covers all clients)
+        configuration.setAllowedHeaders(Arrays.asList("Content-Type", "Authorization", "Accept", "X-Requested-With"));
         configuration.setAllowCredentials(true);
         configuration.setMaxAge(3600L);
         

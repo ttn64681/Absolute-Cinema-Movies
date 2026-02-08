@@ -4,6 +4,8 @@ target/
 .git
 .gitignore
 .env
+set_env.ps1
+set_env.sh
 *.log
 .DS_Store
 HELP.md

@@ -70,7 +70,9 @@ export interface ValidationError {
   message: string;
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api';
+// Ensure base URL always ends with /api so paths like /auth/login become /api/auth/login (CORS is on /api/**)
+const raw = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080').replace(/\/+$/, '');
+const API_BASE_URL = raw.endsWith('/api') ? raw : `${raw}/api`;
 
 /** Parse JSON from response; on failure return a fallback error payload. */
 async function parseJsonOrError(response: Response, fallbackMessage: string): Promise<AuthResponse> {

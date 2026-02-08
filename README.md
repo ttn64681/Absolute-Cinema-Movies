@@ -89,12 +89,6 @@ A full-stack cinema booking application built with Next.js frontend and Spring B
 
    **Important**: If running from IDE (IntelliJ, Eclipse, VS Code), make sure to configure environment variables in IDE settings
 
-### Application URLs
-
-- **Frontend**: [http://localhost:3000](http://localhost:3000)
-- **Backend API**: [http://localhost:8080](http://localhost:8080)
-- **API Documentation**: [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html) _(Coming Soon)_
-
 ## Features
 
 ### Movie Management

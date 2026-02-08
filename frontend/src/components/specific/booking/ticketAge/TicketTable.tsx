@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import TicketCounter from '@/components/specific/booking/ticketAge/TicketCounter';
 import CheckoutButtonWrapper from '@/components/specific/booking/ticketAge/CheckoutButtonWrapper';
 import { buildUrl } from '@/config/api';
@@ -26,10 +26,10 @@ export default function TicketTable({ reservedSeats }: props) {
       try {
         const response = await fetch(buildUrl('/api/ticket-categories'));
         if (!response.ok) throw new Error('Failed to fetch ticket prices');
-        
+
         const categories: TicketCategory[] = await response.json();
         const prices: { [key: string]: number } = {};
-        
+
         categories.forEach((cat) => {
           let priceValue: number;
           if (typeof cat.price === 'number') {
@@ -45,7 +45,7 @@ export default function TicketTable({ reservedSeats }: props) {
           }
           prices[cat.name] = priceValue;
         });
-        
+
         setTicketPrices(prices);
       } catch (error) {
         console.error('Error fetching ticket prices:', error);
@@ -74,10 +74,9 @@ export default function TicketTable({ reservedSeats }: props) {
     const adultPrice = ticketPrices.adult || 0;
     const childPrice = ticketPrices.child || 0;
     const seniorPrice = ticketPrices.senior || 0;
-    
-    const price = (ticketsByCategory[0] * adultPrice) + 
-                  (ticketsByCategory[1] * childPrice) + 
-                  (ticketsByCategory[2] * seniorPrice);
+
+    const price =
+      ticketsByCategory[0] * adultPrice + ticketsByCategory[1] * childPrice + ticketsByCategory[2] * seniorPrice;
     return price;
   }
 

@@ -20,8 +20,6 @@ import com.acm.cinema_ebkg_system.model.Promotion;
 import com.acm.cinema_ebkg_system.service.PromotionService;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.stream.Collectors;
-
 @RestController
 @RequestMapping("/api/promotion")
 @Slf4j
