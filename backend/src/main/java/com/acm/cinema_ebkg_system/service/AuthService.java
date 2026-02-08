@@ -15,6 +15,7 @@ import com.acm.cinema_ebkg_system.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Authentication Service - Business logic layer for authentication operations
@@ -38,6 +39,7 @@ import org.springframework.transaction.annotation.Transactional;
  * @version 1.0
  */
 @Service
+@Slf4j
 public class AuthService {
 
     @Autowired
@@ -92,7 +94,7 @@ public class AuthService {
         User savedUser = userService.registerUser(user);
         
         // Log account_status after registration (defaults to inactive)
-        System.out.println("Registration successful - User: " + savedUser.getEmail() + ", account_status: " + savedUser.getAccountStatus() + " (default)");
+        log.debug("Registration successful - User: {}, account_status: {} (default)", savedUser.getEmail(), savedUser.getAccountStatus());
         
         // Step 3: Create home address if provided
         if (request.getHomeAddress() != null && !request.getHomeAddress().trim().isEmpty()) {
@@ -173,7 +175,7 @@ public class AuthService {
         User user = userService.authenticateUser(request.getEmail(), request.getPassword());
         
         // Step 2: Check account_status (email verified)
-        System.out.println("Login attempt - User: " + user.getEmail() + ", account_status: " + user.getAccountStatus());
+        log.debug("Login attempt - User: {}, account_status: {}", user.getEmail(), user.getAccountStatus());
         if (user.getAccountStatus() != UserStatus.active) {
             String message = user.getAccountStatus() == UserStatus.suspended 
                 ? "Your account has been suspended. Please contact support." 

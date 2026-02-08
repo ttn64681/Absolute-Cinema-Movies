@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashMap;
 import java.util.List;
@@ -19,6 +20,7 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping("/api/seats")
+@Slf4j
 public class SeatController {
     
     @Autowired
@@ -50,13 +52,12 @@ public class SeatController {
     public ResponseEntity<SeatAvailabilityResponse> getSeatsForShow(@PathVariable Long showId) {
         try {
             // showId is movie_show.id - used to find seats in show_seats table
-            System.out.println("GET /api/seats/show/" + showId + " - Fetching seats for movie_show.id = " + showId);
+            log.debug("GET /api/seats/show/{} - Fetching seats for movie_show.id", showId);
             SeatAvailabilityResponse response = showSeatService.getSeatsForShow(showId);
-            System.out.println("GET /api/seats/show/" + showId + " - Found " + (response.getSeats() != null ? response.getSeats().size() : 0) + " seats");
+            log.debug("GET /api/seats/show/{} - Found {} seats", showId, response.getSeats() != null ? response.getSeats().size() : 0);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            System.err.println("GET /api/seats/show/" + showId + " - Error: " + e.getMessage());
-            e.printStackTrace();
+            log.error("GET /api/seats/show/{} - Error", showId, e);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
     }
@@ -75,25 +76,23 @@ public class SeatController {
             // Extract user ID from JWT token (optional - anonymous users can also reserve)
             Long userId = getUserIdFromRequest(httpRequest);
             
-            // Log the request details
-            System.out.println("POST /api/seats/reserve - showId: " + request.getShowId() + ", userId: " + (userId != null ? userId : "anonymous"));
-            System.out.println("POST /api/seats/reserve - seats: " + (request.getSeats() != null ? request.getSeats().size() : 0) + " seats");
-            if (request.getSeats() != null && !request.getSeats().isEmpty()) {
-                request.getSeats().forEach(seat -> 
-                    System.out.println("  - Seat: row=" + seat.getSeatRow() + ", number=" + seat.getSeatNumber())
+            log.debug("POST /api/seats/reserve - showId: {}, userId: {}", request.getShowId(), userId != null ? userId : "anonymous");
+            log.debug("POST /api/seats/reserve - seats: {} seats", request.getSeats() != null ? request.getSeats().size() : 0);
+            if (request.getSeats() != null && !request.getSeats().isEmpty() && log.isDebugEnabled()) {
+                request.getSeats().forEach(seat ->
+                    log.debug("  - Seat: row={}, number={}", seat.getSeatRow(), seat.getSeatNumber())
                 );
             }
-            
-            // Reserve the seats and get the seat IDs (userId can be null for anonymous users)
+
             List<Long> reservedSeatIds = showSeatService.reserveSeats(userId, request);
-            
+
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
             response.put("message", "Seats reserved successfully");
             response.put("seats", request.getSeats());
-            response.put("seatIds", reservedSeatIds); // Include the database seat IDs
-            
-            System.out.println("POST /api/seats/reserve - Success, reserved seat IDs: " + reservedSeatIds);
+            response.put("seatIds", reservedSeatIds);
+
+            log.debug("POST /api/seats/reserve - Success, reserved seat IDs: {}", reservedSeatIds);
             return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
             // Check if it's an authentication error or booking conflict

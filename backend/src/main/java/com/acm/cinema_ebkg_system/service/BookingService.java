@@ -30,6 +30,8 @@ import com.acm.cinema_ebkg_system.dto.booking.OrderResponseDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import lombok.extern.slf4j.Slf4j;
+
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.stream.Collectors;
@@ -43,6 +45,7 @@ import java.util.Map;
  * Service for managing bookings and tickets
  */
 @Service
+@Slf4j
 public class BookingService {
     
     @Autowired
@@ -272,7 +275,7 @@ public class BookingService {
                         if (promotion.getId().equals(promotionId)) {
                             // Only set if valid and IDs match
                             booking.setPromotion(promotion);
-                            System.out.println("Applied promotion " + promotionId + " (id=" + promotion.getId() + ") to booking " + bookingId);
+                            log.debug("Applied promotion " + promotionId + " (id=" + promotion.getId() + ") to booking " + bookingId);
                         } else {
                             System.err.println("Warning: Promotion ID mismatch. Expected " + promotionId + " but got " + promotion.getId());
                         }
@@ -292,21 +295,21 @@ public class BookingService {
         
         // Calculate final total amount (includes tax, fees, and discount)
         BigDecimal ticketSubtotal = booking.getTotalAmount(); // Start with ticket prices only
-        System.out.println("Payment completion - Starting with ticket subtotal: " + ticketSubtotal);
+        log.debug("Payment completion - Starting with ticket subtotal: " + ticketSubtotal);
         
         // Add tax (rate from database)
         BigDecimal taxRate = bookingFeeService.getSalesTaxRate();
         BigDecimal tax = ticketSubtotal.multiply(taxRate);
-        System.out.println("Tax (" + taxRate.multiply(new BigDecimal(100)) + "%): " + tax);
+        log.debug("Tax (" + taxRate.multiply(new BigDecimal(100)) + "%): " + tax);
         
         // Add online fees (per ticket from database)
         BigDecimal onlineFeePerTicket = bookingFeeService.getOnlineFee();
         BigDecimal onlineFees = onlineFeePerTicket.multiply(new BigDecimal(booking.getNumTickets()));
-        System.out.println("Online fees ($" + onlineFeePerTicket + " x " + booking.getNumTickets() + " tickets): " + onlineFees);
+        log.debug("Online fees ($" + onlineFeePerTicket + " x " + booking.getNumTickets() + " tickets): " + onlineFees);
         
         // Calculate total before discount
         BigDecimal totalBeforeDiscount = ticketSubtotal.add(tax).add(onlineFees);
-        System.out.println("Total before discount: " + totalBeforeDiscount);
+        log.debug("Total before discount: " + totalBeforeDiscount);
         
         // Apply promotion discount if promotion is set
         if (booking.getPromotion() != null) {
@@ -318,11 +321,11 @@ public class BookingService {
                 discountAmount = totalBeforeDiscount
                     .multiply(promotion.getDiscountValue())
                     .divide(new BigDecimal(100), 2, java.math.RoundingMode.HALF_UP);
-                System.out.println("Percentage discount (" + promotion.getDiscountValue() + "%): " + discountAmount);
+                log.debug("Percentage discount (" + promotion.getDiscountValue() + "%): " + discountAmount);
             } else {
                 // Fixed discount
                 discountAmount = promotion.getDiscountValue();
-                System.out.println("Fixed discount: " + discountAmount);
+                log.debug("Fixed discount: " + discountAmount);
             }
             
             // Subtract discount
@@ -330,23 +333,23 @@ public class BookingService {
             if (totalBeforeDiscount.compareTo(BigDecimal.ZERO) < 0) {
                 totalBeforeDiscount = BigDecimal.ZERO;
             }
-            System.out.println("Total after discount: " + totalBeforeDiscount);
+            log.debug("Total after discount: " + totalBeforeDiscount);
         }
         
         // Use provided finalTotalAmount if available, otherwise use calculated total
         BigDecimal finalTotalToSave;
         if (finalTotalAmount != null && finalTotalAmount.compareTo(BigDecimal.ZERO) >= 0) {
             finalTotalToSave = finalTotalAmount;
-            System.out.println("Using provided finalTotalAmount: " + finalTotalToSave);
+            log.debug("Using provided finalTotalAmount: " + finalTotalToSave);
         } else {
             // Use calculated total (ticket prices + tax + fees - discount)
             finalTotalToSave = totalBeforeDiscount;
-            System.out.println("Using calculated finalTotalAmount: " + finalTotalToSave);
+            log.debug("Using calculated finalTotalAmount: " + finalTotalToSave);
         }
         
         // Always update the total amount in the database
         booking.setTotalAmount(finalTotalToSave);
-        System.out.println("Final total saved to booking: " + booking.getTotalAmount());
+        log.debug("Final total saved to booking: " + booking.getTotalAmount());
         
         // Parse billing address (format: "street, city, state zip")
         String street = "";
@@ -381,7 +384,7 @@ public class BookingService {
                 addr.getState().equals(state) && 
                 addr.getZip().equals(zip)) {
                 billingAddr = addr;
-                System.out.println("Reusing existing address: " + billingAddr.getId());
+                log.debug("Reusing existing address: " + billingAddr.getId());
                 break;
             }
         }
@@ -397,7 +400,7 @@ public class BookingService {
             billingAddr.setZip(zip);
             billingAddr.setCountry(country);
             billingAddr = addressRepository.save(billingAddr);
-            System.out.println("Created new billing address: " + billingAddr.getId());
+            log.debug("Created new billing address: " + billingAddr.getId());
         }
         
         // Extract last 4 digits of card number for matching
@@ -416,7 +419,7 @@ public class BookingService {
                 existingCardNumber = PaymentEncryptionUtil.decryptCardNumber(card.getCardNumber());
             } catch (Exception e) {
                 // If decryption fails, skip this card (might be corrupted or in wrong format)
-                System.out.println("Warning: Could not decrypt card number for card " + card.getId() + ", skipping comparison");
+                log.debug("Warning: Could not decrypt card number for card " + card.getId() + ", skipping comparison");
                 continue;
             }
             
@@ -430,7 +433,7 @@ public class BookingService {
                 card.getExpirationDate().equals(expirationDate) &&
                 card.getCardholderName().equals(cardholderName)) {
                 paymentCard = card;
-                System.out.println("Reusing existing payment card: " + paymentCard.getId());
+                log.debug("Reusing existing payment card: " + paymentCard.getId());
                 break;
             }
         }
@@ -474,7 +477,7 @@ public class BookingService {
             }
             
             paymentCard = paymentCardRepository.save(paymentCard);
-            System.out.println("Created new payment card: " + paymentCard.getId());
+            log.debug("Created new payment card: " + paymentCard.getId());
         } else {
             // Update existing card - always encrypt card number (it's already matched, but ensure it's encrypted)
             // The card number should already be encrypted, but re-encrypt to ensure consistency
@@ -495,7 +498,7 @@ public class BookingService {
             }
             
             paymentCard = paymentCardRepository.save(paymentCard);
-            System.out.println("Updated existing payment card: " + paymentCard.getId());
+            log.debug("Updated existing payment card: " + paymentCard.getId());
         }
         
         // Link booking to payment card
@@ -587,8 +590,7 @@ public class BookingService {
                 promotionName
             );
         } catch (Exception e) {
-            System.err.println("Error preparing order confirmation email: " + e.getMessage());
-            e.printStackTrace();
+            log.error("Error preparing order confirmation email", e);
         }
     }
     

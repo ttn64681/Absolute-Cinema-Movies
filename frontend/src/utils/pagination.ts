@@ -32,36 +32,4 @@ export function createPaginationState(data: PaginatedMovieResponse) {
   };
 }
 
-/**
- * Checks if cached data is still valid
- */
-export function isCacheValid(lastFetchTime: number, now: number = Date.now()): boolean {
-  return now - lastFetchTime < CACHE_DURATION;
-}
-
-/**
- * Navigation functions factory
- */
-export function createPaginationNavigation(
-  setPage: (updater: (prev: number) => number) => void,
-  pagination: typeof initialPaginationState
-) {
-  return {
-    goToNextPage: () => {
-      if (pagination.hasNext) {
-        setPage((prev) => prev + 1);
-      }
-    },
-    goToPreviousPage: () => {
-      if (pagination.hasPrevious) {
-        setPage((prev) => prev - 1);
-      }
-    },
-    goToPage: (pageNum: number) => {
-      if (pageNum >= 0 && pageNum < pagination.totalPages) {
-        setPage(pageNum);
-      }
-    },
-  };
-}
 

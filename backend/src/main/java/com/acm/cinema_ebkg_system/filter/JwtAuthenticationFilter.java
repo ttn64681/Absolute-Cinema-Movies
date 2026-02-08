@@ -3,6 +3,7 @@ package com.acm.cinema_ebkg_system.filter;
 import com.acm.cinema_ebkg_system.util.JwtUtil;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
+import lombok.extern.slf4j.Slf4j;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -37,6 +38,7 @@ import java.util.List;
  * - Role-based access control support
  */
 @Component
+@Slf4j
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     @Autowired
@@ -64,7 +66,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 
                 // Step 4: Extract role from token
                 String role = jwtUtil.getRoleFromToken(token);
-                System.out.println("JwtAuthenticationFilter - Request: " + request.getRequestURI() + ", Role: " + role);
+                log.debug("JwtAuthenticationFilter - Request: {}, Role: {}", request.getRequestURI(), role);
                 
                 // Step 5: Check if user is not already authenticated
                 if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
@@ -74,10 +76,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     if ("ADMIN".equals(role)) {
                         authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
                         authorities.add(new SimpleGrantedAuthority("ROLE_USER")); // Admins can also access user routes
-                        System.out.println("JwtAuthenticationFilter - Admin authenticated with ROLE_ADMIN");
+                        log.debug("JwtAuthenticationFilter - Admin authenticated with ROLE_ADMIN");
                     } else {
                         authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
-                        System.out.println("JwtAuthenticationFilter - User authenticated with ROLE_USER");
+                        log.debug("JwtAuthenticationFilter - User authenticated with ROLE_USER");
                     }
                     
                     // Create authentication token for Spring Security
@@ -90,9 +92,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 }
                 
             } catch (ExpiredJwtException e) {
-                System.out.println("JWT Token has expired");
+                log.debug("JWT Token has expired");
             } catch (Exception e) {
-                System.out.println("Error validating JWT token: " + e.getMessage());
+                log.debug("Error validating JWT token: {}", e.getMessage());
             }
         }
         

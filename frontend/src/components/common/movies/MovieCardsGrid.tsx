@@ -13,9 +13,9 @@ export default function MovieCardsGrid({ movies, isLoading = false }: MovieCards
   const showSkeleton = isLoading;
 
   return (
-    <section className="py-12">
-      <div className="w-full">
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
+    <section className="py-12 min-w-0">
+      <div className="w-full min-w-0">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 min-w-0">
           {showSkeleton
             ? skeletonItems.map((_, idx) => <SkeletonBlock key={idx} className="w-full aspect-2/3 rounded-xl" />)
             : movies.map((movie) => <MovieCard key={movie.movie_id} movie={movie} />)}

@@ -310,7 +310,7 @@ export default function AddMovieFormModal({ isOpen, onClose, onSaved }: MovieFor
                 max={100}
                 inputMode="numeric"
                 value={score}
-                onChange={(e) => setScore(e.target.value)}
+                onChange={(e) => setScore(e.target.value === '' ? 0 : Number(e.target.value))}
                 placeholder="ex. 85%"
                 className="w-full px-4 py-3 rounded-md bg-white/10 border border-white/20 text-white placeholder-white/60 focus:outline-none focus:ring-1 focus:ring-[#FF478B] focus:border-transparent no-number-spinner"
               />
@@ -328,7 +328,7 @@ export default function AddMovieFormModal({ isOpen, onClose, onSaved }: MovieFor
                 max={180}
                 inputMode="numeric"
                 value={duration}
-                onChange={(e) => setDuration(e.target.value)}
+                onChange={(e) => setDuration(e.target.value === '' ? 0 : Number(e.target.value))}
                 placeholder="ex. 120"
                 className="w-full px-4 py-3 rounded-md bg-white/10 border border-white/20 text-white placeholder-white/60 focus:outline-none focus:ring-1 focus:ring-[#FF478B] focus:border-transparent no-number-spinner"
               />

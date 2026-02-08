@@ -117,7 +117,7 @@ export function useOrders(userId: number | null) {
           seats: seats,
           showtime: showtime,
           orderDate: orderDate,
-          posterUrl: order.moviePosterUrl || '/poster_placeholder.jpg',
+          posterUrl: order.moviePosterUrl || '/cinema_seats.jpg',
           tickets: {
             adult: { count: order.ticketCounts?.adult || 0, price: adultPrice },
             child: { count: order.ticketCounts?.child || 0, price: childPrice },

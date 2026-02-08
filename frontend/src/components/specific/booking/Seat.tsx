@@ -1,7 +1,7 @@
 'use client';
 
 import styles from '@/app/(booking)/booking/(seats)/seating.module.css';
-import { Seat } from '@/types/booking';
+import type { Seat } from '@/types/booking';
 
 interface SeatProps {
   seat: Seat;

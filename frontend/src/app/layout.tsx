@@ -11,8 +11,9 @@ import BokehBackground from '@/components/common/BokehBackground';
 import ReservationTimerToast from '@/components/common/ReservationTimerToast';
 
 export const metadata: Metadata = {
-  title: 'ACM Actual Cinema Movies',
-  description: 'Cinema E-booking System: Book your movie tickets online',
+  title: 'ACM Absolute Cinema Movies',
+  description:
+    'Cinema E-booking System: Book your movie tickets online (Proof of Concept - Under the University of Georgia)',
   icons: {
     icon: '/favicon.ico',
   },
@@ -43,7 +44,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${afacad.variable} ${redRose.variable} ${pacifico.variable} font-afacad bg-dark antialiased`}>
+      <body className={`${afacad.variable} ${redRose.variable} ${pacifico.variable} font-afacad bg-dark antialiased overflow-x-hidden`}>
         <QueryProvider>
           <AuthProvider>
             <ProfileProvider>

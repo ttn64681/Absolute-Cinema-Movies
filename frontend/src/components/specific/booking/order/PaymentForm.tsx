@@ -33,24 +33,24 @@ export default function PaymentForm({ onSubmit, isLoading = false }: PaymentForm
   // Luhn algorithm for card number validation
   const luhnCheck = (cardNumber: string): boolean => {
     const cleaned = cardNumber.replace(/\s/g, '');
-    
+
     // Must have at least 1 digit
     if (!cleaned || cleaned.length === 0) {
       return false;
     }
-    
+
     let sum = 0;
     let isEven = false;
-    
+
     // Start from rightmost digit (check digit), work left
     for (let i = cleaned.length - 1; i >= 0; i--) {
       const digit = parseInt(cleaned[i], 10);
-      
+
       // Invalid digit
       if (isNaN(digit)) {
         return false;
       }
-      
+
       if (isEven) {
         // Double every second digit from right
         const doubled = digit * 2;
@@ -60,22 +60,22 @@ export default function PaymentForm({ onSubmit, isLoading = false }: PaymentForm
         // Add digit as-is
         sum += digit;
       }
-      
+
       isEven = !isEven;
     }
-    
+
     return sum % 10 === 0;
   };
 
   // Validate card number format and checksum
   const validateCardNumber = (cardNumber: string): boolean => {
     const cleaned = cardNumber.replace(/\s/g, '');
-    
+
     // Must be 13-19 digits (standard card lengths)
     if (!/^\d{13,19}$/.test(cleaned)) {
       return false;
     }
-    
+
     // Must pass Luhn algorithm check
     return luhnCheck(cardNumber);
   };
@@ -112,9 +112,9 @@ export default function PaymentForm({ onSubmit, isLoading = false }: PaymentForm
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     const newErrors: Partial<PaymentFormData> = {};
-    
+
     if (!validateCardNumber(formData.cardNumber)) {
       const cleaned = formData.cardNumber.replace(/\s/g, '');
       if (cleaned.length < 13 || cleaned.length > 19) {
@@ -125,24 +125,24 @@ export default function PaymentForm({ onSubmit, isLoading = false }: PaymentForm
         newErrors.cardNumber = 'Invalid card number. Please check and try again.';
       }
     }
-    
+
     if (!validateExpirationDate(formData.expirationDate)) {
       newErrors.expirationDate = 'Please enter a valid expiration date (MM/YY)';
     }
-    
+
     if (!validateCVV(formData.cvv)) {
       newErrors.cvv = 'CVV must be 3-4 digits';
     }
-    
+
     if (!formData.cardholderName.trim()) {
       newErrors.cardholderName = 'Please enter cardholder name';
     }
-    
+
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
     }
-    
+
     setErrors({});
     onSubmit(formData);
   };
@@ -168,9 +168,7 @@ export default function PaymentForm({ onSubmit, isLoading = false }: PaymentForm
           disabled={isLoading}
           title="Enter credit card number"
         />
-        {errors.cardNumber && (
-          <p className="text-red-400 text-sm mt-1">{errors.cardNumber}</p>
-        )}
+        {errors.cardNumber && <p className="text-red-400 text-sm mt-1">{errors.cardNumber}</p>}
       </div>
 
       <div className="grid grid-cols-2 gap-4">
@@ -193,9 +191,7 @@ export default function PaymentForm({ onSubmit, isLoading = false }: PaymentForm
             disabled={isLoading}
             title="Enter expiration date"
           />
-          {errors.expirationDate && (
-            <p className="text-red-400 text-sm mt-1">{errors.expirationDate}</p>
-          )}
+          {errors.expirationDate && <p className="text-red-400 text-sm mt-1">{errors.expirationDate}</p>}
         </div>
 
         <div>
@@ -217,9 +213,7 @@ export default function PaymentForm({ onSubmit, isLoading = false }: PaymentForm
             disabled={isLoading}
             title="Enter CVV"
           />
-          {errors.cvv && (
-            <p className="text-red-400 text-sm mt-1">{errors.cvv}</p>
-          )}
+          {errors.cvv && <p className="text-red-400 text-sm mt-1">{errors.cvv}</p>}
         </div>
       </div>
 
@@ -240,11 +234,8 @@ export default function PaymentForm({ onSubmit, isLoading = false }: PaymentForm
           disabled={isLoading}
           title="Enter cardholder name"
         />
-        {errors.cardholderName && (
-          <p className="text-red-400 text-sm mt-1">{errors.cardholderName}</p>
-        )}
+        {errors.cardholderName && <p className="text-red-400 text-sm mt-1">{errors.cardholderName}</p>}
       </div>
     </form>
   );
 }
-

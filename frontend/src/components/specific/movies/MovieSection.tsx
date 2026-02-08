@@ -33,7 +33,7 @@ export default function MovieSection({
   const showDots = pagination && pagination.totalPages > 1;
 
   return (
-    <div className="w-screen relative px-16">
+    <div className="w-full max-w-full relative px-4 sm:px-8 md:px-12 lg:px-16 box-border">
       <h2 className="text-4xl font-extrabold font-red-rose text-acm-pink mb-4">{title}</h2>
       <WhiteSeparator />
       {showArrows ? (
@@ -52,7 +52,7 @@ export default function MovieSection({
             </div>
           </button>
 
-          <div className="flex-1">
+          <div className="flex-1 min-w-0 overflow-hidden">
             <MovieCardsGrid movies={movies} isLoading={isLoading} />
           </div>
 

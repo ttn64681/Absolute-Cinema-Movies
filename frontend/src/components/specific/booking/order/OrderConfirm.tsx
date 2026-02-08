@@ -1,6 +1,6 @@
 'use client';
 
-import { OrderHomeButton, OrderHistoryButton } from "./OrderButtons";
+import { OrderHomeButton, OrderHistoryButton } from './OrderButtons';
 
 interface OrderConfirmProps {
   email?: string;
@@ -53,9 +53,7 @@ export default function OrderConfirm({
       <div className="max-w-6xl mx-auto flex flex-col gap-10 lg:flex-row">
         {/* Copy deck */}
         <section className="flex-1">
-          <h1 className="mt-4 text-5xl sm:text-6xl lg:text-7xl font-pacifico font-normal text-[#FF478B]">
-            Thank You!
-          </h1>
+          <h1 className="mt-4 text-5xl sm:text-6xl lg:text-7xl font-pacifico font-normal text-[#FF478B]">Thank You!</h1>
           <p className="mt-6 text-lg leading-relaxed text-white max-w-2xl">
             Your order has been confirmed. The order confirmation has been sent to your email address{' '}
             <span className="text-white font-semibold">({email})</span>.
@@ -72,16 +70,14 @@ export default function OrderConfirm({
             </div>
           </dl>
 
-
           <div className="flex flex-row my-8 gap-x-6">
             <OrderHomeButton />
             <OrderHistoryButton />
           </div>
-
         </section>
 
         {/* Summary card */}
-        <aside className="w-full lg:w-[420px] flex-shrink-0">
+        <aside className="w-full lg:w-[420px] shrink-0">
           <div className="bg-[#13131a] border border-white/5 rounded-3xl p-6 shadow-2xl shadow-black/60">
             <header>
               <h2 className="text-2xl font-semibold">Order Summary</h2>
@@ -108,7 +104,9 @@ export default function OrderConfirm({
               <ul className="space-y-2 text-sm">
                 {tickets.map((ticket) => (
                   <li key={ticket.name} className="flex justify-between text-white/90">
-                    <span>{ticket.name} x{ticket.quantity}</span>
+                    <span>
+                      {ticket.name} x{ticket.quantity}
+                    </span>
                     <span>{currency.format(ticket.price * ticket.quantity)}</span>
                   </li>
                 ))}
@@ -154,4 +152,3 @@ export default function OrderConfirm({
     </div>
   );
 }
-

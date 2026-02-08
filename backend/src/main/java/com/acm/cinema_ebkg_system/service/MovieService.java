@@ -315,18 +315,8 @@ public class MovieService {
      */
     @CacheEvict(value = {"nowPlayingMovies", "upcomingMovies", "searchNowPlayingMovies", "searchUpcomingMovies"}, allEntries = true)
     public void deleteMovie(Long movieId) {
-        // Get the movie by id
-        Movie movie = movieRepository.findById(movieId)
-            .orElseThrow(() -> new RuntimeException("Movie not found"));
-        
         // If the movie has no MovieShows, allow it to be deleted
-        System.out.println(movie.getStatus());
-        // if (movie.getStatus() == "UPCOMING") {
-            movieRepository.deleteById(movieId);
-        /* } else {
-            System.out.println("hohohoho, no!");
-            throw new RuntimeException("Cannot delete a movie that is still playing");
-        }*/
+        movieRepository.deleteById(movieId);
         
     }
 

@@ -28,8 +28,9 @@ export function proxy(request: NextRequest) {
     role = roleCookie;
   }
 
-  // Lightweight diagnostics to verify middleware execution and routing decisions
-  console.log('[middleware] path:', pathname, '| roleCookie:', roleCookie ?? 'null', '| derived role:', role ?? 'null');
+  if (process.env.NODE_ENV === 'development') {
+    console.log('[middleware] path:', pathname, '| roleCookie:', roleCookie ?? 'null', '| derived role:', role ?? 'null');
+  }
 
   const isAdmin = role === 'ADMIN';
   const isLoggedInUser = role === 'USER';
@@ -39,12 +40,14 @@ export function proxy(request: NextRequest) {
   // ============================================
   if (pathname.startsWith('/admin')) {
     if (!isAdmin) {
-      // Not admin - redirect to login
-      console.log('[middleware] BLOCKING /admin access - redirecting to admin-login');
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[middleware] BLOCKING /admin access - redirecting to admin-login');
+      }
       return NextResponse.redirect(new URL('/auth/admin-login', request.url));
     }
-    // Admin has access
-    console.log('[middleware] ALLOWING /admin access - user is admin');
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[middleware] ALLOWING /admin access - user is admin');
+    }
     return NextResponse.next();
   }
 

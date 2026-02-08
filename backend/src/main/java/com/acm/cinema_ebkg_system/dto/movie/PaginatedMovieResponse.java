@@ -3,6 +3,8 @@ package com.acm.cinema_ebkg_system.dto.movie;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
+
 import java.util.List;
 
 /**
@@ -12,6 +14,7 @@ import java.util.List;
 @Getter
 @Setter
 @NoArgsConstructor
+@Slf4j
 public class PaginatedMovieResponse {
     private List<MovieSummary> movies;
     private int currentPage;
@@ -30,14 +33,10 @@ public class PaginatedMovieResponse {
         this.hasNext = hasNext;
         this.hasPrevious = hasPrevious;
         this.pageSize = pageSize;
-
-        System.out.println("Paginated Movie Response: ");
-        System.out.println("currentPage: " + currentPage);
-        System.out.println("totalPages: " + totalPages);
-        System.out.println("totalElements: " + totalElements);
-        System.out.println("hasNextPage: " + hasNext);
-        System.out.println("hasPreviousPage: " + hasPrevious);
-
+        if (log.isDebugEnabled()) {
+            log.debug("PaginatedMovieResponse: currentPage={}, totalPages={}, totalElements={}, hasNext={}, hasPrevious={}",
+                    currentPage, totalPages, totalElements, hasNext, hasPrevious);
+        }
     }
 }
 

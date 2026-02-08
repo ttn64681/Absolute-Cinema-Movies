@@ -18,10 +18,13 @@ import org.springframework.web.bind.annotation.RestController;
 import com.acm.cinema_ebkg_system.dto.promotion.PromotionDTO;
 import com.acm.cinema_ebkg_system.model.Promotion;
 import com.acm.cinema_ebkg_system.service.PromotionService;
+import lombok.extern.slf4j.Slf4j;
+
 import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/promotion")
+@Slf4j
 public class PromotionController {
 
     @Autowired
@@ -67,7 +70,7 @@ public class PromotionController {
 
     @PostMapping("/")
     public ResponseEntity<?> createPromotion(@RequestBody PromotionDTO promotion) {
-        System.out.println("Create");
+        log.debug("Create promotion");
         try {
             Promotion createdPromotion = promotionService.createPromotion(promotion);
             return ResponseEntity.ok(createdPromotion);

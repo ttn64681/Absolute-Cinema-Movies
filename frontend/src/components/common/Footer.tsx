@@ -11,7 +11,7 @@ export default function Footer() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
           {/* Brand */}
           <div className="flex items-center gap-3">
-            <span className="text-3xl font-pacifico acm-gradient leading-none">acm</span>
+            <span className="text-3xl font-pacifico acm-gradient leading-none -translate-y-1">acm</span>
             <span className="text-white/70">Actual Cinema Movies</span>
           </div>
 

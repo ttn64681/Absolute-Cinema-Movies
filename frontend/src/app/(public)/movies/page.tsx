@@ -32,7 +32,7 @@ function MoviesPageContent() {
   } = useMovieSearch();
 
   return (
-    <div>
+    <div className="overflow-x-hidden min-w-0">
       <NavBar />
 
       {/* Filters Popup is rendered globally via FiltersContext Portal */}

@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 import java.util.Optional;
@@ -39,6 +40,7 @@ import java.time.LocalDateTime;
  * @version 1.0
  */
 @Service
+@Slf4j
 public class UserService {
     
     @Autowired
@@ -198,10 +200,10 @@ public class UserService {
     @Transactional
     public User suspendUser(Long userId) {
         User user = getUserById(userId);
-        System.out.println("Suspending user - User: " + user.getEmail() + ", current account_status: " + user.getAccountStatus());
+        log.debug("Suspending user - User: " + user.getEmail() + ", current account_status: " + user.getAccountStatus());
         user.setAccountStatus(UserStatus.suspended);
         User suspendedUser = userRepository.save(user);
-        System.out.println("User suspended - User: " + suspendedUser.getEmail() + ", new account_status: " + suspendedUser.getAccountStatus());
+        log.debug("User suspended - User: " + suspendedUser.getEmail() + ", new account_status: " + suspendedUser.getAccountStatus());
         return suspendedUser;
     }
 
@@ -218,10 +220,10 @@ public class UserService {
     @Transactional
     public User unsuspendUser(Long userId) {
         User user = getUserById(userId);
-        System.out.println("Unsuspending user - User: " + user.getEmail() + ", current account_status: " + user.getAccountStatus());
+        log.debug("Unsuspending user - User: " + user.getEmail() + ", current account_status: " + user.getAccountStatus());
         user.setAccountStatus(UserStatus.active);
         User unsuspendedUser = userRepository.save(user);
-        System.out.println("User unsuspended - User: " + unsuspendedUser.getEmail() + ", new account_status: " + unsuspendedUser.getAccountStatus());
+        log.debug("User unsuspended - User: " + unsuspendedUser.getEmail() + ", new account_status: " + unsuspendedUser.getAccountStatus());
         return unsuspendedUser;
     }
 
@@ -346,14 +348,14 @@ public class UserService {
         // Update the password
         user.setPassword(hashedPassword);
 
-        System.out.println("New password: " + newPassword);
-        System.out.println("New hashed password: " + hashedPassword);
+        log.debug("New password: " + newPassword);
+        log.debug("New hashed password: " + hashedPassword);
 
         // Save the user to database
         User savedUser = userRepository.save(user);
 
-        System.out.println("Saved hashed password: " + savedUser.getPassword());
-        System.out.println("Passwords match: " + passwordEncoder.matches(newPassword, savedUser.getPassword()));
+        log.debug("Saved hashed password: " + savedUser.getPassword());
+        log.debug("Passwords match: " + passwordEncoder.matches(newPassword, savedUser.getPassword()));
         return savedUser;
     }
 
@@ -383,7 +385,7 @@ public class UserService {
 
         // Validate that the current password is correct
         if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
-            System.out.println("Incorrect password!");
+            log.debug("Incorrect password!");
             throw new RuntimeException("Incorrect password!");
         }
 
@@ -394,14 +396,14 @@ public class UserService {
         // Update the password
         user.setPassword(hashedPassword);
 
-        System.out.println("New password: " + newPassword);
-        System.out.println("New hashed password: " + hashedPassword);
+        log.debug("New password: " + newPassword);
+        log.debug("New hashed password: " + hashedPassword);
 
         // Save the user to database
         User savedUser = userRepository.save(user);
 
-        System.out.println("Saved hashed password: " + savedUser.getPassword());
-        System.out.println("Passwords match: " + passwordEncoder.matches(newPassword, savedUser.getPassword()));
+        log.debug("Saved hashed password: " + savedUser.getPassword());
+        log.debug("Passwords match: " + passwordEncoder.matches(newPassword, savedUser.getPassword()));
 
         // Send confirmation email
         emailService.sendChangePasswordConfirmationEmail(user.getEmail(), user.getFirstName());
@@ -441,7 +443,7 @@ public class UserService {
         // Send password reset email
         emailService.sendPasswordResetEmail(email, resetToken);
         
-        System.out.println("Password reset token generated for user: " + email);
+        log.debug("Password reset token generated for user: " + email);
     }
 
     /**
@@ -479,7 +481,7 @@ public class UserService {
         // Save user
         userRepository.save(user);
         
-        System.out.println("Password reset successfully for user: " + user.getEmail());
+        log.debug("Password reset successfully for user: " + user.getEmail());
     }
 
     /**
@@ -509,13 +511,13 @@ public class UserService {
         User savedUser = userRepository.save(user);
         
         // DEBUG: Log token info
-        System.out.println("=== VERIFICATION TOKEN GENERATED ===");
-        System.out.println("User Email: " + savedUser.getEmail());
-        System.out.println("account_status: " + savedUser.getAccountStatus());
-        System.out.println("Token Generated: " + token);
-        System.out.println("Token in DB: " + savedUser.getVerificationToken());
-        System.out.println("Expires At: " + savedUser.getVerificationTokenExpiresAt());
-        System.out.println("====================================");
+        log.debug("=== VERIFICATION TOKEN GENERATED ===");
+        log.debug("User Email: " + savedUser.getEmail());
+        log.debug("account_status: " + savedUser.getAccountStatus());
+        log.debug("Token Generated: " + token);
+        log.debug("Token in DB: " + savedUser.getVerificationToken());
+        log.debug("Expires At: " + savedUser.getVerificationTokenExpiresAt());
+        log.debug("====================================");
         
         emailService.sendVerificationEmail(user.getEmail(), token);
         return token;
@@ -529,21 +531,21 @@ public class UserService {
      */
     public User verifyEmail(String token) {
         // DEBUG: Log verification attempt
-        System.out.println("=== VERIFICATION ATTEMPT ===");
-        System.out.println("Token Received: " + token);
-        System.out.println("Token Length: " + token.length());
+        log.debug("=== VERIFICATION ATTEMPT ===");
+        log.debug("Token Received: " + token);
+        log.debug("Token Length: " + token.length());
         
         Optional<User> userOptional = userRepository.findByVerificationToken(token);
         if (userOptional.isEmpty()) {
-            System.out.println("Result: TOKEN NOT FOUND IN DATABASE");
-            System.out.println("===========================");
+            log.debug("Result: TOKEN NOT FOUND IN DATABASE");
+            log.debug("===========================");
             throw new RuntimeException("Invalid verification token. This link may have already been used. If you already verified your email, please try logging in.");
         }
         
         User user = userOptional.get();
-        System.out.println("Result: TOKEN FOUND for user: " + user.getEmail());
-        System.out.println("account_status before verification: " + user.getAccountStatus());
-        System.out.println("===========================");
+        log.debug("Result: TOKEN FOUND for user: " + user.getEmail());
+        log.debug("account_status before verification: " + user.getAccountStatus());
+        log.debug("===========================");
         
         if (user.getVerificationTokenExpiresAt().isBefore(LocalDateTime.now())) {
             throw new RuntimeException("Verification token has expired. Please request a new verification email.");
@@ -553,7 +555,7 @@ public class UserService {
         user.setVerificationToken(null);
         user.setVerificationTokenExpiresAt(null);
         User verifiedUser = userRepository.save(user);
-        System.out.println("Email verified - account_status updated to: " + verifiedUser.getAccountStatus());
+        log.debug("Email verified - account_status updated to: " + verifiedUser.getAccountStatus());
         return verifiedUser;
     }
 
@@ -565,7 +567,7 @@ public class UserService {
      */
     public String resendVerificationEmail(String email) {
         User user = getUserByEmail(email);
-        System.out.println("Resending verification email - User: " + user.getEmail() + ", account_status: " + user.getAccountStatus());
+        log.debug("Resending verification email - User: " + user.getEmail() + ", account_status: " + user.getAccountStatus());
         if (user.getAccountStatus() == UserStatus.active) {
             throw new RuntimeException("User is already verified");
         }

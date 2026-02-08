@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import { formatDateInput, formatTimeInput, parseScore } from "@/components/specific/admin/movieFormUtils";
+import { useEffect, useState } from 'react';
+import { formatDateInput, formatTimeInput, parseScore } from '@/components/specific/admin/movieFormUtils';
 import { useAdminMovie } from '@/hooks/useAdminMovie';
 
 export type AdminMovie = {
@@ -19,7 +19,7 @@ export type AdminMovie = {
   producers: string;
   score: number;
   duration: number;
-}
+};
 
 interface MovieFormModalProps {
   isOpen: boolean;
@@ -30,86 +30,83 @@ interface MovieFormModalProps {
 
 // Edit movie form
 export default function EditMovieFormModal({ isOpen, onClose, onSaved, initialMovieId }: MovieFormModalProps) {
-
   // Hook call
-  const {selectedMovie, editMovie, refreshMovie} = useAdminMovie(initialMovieId);
+  const { selectedMovie, editMovie, refreshMovie } = useAdminMovie(initialMovieId);
 
   // Saving state
   const [saving, setSaving] = useState(false);
 
-  const [title, setTitle] = useState("");
-  const [status, setStatus] = useState("upcoming");
-  const [genres, setGenres] = useState("");
-  const [poster_link, setPosterLink] = useState("");
-  const [trailer_link, setTrailerLink] = useState("");
-  const [synopsis, setSynopsis] = useState("");
-  const [directors, setDirectors] = useState("");
-  const [producers, setProducers] = useState("");
-  const [cast_names, setCastNames] = useState("");
-  const [rating, setRating] = useState("");
+  const [title, setTitle] = useState('');
+  const [status, setStatus] = useState('upcoming');
+  const [genres, setGenres] = useState('');
+  const [poster_link, setPosterLink] = useState('');
+  const [trailer_link, setTrailerLink] = useState('');
+  const [synopsis, setSynopsis] = useState('');
+  const [directors, setDirectors] = useState('');
+  const [producers, setProducers] = useState('');
+  const [cast_names, setCastNames] = useState('');
+  const [rating, setRating] = useState('');
   const [duration, setDuration] = useState(0);
   const [score, setScore] = useState(0);
-  const [release_date, setReleaseDate] = useState("");
+  const [release_date, setReleaseDate] = useState('');
   const [editingId, setEditingId] = useState(0);
-
 
   useEffect(() => {
     if (!isOpen) return;
 
     if (selectedMovie) {
       setEditingId(selectedMovie.movie_id);
-      setTitle(selectedMovie.title || "");
-      setStatus(selectedMovie.status || "upcoming");
-      setGenres(selectedMovie.genres || "");
-      setReleaseDate(selectedMovie.release_date || "");
-      setPosterLink(selectedMovie.poster_link || "");
-      setTrailerLink(selectedMovie.trailer_link || "");
-      setSynopsis(selectedMovie.synopsis || "");
-      setDirectors(selectedMovie.directors || "");
-      setProducers(selectedMovie.producers || "");
-      setCastNames(selectedMovie.cast_names || "");
-      setRating(selectedMovie.rating || "");
+      setTitle(selectedMovie.title || '');
+      setStatus(selectedMovie.status || 'upcoming');
+      setGenres(selectedMovie.genres || '');
+      setReleaseDate(selectedMovie.release_date || '');
+      setPosterLink(selectedMovie.poster_link || '');
+      setTrailerLink(selectedMovie.trailer_link || '');
+      setSynopsis(selectedMovie.synopsis || '');
+      setDirectors(selectedMovie.directors || '');
+      setProducers(selectedMovie.producers || '');
+      setCastNames(selectedMovie.cast_names || '');
+      setRating(selectedMovie.rating || '');
       setScore(selectedMovie.score || 0);
       setDuration(selectedMovie.duration || 0);
-  
     } else {
       setEditingId(0);
-      setTitle("");
-      setStatus("upcoming");
-      setGenres("");
-      setReleaseDate("");
-      setPosterLink("");
-      setTrailerLink("");
-      setSynopsis("");
-      setDirectors("");
-      setProducers("");
-      setCastNames("");
-      setRating("");
+      setTitle('');
+      setStatus('upcoming');
+      setGenres('');
+      setReleaseDate('');
+      setPosterLink('');
+      setTrailerLink('');
+      setSynopsis('');
+      setDirectors('');
+      setProducers('');
+      setCastNames('');
+      setRating('');
       setScore(0);
       setDuration(0);
-      console.log("Selected movie data was not set");
+      console.log('Selected movie data was not set');
     }
   }, [isOpen, selectedMovie, initialMovieId]);
 
-  // Display helpers 
+  // Display helpers
   const getHeaderTitle = () => {
-    if (initialMovieId) return "Edit Movie";
-    return "Add Movie";
+    if (initialMovieId) return 'Edit Movie';
+    return 'Add Movie';
   };
   const getStatusLabel = (status: String) => {
-    if (status == "now_playing") {
-      return "Now Playing";
+    if (status == 'now_playing') {
+      return 'Now Playing';
     } else {
-      return "Upcoming";
+      return 'Upcoming';
     }
   };
   const getPosterNameClass = () => {
-    if (poster_link) return "text-white";
-    return "opacity-80";
+    if (poster_link) return 'text-white';
+    return 'opacity-80';
   };
   const getPosterDisplayText = () => {
     if (poster_link) return poster_link;
-    return "Select File";
+    return 'Select File';
   };
   const isSaveDisabled = () => {
     if (saving) return true;
@@ -121,12 +118,24 @@ export default function EditMovieFormModal({ isOpen, onClose, onSaved, initialMo
     return 1;
   };
   const getSaveButtonLabel = () => {
-    if (saving) return "Saving...";
-    return "Save";
+    if (saving) return 'Saving...';
+    return 'Save';
   };
 
   const formComplete = () => {
-    if (!title || !genres || !synopsis || !cast_names || !directors || !producers || !score || !rating || !release_date || !trailer_link || !poster_link ) 
+    if (
+      !title ||
+      !genres ||
+      !synopsis ||
+      !cast_names ||
+      !directors ||
+      !producers ||
+      !score ||
+      !rating ||
+      !release_date ||
+      !trailer_link ||
+      !poster_link
+    )
       return false;
     return true;
   };
@@ -142,12 +151,12 @@ export default function EditMovieFormModal({ isOpen, onClose, onSaved, initialMo
     const durationRegex = /^-?\d+(\.\d+)?$/;
     const validDuration = durationRegex.test(duration.toString());
 
-    if (!validDate) return "Check that the release date is in the correct format.";
-    if (!validScore) return "Check that the score is a number between 1 and 100.";
-    if (!validDuration) return "Check that the duration is a number.";
+    if (!validDate) return 'Check that the release date is in the correct format.';
+    if (!validScore) return 'Check that the score is a number between 1 and 100.';
+    if (!validDuration) return 'Check that the duration is a number.';
 
     return null;
-  }
+  };
 
   const onSave = async () => {
     if (!formComplete()) return;
@@ -161,39 +170,39 @@ export default function EditMovieFormModal({ isOpen, onClose, onSaved, initialMo
 
     setSaving(true);
 
-      // Partial movie object to send to backend
-      const backendMovieRequest: Partial<AdminMovie> = {
-        title,
-        genres,
-        rating,
-        release_date,
-        synopsis,
-        trailer_link,
-        poster_link,
-        cast_names,
-        directors,
-        producers,
-        duration,
-        score
-      };
+    // Partial movie object to send to backend
+    const backendMovieRequest: Partial<AdminMovie> = {
+      title,
+      genres,
+      rating,
+      release_date,
+      synopsis,
+      trailer_link,
+      poster_link,
+      cast_names,
+      directors,
+      producers,
+      duration,
+      score,
+    };
 
-      // Full movie object to return to the movies list
-      const updatedMovie: AdminMovie = {
-        movie_id: editingId,
-        status,
-        title,
-        genres,
-        rating,
-        release_date,
-        synopsis,
-        trailer_link,
-        poster_link,
-        cast_names,
-        directors,
-        producers,
-        duration,
-        score
-      };
+    // Full movie object to return to the movies list
+    const updatedMovie: AdminMovie = {
+      movie_id: editingId,
+      status,
+      title,
+      genres,
+      rating,
+      release_date,
+      synopsis,
+      trailer_link,
+      poster_link,
+      cast_names,
+      directors,
+      producers,
+      duration,
+      score,
+    };
 
     const editingStatus = await editMovie(backendMovieRequest, editingId);
     if (editingStatus) {
@@ -225,7 +234,7 @@ export default function EditMovieFormModal({ isOpen, onClose, onSaved, initialMo
         <div className="mb-4 text-white font-red-rose text-2xl">{getHeaderTitle()}</div>
 
         <div className="grid grid-cols-1 sm:grid-cols-[2fr_1fr] gap-6 mb-6">
-          {/* Title */ }
+          {/* Title */}
           <div>
             <label className="block text-sm mb-2 font-afacad text-white">Movie Title</label>
             <input
@@ -234,25 +243,25 @@ export default function EditMovieFormModal({ isOpen, onClose, onSaved, initialMo
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Enter movie title"
               className="w-full px-4 py-3 rounded-md bg-white/10 border border-white/20 text-white placeholder-white/60 focus:outline-none focus:ring-1 focus:ring-[#FF478B] focus:border-transparent"
-              style={{ fontSize: "16px" }}
+              style={{ fontSize: '16px' }}
             />
           </div>
 
-          {/* Status */ }
+          {/* Status */}
           <div>
             <label className="block text-sm mb-2 font-afacad text-white">Status</label>
             <div className="relative cursor-not-allowed">
               <p
-              className="w-full px-4 py-3 rounded-md bg-white/10 border border-white/20 text-white placeholder-white/60 focus:outline-none focus:ring-1 focus:ring-[#FF478B] focus:border-transparent"
-              style={{ fontSize: "16px" }}
+                className="w-full px-4 py-3 rounded-md bg-white/10 border border-white/20 text-white placeholder-white/60 focus:outline-none focus:ring-1 focus:ring-[#FF478B] focus:border-transparent"
+                style={{ fontSize: '16px' }}
               >
-              {getStatusLabel(status)}
-            </p>
+                {getStatusLabel(status)}
+              </p>
             </div>
           </div>
         </div>
 
-        {/* Genres */ }
+        {/* Genres */}
         <div className="grid grid-cols-1 sm:grid-cols-[2fr_1fr] gap-6 mb-6">
           <div>
             <label className="block text-sm mb-2 font-afacad text-white">Genres</label>
@@ -263,12 +272,12 @@ export default function EditMovieFormModal({ isOpen, onClose, onSaved, initialMo
                 onChange={(e) => setGenres(e.target.value)}
                 placeholder="Enter genres"
                 className="w-full px-4 py-3 rounded-md bg-white/10 border border-white/20 text-white placeholder-white/60 focus:outline-none focus:ring-1 focus:ring-[#FF478B] focus:border-transparent"
-                style={{ fontSize: "16px" }}
+                style={{ fontSize: '16px' }}
               />
             </div>
           </div>
 
-        {/* Rating */ }
+          {/* Rating */}
           <div>
             <label className="block text-sm mb-2 font-afacad text-white">Rating</label>
             <div className="relative">
@@ -291,12 +300,10 @@ export default function EditMovieFormModal({ isOpen, onClose, onSaved, initialMo
               </div>
             </div>
           </div>
-    
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-6">
-
-          {/* Release Date */ }
+          {/* Release Date */}
           <div>
             <label className="block text-sm mb-2 font-afacad text-white">Release Date</label>
             <div className="flex items-center gap-2">
@@ -310,7 +317,7 @@ export default function EditMovieFormModal({ isOpen, onClose, onSaved, initialMo
             </div>
           </div>
 
-          {/* Score */ }
+          {/* Score */}
           <div>
             <label className="block text-sm mb-2 font-afacad text-white">Score (1-100%)</label>
             <div className="flex items-center gap-2">
@@ -320,7 +327,7 @@ export default function EditMovieFormModal({ isOpen, onClose, onSaved, initialMo
                 max={100}
                 inputMode="numeric"
                 value={score}
-                onChange={(e) => setScore(e.target.value)}
+                onChange={(e) => setScore(e.target.value === '' ? 0 : Number(e.target.value))}
                 placeholder="ex. 85%"
                 className="w-full px-4 py-3 rounded-md bg-white/10 border border-white/20 text-white placeholder-white/60 focus:outline-none focus:ring-1 focus:ring-[#FF478B] focus:border-transparent no-number-spinner"
               />
@@ -328,7 +335,7 @@ export default function EditMovieFormModal({ isOpen, onClose, onSaved, initialMo
             </div>
           </div>
 
-          {/* Duration */ }
+          {/* Duration */}
           <div>
             <label className="block text-sm mb-2 font-afacad text-white">Duration (minutes)</label>
             <div className="flex items-center gap-2">
@@ -338,29 +345,28 @@ export default function EditMovieFormModal({ isOpen, onClose, onSaved, initialMo
                 max={180}
                 inputMode="numeric"
                 value={duration}
-                onChange={(e) => setDuration(e.target.value)}
+                onChange={(e) => setDuration(e.target.value === '' ? 0 : Number(e.target.value))}
                 placeholder="ex. 120"
                 className="w-full px-4 py-3 rounded-md bg-white/10 border border-white/20 text-white placeholder-white/60 focus:outline-none focus:ring-1 focus:ring-[#FF478B] focus:border-transparent no-number-spinner"
               />
               <span className="text-white/80"></span>
             </div>
           </div>
-
         </div>
 
-        {/* Poster link */ }
-          <div className="mb-6">
-            <label className="block text-sm mb-2 font-afacad text-white">Poster URL</label>
-              <input
-                type="url"
-                value={poster_link}
-                onChange={(e) => setPosterLink(e.target.value)}
-                placeholder="Enter poster link (embed)"
-                className="w-full px-4 py-3 rounded-md bg-white/10 border border-white/20 text-white placeholder-white/60 focus:outline-none focus:ring-1 focus:ring-[#FF478B] focus:border-transparent"
-              />
-          </div>
+        {/* Poster link */}
+        <div className="mb-6">
+          <label className="block text-sm mb-2 font-afacad text-white">Poster URL</label>
+          <input
+            type="url"
+            value={poster_link}
+            onChange={(e) => setPosterLink(e.target.value)}
+            placeholder="Enter poster link (embed)"
+            className="w-full px-4 py-3 rounded-md bg-white/10 border border-white/20 text-white placeholder-white/60 focus:outline-none focus:ring-1 focus:ring-[#FF478B] focus:border-transparent"
+          />
+        </div>
 
-        {/* Trailer link */ }
+        {/* Trailer link */}
         <div className="mb-6">
           <label className="block text-sm mb-2 font-afacad text-white">Trailer URL</label>
           <input
@@ -372,7 +378,7 @@ export default function EditMovieFormModal({ isOpen, onClose, onSaved, initialMo
           />
         </div>
 
-        {/* Synopsis */ }
+        {/* Synopsis */}
         <div className="mb-6">
           <label className="block text-sm mb-2 font-afacad text-white">Synopsis</label>
           <textarea
@@ -381,11 +387,11 @@ export default function EditMovieFormModal({ isOpen, onClose, onSaved, initialMo
             placeholder="Enter movie synopsis"
             rows={4}
             className="w-full px-4 py-3 rounded-md bg-white/10 border border-white/20 text-white placeholder-white/60 focus:outline-none focus:ring-1 focus:ring-[#FF478B] focus:border-transparent resize-none"
-            style={{ scrollbarWidth: "thin", scrollbarColor: "#6B7280 #374151", lineHeight: "1.5" }}
+            style={{ scrollbarWidth: 'thin', scrollbarColor: '#6B7280 #374151', lineHeight: '1.5' }}
           />
         </div>
 
-        {/* Directors */ }
+        {/* Directors */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
           <div>
             <label className="block text-sm mb-2 font-afacad text-white">Director(s)</label>
@@ -397,7 +403,7 @@ export default function EditMovieFormModal({ isOpen, onClose, onSaved, initialMo
               className="w-full px-4 py-3 rounded-md bg-white/10 border border-white/20 text-white placeholder-white/60 focus:outline-none focus:ring-1 focus:ring-[#FF478B] focus:border-transparent"
             />
           </div>
-          {/* Producers */ }
+          {/* Producers */}
           <div>
             <label className="block text-sm mb-2 font-afacad text-white">Producer(s)</label>
             <input
@@ -410,7 +416,7 @@ export default function EditMovieFormModal({ isOpen, onClose, onSaved, initialMo
           </div>
         </div>
 
-        {/* Cast Names */ }
+        {/* Cast Names */}
         <div className="mb-6">
           <label className="block text-sm mb-2 font-afacad text-white">Cast</label>
           <textarea
@@ -419,7 +425,7 @@ export default function EditMovieFormModal({ isOpen, onClose, onSaved, initialMo
             placeholder="Enter cast members"
             rows={4}
             className="w-full px-4 py-3 rounded-md bg-white/10 border border-white/20 text-white placeholder-white/60 focus:outline-none focus:ring-1 focus:ring-[#FF478B] focus:border-transparent resize-none"
-            style={{ scrollbarWidth: "thin", scrollbarColor: "#6B7280 #374151" }}
+            style={{ scrollbarWidth: 'thin', scrollbarColor: '#6B7280 #374151' }}
           />
         </div>
 
@@ -436,7 +442,7 @@ export default function EditMovieFormModal({ isOpen, onClose, onSaved, initialMo
             onClick={onSave}
             disabled={isSaveDisabled()}
             className="px-8 py-2 rounded-full font-afacad font-bold text-black cursor-pointer hover:shadow-md hover:underline hover:shadow-acm-pink/50"
-            style={{ background: "linear-gradient(to right, #FF478B, #FF5C33)", opacity: getSaveOpacity() }}
+            style={{ background: 'linear-gradient(to right, #FF478B, #FF5C33)', opacity: getSaveOpacity() }}
           >
             {getSaveButtonLabel()}
           </button>
@@ -445,5 +451,3 @@ export default function EditMovieFormModal({ isOpen, onClose, onSaved, initialMo
     </div>
   );
 }
-
-

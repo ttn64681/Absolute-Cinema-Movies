@@ -8,6 +8,7 @@ import com.acm.cinema_ebkg_system.service.AdminService;
 import com.acm.cinema_ebkg_system.service.UserService;
 import com.acm.cinema_ebkg_system.util.JwtUtil;
 import com.acm.cinema_ebkg_system.mapper.UserDtoFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -40,6 +41,7 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/api/admin")
+@Slf4j
 public class AdminController {
 
     // ========== DEPENDENCY INJECTION ==========
@@ -142,8 +144,7 @@ public class AdminController {
             List<Admin> admins = adminService.getAllAdmins();
             return ResponseEntity.ok(admins);
         } catch (Exception e) {
-            System.err.println("Error fetching admins: " + e.getMessage());
-            e.printStackTrace();
+            log.error("Error fetching admins", e);
             AuthResponse response = new AuthResponse(false, "Failed to fetch admins: " + e.getMessage());
             return ResponseEntity.status(org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
@@ -214,13 +215,12 @@ public class AdminController {
     @PutMapping("/users/{userId}/suspend")
     public ResponseEntity<?> suspendUser(@PathVariable Long userId) {
         try {
-            System.out.println("AdminController.suspendUser - userId: " + userId);
+            log.debug("AdminController.suspendUser - userId: {}", userId);
             User user = userService.suspendUser(userId);
-            System.out.println("AdminController.suspendUser - Success: " + user.getEmail() + ", status: " + user.getAccountStatus());
+            log.debug("AdminController.suspendUser - Success: {}, status: {}", user.getEmail(), user.getAccountStatus());
             return ResponseEntity.ok(user);
         } catch (Exception e) {
-            System.err.println("AdminController.suspendUser - Error: " + e.getMessage());
-            e.printStackTrace();
+            log.error("AdminController.suspendUser - Error", e);
             AuthResponse response = new AuthResponse(false, "Failed to suspend user: " + e.getMessage());
             return ResponseEntity.badRequest().body(response);
         }
@@ -237,13 +237,12 @@ public class AdminController {
     @PutMapping("/users/{userId}/unsuspend")
     public ResponseEntity<?> unsuspendUser(@PathVariable Long userId) {
         try {
-            System.out.println("AdminController.unsuspendUser - userId: " + userId);
+            log.debug("AdminController.unsuspendUser - userId: {}", userId);
             User user = userService.unsuspendUser(userId);
-            System.out.println("AdminController.unsuspendUser - Success: " + user.getEmail() + ", status: " + user.getAccountStatus());
+            log.debug("AdminController.unsuspendUser - Success: {}, status: {}", user.getEmail(), user.getAccountStatus());
             return ResponseEntity.ok(user);
         } catch (Exception e) {
-            System.err.println("AdminController.unsuspendUser - Error: " + e.getMessage());
-            e.printStackTrace();
+            log.error("AdminController.unsuspendUser - Error", e);
             AuthResponse response = new AuthResponse(false, "Failed to unsuspend user: " + e.getMessage());
             return ResponseEntity.badRequest().body(response);
         }
@@ -258,13 +257,12 @@ public class AdminController {
     @DeleteMapping("/users/{userId}")
     public ResponseEntity<?> deleteUser(@PathVariable Long userId) {
         try {
-            System.out.println("AdminController.deleteUser - userId: " + userId);
+            log.debug("AdminController.deleteUser - userId: {}", userId);
             adminService.deleteUser(userId);
-            System.out.println("AdminController.deleteUser - Success: User " + userId + " deleted");
+            log.debug("AdminController.deleteUser - Success: User {} deleted", userId);
             return ResponseEntity.ok().build();
         } catch (Exception e) {
-            System.err.println("AdminController.deleteUser - Error: " + e.getMessage());
-            e.printStackTrace();
+            log.error("AdminController.deleteUser - Error", e);
             AuthResponse response = new AuthResponse(false, "Failed to delete user: " + e.getMessage());
             return ResponseEntity.badRequest().body(response);
         }

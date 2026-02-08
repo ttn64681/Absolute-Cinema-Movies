@@ -12,6 +12,7 @@ import com.acm.cinema_ebkg_system.repository.ShowSeatRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -36,6 +37,7 @@ import java.util.stream.Collectors;
  * 3. Set is_available = false to reserve/book the seat
  */
 @Service
+@Slf4j
 public class ShowSeatService {
     
     @Autowired
@@ -221,16 +223,16 @@ public class ShowSeatService {
     @Transactional
     public List<Long> reserveSeats(Long userId, ReserveSeatsRequest request) {
         Long showId = request.getShowId();
-        System.out.println("ShowSeatService.reserveSeats - showId: " + showId + " (movie_show.id)");
+        log.debug("ShowSeatService.reserveSeats - showId: " + showId + " (movie_show.id)");
         
         // Verify movie_show exists
         MovieShow movieShow = movieShowRepository.findById(showId)
             .orElseThrow(() -> {
-                System.err.println("Movie show not found with id: " + showId);
+                log.error("Movie show not found with id: {}", showId);
                 return new RuntimeException("Movie show not found with id: " + showId);
             });
         
-        System.out.println("ShowSeatService.reserveSeats - Found movie_show: id=" + movieShow.getId() + 
+        log.debug("ShowSeatService.reserveSeats - Found movie_show: id=" + movieShow.getId() + 
             ", movie_id=" + (movieShow.getMovie() != null ? movieShow.getMovie().getMovie_id() : "null") +
             ", show_room_id=" + (movieShow.getShowRoom() != null ? movieShow.getShowRoom().getId() : "null"));
         
@@ -299,7 +301,7 @@ public class ShowSeatService {
                         seat.setIsAvailable(true);
                         seat.setReservedAt(null);
                         seat.setUpdatedAt(now);
-                        System.out.println("Reservation expired for seat " + seatRow + seatNumber + " (reserved " + minutesSinceReservation + " minutes ago)");
+                        log.debug("Reservation expired for seat " + seatRow + seatNumber + " (reserved " + minutesSinceReservation + " minutes ago)");
                     }
                 }
                 // Seat exists and is available - mark as reserved with timestamp
@@ -586,7 +588,7 @@ public class ShowSeatService {
             }
             showSeatRepository.saveAll(expiredSeats);
             updateAvailableSeatsCount(showId);
-            System.out.println("Released " + expiredSeats.size() + " expired reservation(s) for showId: " + showId);
+            log.debug("Released " + expiredSeats.size() + " expired reservation(s) for showId: " + showId);
         }
     }
     

@@ -52,9 +52,7 @@ export default function BookingFeeModal({ isOpen, onClose, onSave, editingFee }:
         </button>
 
         <div className="space-y-6">
-          <h2 className="text-white text-xl font-bold">
-            {editingFee ? 'Edit Booking Fee' : 'Add Booking Fee'}
-          </h2>
+          <h2 className="text-white text-xl font-bold">{editingFee ? 'Edit Booking Fee' : 'Add Booking Fee'}</h2>
 
           <div>
             <label className="block text-white text-sm mb-2">Name:</label>
@@ -90,10 +88,7 @@ export default function BookingFeeModal({ isOpen, onClose, onSave, editingFee }:
           </div>
 
           <div className="flex justify-end">
-            <button
-              onClick={handleSubmit}
-              className="text-white hover:text-gray-300 transition-colors font-medium"
-            >
+            <button onClick={handleSubmit} className="text-white hover:text-gray-300 transition-colors font-medium">
               Save
             </button>
           </div>
@@ -102,4 +97,3 @@ export default function BookingFeeModal({ isOpen, onClose, onSave, editingFee }:
     </div>
   );
 }
-

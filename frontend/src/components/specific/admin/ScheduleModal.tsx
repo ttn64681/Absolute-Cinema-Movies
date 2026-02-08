@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import { BackendMovieShow } from "@/types/admin";
+import { useEffect, useState } from 'react';
+import { BackendMovieShow } from '@/types/admin';
 import { useAdminMovieShows } from '@/hooks/useAdminMovieShows';
 
 type Showtime = {
@@ -22,24 +22,17 @@ interface ScheduleModalProps {
 
 // Hardcoded show rooms with capacities: 60, 70, 80, 90
 const SHOW_ROOMS = [
-  { id: 3, name: "A", capacity: 60 },
-  { id: 4, name: "B", capacity: 70 },
-  { id: 5, name: "C", capacity: 80 },
-  { id: 6, name: "D", capacity: 90 },
+  { id: 3, name: 'A', capacity: 60 },
+  { id: 4, name: 'B', capacity: 70 },
+  { id: 5, name: 'C', capacity: 80 },
+  { id: 6, name: 'D', capacity: 90 },
 ];
 
-export default function ScheduleModal({
-  isOpen,
-  onClose,
-  onSchedule,
-  movieId,
-  movieTitle,
-}: ScheduleModalProps) {
+export default function ScheduleModal({ isOpen, onClose, onSchedule, movieId, movieTitle }: ScheduleModalProps) {
+  const { movieShows, isLoading, error, scheduleMovieShow } = useAdminMovieShows(movieId);
 
-  const {movieShows, isLoading, error, scheduleMovieShow} = useAdminMovieShows(movieId);
-
-  const [selectedDate, setSelectedDate] = useState("");
-  const [selectedTime, setSelectedTime] = useState("");
+  const [selectedDate, setSelectedDate] = useState('');
+  const [selectedTime, setSelectedTime] = useState('');
   const [selectedShowRoomId, setSelectedShowRoomId] = useState<number | null>(null);
   const [showtimes, setShowtimes] = useState<Showtime[]>(movieShows);
 
@@ -51,8 +44,8 @@ export default function ScheduleModal({
   // Reset state when modal opens/closes
   useEffect(() => {
     if (!isOpen) {
-      setSelectedDate("");
-      setSelectedTime("");
+      setSelectedDate('');
+      setSelectedTime('');
       setSelectedShowRoomId(null);
       setShowtimes(movieShows);
     }
@@ -65,9 +58,8 @@ export default function ScheduleModal({
     console.log(selectedShowRoomId);
 
     if (selectedDate && selectedTime && selectedShowRoomId !== null) {
-
       // Parse the input date
-      const dateParts = selectedDate.split("-");
+      const dateParts = selectedDate.split('-');
       const year = parseInt(dateParts[0], 10);
       const month = parseInt(dateParts[1], 10) - 1; // Month is 0-indexed in JavaScript
       const day = parseInt(dateParts[2], 10);
@@ -81,11 +73,11 @@ export default function ScheduleModal({
       console.log(hour, minute);
 
       // Convert to 24-hour format if necessary
-      if (period === "PM" && hour < 12) {
-          hour += 12; // Convert PM hour
+      if (period === 'PM' && hour < 12) {
+        hour += 12; // Convert PM hour
       }
-      if (period === "AM" && hour === 12) {
-          hour = 0; // 12 AM should be 0 hours
+      if (period === 'AM' && hour === 12) {
+        hour = 0; // 12 AM should be 0 hours
       }
 
       console.log(hour, minute);
@@ -108,20 +100,25 @@ export default function ScheduleModal({
 
       // Create an object the backend will accept
       const newMovieShow: BackendMovieShow = {
-          movieId: movieId,
-          showRoomId: selectedShowRoomId,
-          startTime: formattedDateTime
-      }
+        movieId: movieId,
+        showRoomId: selectedShowRoomId,
+        startTime: formattedDateTime,
+      };
 
       // Send the movie show to backend and await response
-      const movieShowStatus = await scheduleMovieShow(newMovieShow, movieTitle, selectedDate, selectedTime, selectedShowRoomId);
+      const movieShowStatus = await scheduleMovieShow(
+        newMovieShow,
+        movieTitle,
+        selectedDate,
+        selectedTime,
+        selectedShowRoomId
+      );
       if (movieShowStatus) {
         //alert("Movie show for \" " + movieTitle + "\"  on " + selectedDate + " at " + selectedTime + " in Showroom " + selectedShowRoomId + " successfully scheduled.");
         onClose();
       } else {
         //alert("Movie show schedule conflict. Check that there isn't another show at the same time in the same room.");
       }
-      
     }
   };
 
@@ -148,7 +145,9 @@ export default function ScheduleModal({
         {/* Header */}
         <div className="mb-4">
           <h2 className="text-white text-xl font-bold">Schedule Showtime</h2>
-          <p className="text-white/80 text-sm font-afacad mt-2">Movie: <span className="text-white font-semibold">{movieTitle}</span></p>
+          <p className="text-white/80 text-sm font-afacad mt-2">
+            Movie: <span className="text-white font-semibold">{movieTitle}</span>
+          </p>
         </div>
 
         {/* Content */}
@@ -157,20 +156,15 @@ export default function ScheduleModal({
           {showtimes.length > 0 && (
             <div>
               <label className="block text-sm mb-3 font-afacad text-white">Scheduled Showtimes</label>
-              <div
-                className="rounded-md overflow-hidden shadow-lg h-48 overflow-y-auto bg-white/5 backdrop-blur-sm"
-              >
+              <div className="rounded-md overflow-hidden shadow-lg h-48 overflow-y-auto bg-white/5 backdrop-blur-sm">
                 {showtimes.map((showtime, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between px-5 py-4 border-b border-white/10"
-                  >
+                  <div key={index} className="flex items-center justify-between px-5 py-4 border-b border-white/10">
                     <div className="flex-1 font-afacad flex items-center gap-4">
                       <span className="w-32">{showtime.date}</span>
-                      <span className="w-32">{showtime.time} {showtime.ampm}</span>
-                      {showtime.room && (
-                        <span className="w-40 text-white/60 text-sm">Room {showtime.room}</span>
-                      )}
+                      <span className="w-32">
+                        {showtime.time} {showtime.ampm}
+                      </span>
+                      {showtime.room && <span className="w-40 text-white/60 text-sm">Room {showtime.room}</span>}
                     </div>
                   </div>
                 ))}
@@ -179,9 +173,7 @@ export default function ScheduleModal({
           )}
 
           {/* Divider */}
-          {showtimes.length > 0 && (
-            <div className="border-t border-white/10 my-2" />
-          )}
+          {showtimes.length > 0 && <div className="border-t border-white/10 my-2" />}
 
           {/* Add New Showtime Section */}
           <div>
@@ -196,11 +188,10 @@ export default function ScheduleModal({
                 type="date"
                 onChange={(e) => {
                   setSelectedDate(e.target.value);
-                  console.log("Date:" + selectedDate);
+                  console.log('Date:' + selectedDate);
                 }}
                 className="w-full pl-4 pr-2 py-3 rounded-md bg-white/10 border border-white/20 text-white focus:outline-none focus:ring-1 focus:ring-[#FF478B] focus:border-transparent appearance-none cursor-text font-afacad"
-              >
-              </input>
+              ></input>
             </div>
           </div>
 
@@ -212,15 +203,14 @@ export default function ScheduleModal({
                 type="time"
                 onChange={(e) => {
                   setSelectedTime(e.target.value);
-                  console.log("Time:" + selectedTime);
+                  console.log('Time:' + selectedTime);
                   setSelectedShowRoomId(null);
                 }}
                 disabled={!selectedDate}
                 className={`w-full pl-4 pr-10 py-3 rounded-md bg-white/10 border border-white/20 text-white focus:outline-none focus:ring-1 focus:ring-[#FF478B] focus:border-transparent appearance-none font-afacad ${
-                  !selectedDate ? "opacity-50 cursor-not-allowed" : "cursor-text"
+                  !selectedDate ? 'opacity-50 cursor-not-allowed' : 'cursor-text'
                 }`}
-              >
-              </input>
+              ></input>
             </div>
           </div>
 
@@ -229,14 +219,14 @@ export default function ScheduleModal({
             <label className="block text-sm mb-2 font-afacad text-white">Show Room</label>
             <div className="relative">
               <select
-                value={selectedShowRoomId || ""}
+                value={selectedShowRoomId || ''}
                 onChange={(e) => {
                   setSelectedShowRoomId(e.target.value ? Number(e.target.value) : null);
                   console.log(selectedShowRoomId);
                 }}
                 disabled={!selectedTime}
                 className={`w-full pl-4 pr-10 py-3 rounded-md bg-white/10 border border-white/20 text-white focus:outline-none focus:ring-1 focus:ring-[#FF478B] focus:border-transparent appearance-none font-afacad ${
-                  !selectedTime ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
+                  !selectedTime ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
                 }`}
               >
                 <option value="">-Select Room-</option>
@@ -269,8 +259,8 @@ export default function ScheduleModal({
               disabled={!selectedDate || !selectedTime || selectedShowRoomId === null}
               className={`px-8 py-2 rounded-full font-afacad font-bold text-black bg-gradient-to-r from-[#FF478B] to-[#FF5C33] ${
                 selectedDate && selectedTime && selectedShowRoomId !== null
-                  ? "opacity-100 hover:shadow-md hover:underline hover:shadow-acm-pink/50"
-                  : "opacity-50 cursor-not-allowed"
+                  ? 'opacity-100 hover:shadow-md hover:underline hover:shadow-acm-pink/50'
+                  : 'opacity-50 cursor-not-allowed'
               }`}
             >
               Schedule
@@ -281,4 +271,3 @@ export default function ScheduleModal({
     </div>
   );
 }
-

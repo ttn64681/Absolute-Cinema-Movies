@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
+import lombok.extern.slf4j.Slf4j;
 
 import com.acm.cinema_ebkg_system.model.Promotion;
 
@@ -32,6 +33,7 @@ import com.acm.cinema_ebkg_system.model.Promotion;
  * @version 1.0
  */
 @Service
+@Slf4j
 public class EmailService {
 
     // ========== DEPENDENCY INJECTION ==========
@@ -96,17 +98,12 @@ public class EmailService {
             // Step 5: Send the email
             mailSender.send(message);
             
-            System.out.println("Verification email sent successfully to: " + toEmail);
-            System.out.println("Verification URL: " + verificationUrl); // For development/testing
-            System.out.println("Note: account_status will be updated to 'active' upon email verification");
-            
+            log.debug("Verification email sent successfully to: {}", toEmail);
+            log.debug("Verification URL: {}", verificationUrl);
+            log.debug("Note: account_status will be updated to 'active' upon email verification");
+
         } catch (Exception e) {
-            System.err.println("=== EMAIL SENDING ERROR ===");
-            System.err.println("Failed to send verification email to: " + toEmail);
-            System.err.println("Error: " + e.getMessage());
-            System.err.println("Error Type: " + e.getClass().getSimpleName());
-            e.printStackTrace();
-            System.err.println("===========================");
+            log.error("Failed to send verification email to: {}", toEmail, e);
             throw new RuntimeException("Failed to send verification email: " + e.getMessage());
         }
     }
@@ -141,10 +138,10 @@ public class EmailService {
             message.setText(emailBody);
             mailSender.send(message);
             
-            System.out.println("Password reset email sent successfully to: " + toEmail);
-            
+            log.debug("Password reset email sent successfully to: {}", toEmail);
+
         } catch (Exception e) {
-            System.err.println("Failed to send password reset email to: " + toEmail);
+            log.error("Failed to send password reset email to: {}", toEmail, e);
             throw new RuntimeException("Failed to send password reset email: " + e.getMessage());
         }
     }
@@ -164,9 +161,9 @@ public class EmailService {
             message.setText(emailBody);
             mailSender.send(message);
             
-            System.out.println("Confirmation email sent successfully to: " + toEmail);
+            log.debug("Confirmation email sent successfully to: {}", toEmail);
         } catch (Exception e) {
-            System.err.println("Failed to send confirmation email to: " + toEmail);
+            log.error("Failed to send confirmation email to: {}", toEmail, e);
             throw new RuntimeException("Failed to send confirmation email: " + e.getMessage());
         }
     }
@@ -187,9 +184,9 @@ public class EmailService {
             message.setText(emailBody);
             mailSender.send(message);
             
-            System.out.println("Confirmation email sent successfully to: " + toEmail);
+            log.debug("Confirmation email sent successfully to: {}", toEmail);
         } catch (Exception e) {
-            System.err.println("Failed to send confirmation email to: " + toEmail);
+            log.error("Failed to send confirmation email to: {}", toEmail, e);
             throw new RuntimeException("Failed to send confirmation email: " + e.getMessage());
         }
     }
@@ -225,11 +222,9 @@ public class EmailService {
             message.setText(emailBody);
             mailSender.send(message);
             
-            System.out.println("Promotion enrollment email sent successfully to: " + toEmail);
+            log.debug("Promotion enrollment email sent successfully to: {}", toEmail);
         } catch (Exception e) {
-            System.err.println("Failed to send promotion enrollment email to: " + toEmail);
-            // Don't throw exception - promotion enrollment failure shouldn't block user registration/profile update
-            System.err.println("Error: " + e.getMessage());
+            log.warn("Failed to send promotion enrollment email to: {}: {}", toEmail, e.getMessage());
         }
     }
 
@@ -243,11 +238,9 @@ public class EmailService {
 
             mailSender.send(message);
 
-            System.out.println("Promotion enrollment email sent successfully to: " + toEmail);
-            
+            log.debug("Promotion enrollment email sent successfully to: {}", toEmail);
         } catch (Exception e) {
-            System.err.println("Failed to send promotion enrollment email to: " + toEmail);            
-            System.err.println("Error: " + e.getMessage());
+            log.warn("Failed to send promotion enrollment email to: {}: {}", toEmail, e.getMessage());
         }
     }
 
@@ -266,9 +259,9 @@ public class EmailService {
             message.setText(emailBody);
             mailSender.send(message);
             
-            System.out.println("Confirmation email sent successfully to: " + toEmail);
+            log.debug("Confirmation email sent successfully to: {}", toEmail);
         } catch (Exception e) {
-            System.err.println("Failed to send confirmation email to: " + toEmail);
+            log.error("Failed to send confirmation email to: {}", toEmail, e);
             throw new RuntimeException("Failed to send confirmation email: " + e.getMessage());
         }
     }
@@ -319,11 +312,9 @@ public class EmailService {
             message.setText(emailBody.toString());
             mailSender.send(message);
 
-            System.out.println("Order confirmation email sent successfully to: " + toEmail);
-            
+            log.debug("Order confirmation email sent successfully to: {}", toEmail);
         } catch (Exception e) {
-            System.err.println("Failed to send order confirmation email to: " + toEmail);
-            System.err.println("Error: " + e.getMessage());
+            log.error("Failed to send order confirmation email to: {}", toEmail, e);
             // Don't throw exception - email failure shouldn't block payment completion
         }
     }

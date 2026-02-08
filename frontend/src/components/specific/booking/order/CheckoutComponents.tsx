@@ -98,11 +98,7 @@ interface StepActionsProps {
 export function StepActions({ onPrev, onNext }: StepActionsProps) {
   return (
     <div className="mt-auto pt-6 flex justify-between">
-      {onPrev ? (
-        <GhostButton onClick={onPrev}>Back</GhostButton>
-      ) : (
-        <span />
-      )}
+      {onPrev ? <GhostButton onClick={onPrev}>Back</GhostButton> : <span />}
       {onNext && <PrimaryButton onClick={onNext}>Next</PrimaryButton>}
     </div>
   );
@@ -129,7 +125,15 @@ export function GhostButton({ children, onClick }: { children: React.ReactNode; 
   );
 }
 
-export function PrimaryButton({ children, onClick, disabled }: { children: React.ReactNode; onClick?: () => void; disabled?: boolean }) {
+export function PrimaryButton({
+  children,
+  onClick,
+  disabled,
+}: {
+  children: React.ReactNode;
+  onClick?: () => void;
+  disabled?: boolean;
+}) {
   return (
     <button
       type="button"
@@ -141,4 +145,3 @@ export function PrimaryButton({ children, onClick, disabled }: { children: React
     </button>
   );
 }
-

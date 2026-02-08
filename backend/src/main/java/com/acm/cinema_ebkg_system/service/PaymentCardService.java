@@ -14,6 +14,8 @@ import com.acm.cinema_ebkg_system.util.PaymentEncryptionUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import lombok.extern.slf4j.Slf4j;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -21,6 +23,7 @@ import java.util.Optional;
  * Payment Card Service
  */
 @Service
+@Slf4j
 public class PaymentCardService {
     
     @Autowired // Spring automatically provides repository instance (dependency injection)
@@ -55,7 +58,7 @@ public class PaymentCardService {
             } catch (Exception e) {
                 // Card number might already be decrypted (from old data)
                 // Just keep the original value
-                System.out.println("Warning: Could not decrypt card number for card " + card.getId() + ", assuming already decrypted");
+                log.warn("Warning: Could not decrypt card number for card " + card.getId() + ", assuming already decrypted");
             }
         }
         return cards;
@@ -76,7 +79,7 @@ public class PaymentCardService {
                 }
             } catch (Exception e) {
                 // Card number might already be decrypted (from old data)
-                System.out.println("Warning: Could not decrypt card number for card " + card.get().getId() + ", assuming already decrypted");
+                log.warn("Warning: Could not decrypt card number for card " + card.get().getId() + ", assuming already decrypted");
             }
         }
         return card;
@@ -97,7 +100,7 @@ public class PaymentCardService {
                 }
             } catch (Exception e) {
                 // Card number might already be decrypted (from old data)
-                System.out.println("Warning: Could not decrypt card number for card " + cardId + ", assuming already decrypted");
+                log.warn("Warning: Could not decrypt card number for card " + cardId + ", assuming already decrypted");
             }
         }
         return card;
@@ -150,7 +153,7 @@ public class PaymentCardService {
             }
         } catch (Exception e) {
             // Shouldn't happen since we just encrypted it, but handle gracefully
-            System.out.println("Warning: Could not decrypt newly saved card number");
+            log.warn("Warning: Could not decrypt newly saved card number");
         } */
         
         return saved;
@@ -182,7 +185,7 @@ public class PaymentCardService {
             }
         } catch (Exception e) {
             // Shouldn't happen since we just encrypted it, but handle gracefully
-            System.out.println("Warning: Could not decrypt newly saved card number");
+            log.warn("Warning: Could not decrypt newly saved card number");
         }
 
         emailService.sendPaymentCardEmail(paymentCard.getUser().getEmail(), paymentCard.getUser().getFirstName(), "changed");

@@ -3,17 +3,19 @@ package com.acm.cinema_ebkg_system.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
 import org.springframework.core.env.Environment;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
 /**
- * API Controller - Purely for testing if endpoint connections work lol
+ * API Controller - Test/health endpoints. /api/env only available when dev profile is active.
  */
-@RestController 
+@RestController
 @RequestMapping("/api")
 public class ApiController {
 
@@ -24,15 +26,14 @@ public class ApiController {
     private DataSourceProperties dataSourceProperties;
 
     /**
-     * GET /api/env - Returns environment variables
-     * 
-     * Uses Environment bean to access properties, which is more resilient than
-     * direct @Value injection when environment variables might not be available.
-     * 
-     * @return Map of environment variables
+     * GET /api/env - Returns environment variables (dev profile only; 404 in production).
      */
     @GetMapping("/env")
-    public Map<String, String> getEnvironmentVariables() {
+    public ResponseEntity<?> getEnvironmentVariables() {
+        boolean devProfile = Arrays.asList(environment.getActiveProfiles()).contains("dev");
+        if (!devProfile) {
+            return ResponseEntity.notFound().build();
+        }
         Map<String, String> env = new HashMap<>();
         
         // Get database URL from environment or properties
@@ -66,7 +67,7 @@ public class ApiController {
             env.put("DataSource configured", "NO");
         }
 
-        return env;
+        return ResponseEntity.ok(env);
     }
 
     @GetMapping("/hello")

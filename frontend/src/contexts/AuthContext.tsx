@@ -111,7 +111,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
               // Keep role cookie in sync for middleware-based routing
               const role = response.role || (isAdmin ? 'ADMIN' : 'USER');
-              setRoleCookie(role);
+              setRoleCookie(role as 'ADMIN' | 'USER');
 
               // Trigger custom event to notify other tabs about token refresh
               window.dispatchEvent(
@@ -227,7 +227,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       // Set role cookie for middleware-based routing (default to USER when login succeeds)
       const role = response.role || 'USER';
-      setRoleCookie(role);
+      setRoleCookie(role as 'ADMIN' | 'USER');
     } else {
       console.log('Login failed:', response.message);
     }
@@ -265,7 +265,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       // Set role cookie for middleware-based routing (ADMIN for admin login)
       const role = response.role || 'ADMIN';
-      setRoleCookie(role);
+      setRoleCookie(role as 'ADMIN');
     } else {
       console.log('Admin login failed:', response.message);
     }

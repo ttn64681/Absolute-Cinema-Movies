@@ -9,6 +9,7 @@ import com.acm.cinema_ebkg_system.dto.user.PasswordChangeRequest;
 import com.acm.cinema_ebkg_system.dto.user.UserProfileDTO;
 import com.acm.cinema_ebkg_system.dto.auth.AuthResponse;
 import com.acm.cinema_ebkg_system.mapper.UserDtoFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,8 +23,9 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 import java.util.Optional;
 
-@RestController // Bean that creates a RESTful controller class that handles HTTP requests
+@RestController
 @RequestMapping("/api")
+@Slf4j
 public class UserController {
     
     // Dependency injection of services for business logic
@@ -90,13 +92,12 @@ public class UserController {
     @GetMapping("/users")
     public ResponseEntity<?> getAllUsers() {
         try {
-        System.out.println("Getting all users");
+            log.debug("Getting all users");
             List<User> users = userService.getAllUsers();
-            System.out.println("Found " + users.size() + " users");
+            log.debug("Found {} users", users.size());
             return ResponseEntity.ok(users);
         } catch (Exception e) {
-            System.err.println("Error fetching users: " + e.getMessage());
-            e.printStackTrace();
+            log.error("Error fetching users", e);
             return ResponseEntity.status(org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(new java.util.HashMap<String, Object>() {{
                     put("error", "Failed to fetch users: " + e.getMessage());

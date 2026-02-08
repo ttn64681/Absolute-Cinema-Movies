@@ -14,12 +14,14 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
+import lombok.extern.slf4j.Slf4j;
 
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
 
 @Service
+@Slf4j
 public class ShowTimeService {
 
     // Dependency injection of repositories for database operations
@@ -51,10 +53,10 @@ public class ShowTimeService {
         List<Time> sqlTimes = new ArrayList<>();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("h:mm a");
         try {
-            System.out.println("Showdate received: " + showDate);
+            log.debug("Showdate received: {}", showDate);
             sqlTimes = showTimeRepository.findTimesByMovieIdAndDate(movieId, showDate);
         } catch (Exception e) {
-            System.out.println("Could not retrieve showtimes: " + e.getMessage());
+            log.debug("Could not retrieve showtimes: {}", e.getMessage());
         }
         
         return sqlTimes.stream()
@@ -81,7 +83,7 @@ public class ShowTimeService {
 
         for (LocalTime time : timeList) {
             String formattedTime = time.format(formatter);
-            System.out.println("Showtime in AM/PM" + time);
+            log.debug("Showtime in AM/PM: {}", time);
             formattedTimes.add(formattedTime);
         }
         return formattedTimes;
@@ -117,8 +119,7 @@ public class ShowTimeService {
             
             return movieShowId;
         } catch (Exception e) {
-            System.err.println("Error getting movie show ID: " + e.getMessage());
-            e.printStackTrace();
+            log.error("Error getting movie show ID", e);
             return null;
         }
     }

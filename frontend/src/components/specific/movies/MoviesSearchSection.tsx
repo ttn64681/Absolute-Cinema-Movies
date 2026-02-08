@@ -19,7 +19,7 @@ export default function MoviesSearchSection({
   // Get global filter state from context
   const { setIsFiltersOpen } = useFilters();
   return (
-    <div className="w-screen h-[60vh] relative flex flex-col items-center gap-8 py-36 overflow-hidden">
+    <div className="w-full max-w-full h-[60vh] relative flex flex-col items-center gap-8 py-36 overflow-hidden box-border">
       <Image
         src="/search_background.jpg"
         alt="Search background"

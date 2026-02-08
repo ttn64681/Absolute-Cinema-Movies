@@ -12,10 +12,12 @@ import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import lombok.extern.slf4j.Slf4j;
 
 import com.acm.cinema_ebkg_system.dto.promotion.PromotionDTO;
 
 @Service
+@Slf4j
 public class PromotionService {
 
     @Autowired
@@ -93,12 +95,12 @@ public class PromotionService {
                 promotion.setStatus(status);
                 if (status == PromotionStatus.active) {
                     List<User> enrolledUsers = userService.getAllUsersEnrolledForPromotions();
-                    System.out.println("Found users: " + enrolledUsers.size());
+                    log.debug("Found users: {}", enrolledUsers.size());
                     for (User user : enrolledUsers) {
                         try {
                             emailService.sendPromotionToEnrolledUsers(user.getEmail(), promotion);
                         } catch (Exception e) {
-                            System.err.println("Failed to send email to " + user.getEmail() + ": " + e.getMessage());
+                            log.warn("Failed to send email to {}: {}", user.getEmail(), e.getMessage());
                         }
                     }
                 }
