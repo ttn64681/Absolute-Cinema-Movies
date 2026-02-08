@@ -519,7 +519,11 @@ public class UserService {
         log.debug("Expires At: " + savedUser.getVerificationTokenExpiresAt());
         log.debug("====================================");
         
-        emailService.sendVerificationEmail(user.getEmail(), token);
+        try {
+            emailService.sendVerificationEmail(user.getEmail(), token);
+        } catch (Exception e) {
+            log.warn("Could not send verification email (e.g. SMTP unreachable on host): {}", e.getMessage());
+        }
         return token;
     }
 

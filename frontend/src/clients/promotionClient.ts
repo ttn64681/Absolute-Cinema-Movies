@@ -26,7 +26,19 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   if (!response.ok) {
     const errorText = await response.text();
     console.error(`API Error [${response.status}]:`, errorText);
-    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    let message = response.statusText;
+    try {
+      if (errorText?.startsWith('{')) {
+        const err = JSON.parse(errorText);
+        if (err.message) message = err.message;
+        else if (err.error) message = String(err.error);
+      } else if (errorText && errorText.length < 300) {
+        message = errorText;
+      }
+    } catch {
+      if (errorText && errorText.length < 300) message = errorText;
+    }
+    throw new Error(message);
   }
 
   const data = await response.json();

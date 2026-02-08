@@ -48,11 +48,16 @@ public class PromotionService {
     public Promotion createPromotion(PromotionDTO promotionDTO) {
         Promotion promotion = new Promotion();
 
-        // Map DTO fields to entity fields
         promotion.setPromoCode(promotionDTO.getPromoCode());
         promotion.setTitle(promotionDTO.getTitle());
         promotion.setDescription(promotionDTO.getDescription());
-        promotion.setImageLink(promotionDTO.getImageLink());
+        String imageLink = promotionDTO.getImageLink() != null ? promotionDTO.getImageLink().trim() : null;
+        if (imageLink == null || imageLink.isEmpty()) {
+            imageLink = " ";
+        } else if (imageLink.length() > 500) {
+            imageLink = imageLink.substring(0, 500);
+        }
+        promotion.setImageLink(imageLink);
         promotion.setDiscountValue(promotionDTO.getDiscountValue());
         promotion.setDiscountType(promotionDTO.getDiscountType());
         promotion.setCreatedAt(LocalDateTime.now());

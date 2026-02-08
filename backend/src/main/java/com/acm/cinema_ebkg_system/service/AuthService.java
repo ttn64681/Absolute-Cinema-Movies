@@ -147,14 +147,17 @@ public class AuthService {
         // Step 5: Generate verification token and send email
         String verificationToken = userService.generateVerificationToken(savedUser);
         
-        // Step 6: If user enrolled for promotions, send welcome email
-        // Note: We send this regardless of email verification status because they explicitly opted in
+        // Step 6: If user enrolled for promotions, send welcome email (non-blocking; SMTP may be unreachable on free tier)
         if (savedUser.isEnrolledForPromotions()) {
-            emailService.sendPromotionEnrollmentEmail(savedUser.getEmail(), savedUser.getFirstName());
+            try {
+                emailService.sendPromotionEnrollmentEmail(savedUser.getEmail(), savedUser.getFirstName());
+            } catch (Exception e) {
+                log.warn("Could not send promotion enrollment email: {}", e.getMessage());
+            }
         }
 
-        // Step 7: Return success response with verification token for testing
-        return new AuthResponse(true, "Registration successful! Verification token: " + verificationToken);
+        // Step 7: Return success (user can verify email via resend if verification email failed)
+        return new AuthResponse(true, "Registration successful! Please check your email to verify your account. If you do not receive it, use Resend verification from the login page.");
     }
 
     /**
