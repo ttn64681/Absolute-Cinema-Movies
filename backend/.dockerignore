@@ -1,0 +1,9 @@
+target/
+!.mvn/wrapper/maven-wrapper.jar
+*.md
+.git
+.gitignore
+.env
+*.log
+.DS_Store
+HELP.md
