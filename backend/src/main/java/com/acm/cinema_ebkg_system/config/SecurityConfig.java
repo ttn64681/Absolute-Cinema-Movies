@@ -74,6 +74,8 @@ public class SecurityConfig {
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
             
             .authorizeHttpRequests(authz -> authz
+                // Health check for Render/load balancers (no auth)
+                .requestMatchers("/actuator/health").permitAll()
                 // Public endpoints - no authentication required
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/api/admin/create").permitAll() // this is for testing...
