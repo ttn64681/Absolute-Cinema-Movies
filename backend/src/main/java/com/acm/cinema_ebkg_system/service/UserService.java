@@ -564,6 +564,23 @@ public class UserService {
     }
 
     /**
+     * Verify email using demo code (bypass for sandbox env). Call when token is demo code and email is provided.
+     *
+     * @param email User email to verify
+     * @return User verified user
+     */
+    public User verifyEmailWithDemoCode(String email) {
+        User user = getUserByEmail(email);
+        if (user.getAccountStatus() == UserStatus.active) {
+            throw new RuntimeException("User is already verified. You can log in.");
+        }
+        user.setAccountStatus(UserStatus.active);
+        user.setVerificationToken(null);
+        user.setVerificationTokenExpiresAt(null);
+        return userRepository.save(user);
+    }
+
+    /**
      * Resend verification email
      * 
      * @param email User's email address

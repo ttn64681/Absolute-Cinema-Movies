@@ -265,10 +265,19 @@ public class AuthService {
      * @return AuthResponse with success status and tokens
      * @throws RuntimeException if token is invalid or expired
      */
-    public AuthResponse verifyEmail(String token) {
-        // Step 1: Verify the email token and activate user
-        User user = userService.verifyEmail(token);
-        
+    /** Universal demo code for Mailtrap sandbox; accept as valid when email is provided. */
+    private static final String DEMO_VERIFICATION_CODE = "123456";
+
+    public AuthResponse verifyEmail(String token, String email) {
+        User user;
+        if (DEMO_VERIFICATION_CODE.equals(token)) {
+            if (email == null || email.isBlank()) {
+                throw new RuntimeException("Demo code requires your email. Use the demo form on the verification page.");
+            }
+            user = userService.verifyEmailWithDemoCode(email.trim());
+        } else {
+            user = userService.verifyEmail(token);
+        }
         // Step 2: Generate JWT tokens for verified user (default to remember me for email verification)
         String jwtToken = jwtUtil.generateToken(user.getEmail(), user.getId(), true);
         String refreshToken = jwtUtil.generateRefreshToken(user.getEmail(), user.getId(), true);

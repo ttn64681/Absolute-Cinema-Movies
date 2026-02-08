@@ -116,9 +116,9 @@ public class AuthController {
      * @return ResponseEntity<AuthResponse> with success status and tokens
      */
     @PostMapping("/verify-email")
-    public ResponseEntity<AuthResponse> verifyEmail(@RequestParam String token) {
+    public ResponseEntity<AuthResponse> verifyEmail(@RequestParam String token, @RequestParam(required = false) String email) {
         try {
-            AuthResponse response = authService.verifyEmail(token);
+            AuthResponse response = authService.verifyEmail(token, email);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             AuthResponse response = new AuthResponse(false, e.getMessage());

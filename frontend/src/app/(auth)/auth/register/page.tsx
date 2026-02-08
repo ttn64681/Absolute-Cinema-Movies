@@ -11,7 +11,7 @@ import AuthButton from '@/components/common/auth/AuthButton';
 
 function RegisterPageContent() {
   const { data, updateData, isStepValid } = useRegistration();
-  const [errors, setErrors] = useState<{[key: string]: string}>({});
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [isCheckingEmail, setIsCheckingEmail] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -49,7 +49,7 @@ function RegisterPageContent() {
     // Set errors and only proceed if no errors
     // Using newErrors instead of checking old errors state prevents async issues
     setErrors(newErrors);
-    
+
     // If there are validation errors, don't proceed
     if (Object.keys(newErrors).length > 0) {
       return;
@@ -61,12 +61,12 @@ function RegisterPageContent() {
       try {
         const emailCheck = await authClient.checkEmail(data.email);
         if (!emailCheck.success) {
-          setErrors(prev => ({ ...prev, email: emailCheck.message }));
+          setErrors((prev) => ({ ...prev, email: emailCheck.message }));
           setIsCheckingEmail(false);
           return;
         }
       } catch (error) {
-        setErrors(prev => ({ ...prev, email: 'Error checking email availability. Please try again.' }));
+        setErrors((prev) => ({ ...prev, email: 'Error checking email availability. Please try again.' }));
         setIsCheckingEmail(false);
         return;
       }
@@ -75,7 +75,7 @@ function RegisterPageContent() {
 
     // If no errors, proceed to next step
     if (Object.keys(newErrors).length === 0 && isStepValid(1)) {
-      const step2Url = redirectPath 
+      const step2Url = redirectPath
         ? `/auth/register/step2?redirect=${encodeURIComponent(redirectPath)}`
         : '/auth/register/step2';
       router.push(step2Url);
@@ -90,6 +90,16 @@ function RegisterPageContent() {
       stepTitle="Create an Account"
       stepDescription="Step 1 of 3 - Get started with your account"
     >
+      {/* Demo disclaimer: Mailtrap sandbox, universal bypass code for recruiters/guests */}
+      <div className="mb-4 p-3 rounded-lg bg-white/5 border border-white/10 text-white/60 text-xs">
+        <p className="font-medium text-white/70 mb-1">Demo environment</p>
+        <p className="mb-1">
+          Emails are trapped in a sandbox and are not delivered. To bypass verification, use this code during
+          verification:
+        </p>
+        <p className="font-mono font-semibold text-acm-pink/90">123456</p>
+      </div>
+
       {hasErrors && (
         <div className="mb-6 p-4 bg-red-900/50 border border-red-500 rounded-md">
           <p className="text-red-200 text-sm font-semibold mb-2">Please fix the following errors:</p>
