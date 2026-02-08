@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, Suspense } from 'react';
+import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import NavBar from '@/components/common/navBar/NavBar';
 import api from '@/config/api';
@@ -219,8 +220,8 @@ function VerifyEmailContent() {
     <div className="min-h-screen bg-black">
       <NavBar />
 
-      <div className="flex items-center justify-center min-h-[calc(100vh-80px)] px-4">
-        <div className="w-full max-w-md">
+      <div className="flex items-center justify-center min-h-[calc(100vh-80px)] px-4 translate-y-[5rem]">
+        <div className="w-full max-w-lg">
           <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-6 shadow-xl">
             {/* Header */}
             <div className="text-center mb-6">
@@ -289,147 +290,80 @@ function VerifyEmailContent() {
               )}
             </div>
 
-            {/* Actions */}
+            {/* Actions: single form like token-from-email, links for demo / resend / login */}
             {status === 'error' && (
-              <div className="space-y-4">
-                {/* Single verification form: real code or demo, switch via link */}
-                <div className="border-t border-white/10 pt-4">
-                  {formError && (
-                    <div className="mb-3 p-2 rounded bg-red-900/40 border border-red-500/60 text-red-200 text-sm">
-                      {formError}
-                    </div>
-                  )}
-                  {verifyMode === 'real' ? (
-                    <form onSubmit={handleRealCodeVerify} className="space-y-3">
-                      <div>
-                        <label htmlFor="realCode" className="block text-sm font-medium text-white mb-1">
-                          Verification link or code
-                        </label>
-                        <input
-                          type="text"
-                          id="realCode"
-                          title="Paste verification link or code from email"
-                          value={realCodeInput}
-                          onChange={(e) => setRealCodeInput(e.target.value)}
-                          className="w-full px-4 py-3 rounded-md bg-white/10 border border-white/20 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-acm-pink focus:border-transparent"
-                          placeholder="Paste link or code from your email"
-                          disabled={formLoading !== 'idle'}
-                        />
-                      </div>
-                      <button
-                        type="submit"
-                        title="Verify with code from email"
-                        disabled={formLoading !== 'idle'}
-                        className="w-full inline-flex justify-center bg-linear-to-r from-acm-pink to-acm-orange text-white px-5 py-2.5 rounded-lg font-semibold hover:brightness-110 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-                      >
-                        {formLoading === 'realCode' ? 'Verifying...' : 'Verify'}
-                      </button>
-                    </form>
-                  ) : (
-                    <form onSubmit={handleDemoVerify} className="space-y-3">
-                      <div>
-                        <label htmlFor="demoEmailError" className="block text-sm font-medium text-white mb-1">
-                          Your email
-                        </label>
-                        <input
-                          type="email"
-                          id="demoEmailError"
-                          title="Email used at registration"
-                          value={demoEmail}
-                          onChange={(e) => setDemoEmail(e.target.value)}
-                          className="w-full px-4 py-3 rounded-md bg-white/10 border border-white/20 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-acm-pink focus:border-transparent"
-                          placeholder="Email you registered with"
-                          disabled={formLoading !== 'idle'}
-                        />
-                      </div>
-                      <button
-                        type="submit"
-                        title="Verify with demo code"
-                        disabled={formLoading !== 'idle'}
-                        className="w-full inline-flex justify-center bg-linear-to-r from-acm-pink to-acm-orange text-white px-5 py-2.5 rounded-lg font-semibold hover:brightness-110 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-                      >
-                        {formLoading === 'demo' ? 'Verifying...' : `Verify with code ${DEMO_VERIFICATION_CODE}`}
-                      </button>
-                    </form>
-                  )}
-                  <p className="mt-3 text-center">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setVerifyMode(verifyMode === 'real' ? 'demo' : 'real');
-                        setFormError('');
-                      }}
-                      className="text-acm-pink hover:text-acm-pink/80 text-sm font-medium cursor-pointer"
-                    >
-                      {verifyMode === 'real' ? 'Use demo bypass' : 'Enter code from email'}
-                    </button>
-                  </p>
-                </div>
-
-                {/* Resend Email Form */}
-                <div className="border-t border-white/10 pt-4">
-                  <h3 className="text-lg font-medium text-white mb-3 text-center">Request New Verification Email</h3>
-                  {resendMessage && (
-                    <div
-                      className={`mb-4 p-3 rounded-lg text-sm ${
-                        resendStatus === 'success'
-                          ? 'bg-green-900/40 border border-green-500/60 text-green-200'
-                          : resendStatus === 'error'
-                            ? 'bg-red-900/40 border border-red-500/60 text-red-200'
-                            : 'bg-blue-900/40 border border-blue-500/60 text-blue-200'
-                      }`}
-                    >
-                      {resendMessage}
-                    </div>
-                  )}
-                  <form onSubmit={handleResendEmail} className="space-y-3">
-                    <div>
-                      <label htmlFor="resendEmail" className="block text-sm font-medium text-white mb-1">
-                        Email Address
-                      </label>
-                      <input
-                        type="email"
-                        id="resendEmail"
-                        value={resendEmail}
-                        onChange={(e) => setResendEmail(e.target.value)}
-                        className="w-full px-4 py-3 rounded-md bg-white/10 border border-white/20 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-acm-pink focus:border-transparent"
-                        placeholder="Enter your email address"
-                        required
-                        disabled={resendStatus === 'loading'}
-                      />
-                    </div>
+              <div className="space-y-6 pt-2">
+                {formError && (
+                  <div className="p-3 rounded-lg bg-red-900/40 border border-red-500/60 text-red-200 text-sm">
+                    {formError}
+                  </div>
+                )}
+                {verifyMode === 'real' ? (
+                  <form onSubmit={handleRealCodeVerify} className="space-y-4">
+                    <label htmlFor="realCode" className="block text-sm font-medium text-white/80 mb-1">
+                      Verification code from email
+                    </label>
+                    <input
+                      type="text"
+                      id="realCode"
+                      title="Paste verification link or code from email"
+                      value={realCodeInput}
+                      onChange={(e) => setRealCodeInput(e.target.value)}
+                      className="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-acm-pink focus:border-transparent"
+                      placeholder="Paste link or code"
+                      disabled={formLoading !== 'idle'}
+                    />
                     <button
                       type="submit"
-                      disabled={resendStatus === 'loading'}
-                      className="w-full inline-flex justify-center bg-linear-to-r from-acm-pink to-acm-orange text-white px-5 py-2.5 rounded-lg font-semibold hover:brightness-110 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                      title="Verify"
+                      disabled={formLoading !== 'idle'}
+                      className="w-full py-3 rounded-lg font-semibold text-white bg-gradient-to-r from-acm-pink to-acm-orange hover:brightness-110 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                     >
-                      {resendStatus === 'loading' ? (
-                        <span className="flex items-center justify-center">
-                          <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                            <circle
-                              className="opacity-25"
-                              cx="12"
-                              cy="12"
-                              r="10"
-                              stroke="currentColor"
-                              strokeWidth="4"
-                            />
-                            <path
-                              className="opacity-75"
-                              fill="currentColor"
-                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                            />
-                          </svg>
-                          Sending...
-                        </span>
-                      ) : (
-                        'Send Verification Email'
-                      )}
+                      {formLoading === 'realCode' ? 'Verifying...' : 'Verify'}
                     </button>
                   </form>
-                </div>
-
-                <div className="space-y-2">
+                ) : (
+                  <form onSubmit={handleDemoVerify} className="space-y-4">
+                    <label htmlFor="demoEmailError" className="block text-sm font-medium text-white/80 mb-1">
+                      Your email (demo bypass)
+                    </label>
+                    <input
+                      type="email"
+                      id="demoEmailError"
+                      title="Email used at registration"
+                      value={demoEmail}
+                      onChange={(e) => setDemoEmail(e.target.value)}
+                      className="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-acm-pink focus:border-transparent"
+                      placeholder="Your email"
+                      disabled={formLoading !== 'idle'}
+                    />
+                    <button
+                      type="submit"
+                      title="Verify with demo code"
+                      disabled={formLoading !== 'idle'}
+                      className="w-full py-3 rounded-lg font-semibold text-white bg-gradient-to-r from-acm-pink to-acm-orange hover:brightness-110 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                    >
+                      {formLoading === 'demo' ? 'Verifying...' : `Verify with code ${DEMO_VERIFICATION_CODE}`}
+                    </button>
+                  </form>
+                )}
+                <div className="text-center text-sm text-white/60 space-y-1 pt-2 border-t border-white/10">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setVerifyMode(verifyMode === 'real' ? 'demo' : 'real');
+                      setFormError('');
+                    }}
+                    className="block w-full text-acm-pink hover:text-acm-pink/80 cursor-pointer"
+                  >
+                    {verifyMode === 'real' ? 'Use demo bypass' : 'Enter code from email'}
+                  </button>
+                  <Link
+                    href="/auth/resend-verification"
+                    className="block text-white/70 hover:text-acm-pink transition-colors cursor-pointer"
+                  >
+                    Resend verification email
+                  </Link>
                   <button
                     type="button"
                     onClick={() => {
@@ -438,16 +372,9 @@ function VerifyEmailContent() {
                         : '/auth/login';
                       router.push(loginUrl);
                     }}
-                    className="w-full bg-white/10 text-white py-2 px-4 rounded-md hover:bg-white/20 transition-colors font-medium border border-white/20 cursor-pointer"
+                    className="block w-full text-white/70 hover:text-acm-pink transition-colors cursor-pointer"
                   >
                     Go to Login
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => router.push('/auth/resend-verification')}
-                    className="w-full text-acm-pink hover:text-acm-pink/80 text-sm font-medium cursor-pointer"
-                  >
-                    Use dedicated resend page
                   </button>
                 </div>
               </div>
@@ -455,96 +382,94 @@ function VerifyEmailContent() {
 
             {status === 'success' && (
               <button
+                type="button"
+                title="Go to Login"
                 onClick={() => {
                   const loginUrl = redirectPath
                     ? `/auth/login?redirect=${encodeURIComponent(redirectPath)}`
                     : '/auth/login';
                   router.push(loginUrl);
                 }}
-                className="w-full inline-flex justify-center bg-linear-to-r from-acm-pink to-acm-orange text-white px-5 py-2.5 rounded-lg font-semibold hover:brightness-110 transition-all cursor-pointer"
+                className="w-full py-3 rounded-lg font-semibold text-white bg-gradient-to-r from-acm-pink to-acm-orange hover:brightness-110 transition-all cursor-pointer"
               >
                 Go to Login
               </button>
             )}
 
             {status === 'registration-success' && (
-              <div className="space-y-4">
-                {/* Single verification form: real code or demo, switch via link */}
-                <div className="border-t border-white/10 pt-4">
-                  {formError && (
-                    <div className="mb-3 p-2 rounded bg-red-900/40 border border-red-500/60 text-red-200 text-sm">
-                      {formError}
-                    </div>
-                  )}
-                  {verifyMode === 'real' ? (
-                    <form onSubmit={handleRealCodeVerify} className="space-y-3">
-                      <div>
-                        <label htmlFor="realCodeReg" className="block text-sm font-medium text-white mb-1">
-                          Verification link or code
-                        </label>
-                        <input
-                          type="text"
-                          id="realCodeReg"
-                          title="Paste verification link or code from email"
-                          value={realCodeInput}
-                          onChange={(e) => setRealCodeInput(e.target.value)}
-                          className="w-full px-4 py-3 rounded-md bg-white/10 border border-white/20 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-acm-pink focus:border-transparent"
-                          placeholder="Paste link or code from your email"
-                          disabled={formLoading !== 'idle'}
-                        />
-                      </div>
-                      <button
-                        type="submit"
-                        title="Verify with code from email"
-                        disabled={formLoading !== 'idle'}
-                        className="w-full inline-flex justify-center bg-linear-to-r from-acm-pink to-acm-orange text-white px-5 py-2.5 rounded-lg font-semibold hover:brightness-110 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-                      >
-                        {formLoading === 'realCode' ? 'Verifying...' : 'Verify'}
-                      </button>
-                    </form>
-                  ) : (
-                    <form onSubmit={handleDemoVerify} className="space-y-3">
-                      <div>
-                        <label htmlFor="demoEmail" className="block text-sm font-medium text-white mb-1">
-                          Your email
-                        </label>
-                        <input
-                          type="email"
-                          id="demoEmail"
-                          title="Email used at registration"
-                          value={demoEmail}
-                          onChange={(e) => setDemoEmail(e.target.value)}
-                          className="w-full px-4 py-3 rounded-md bg-white/10 border border-white/20 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-acm-pink focus:border-transparent"
-                          placeholder="Email you registered with"
-                          disabled={formLoading !== 'idle'}
-                        />
-                      </div>
-                      <button
-                        type="submit"
-                        title="Verify with demo code"
-                        disabled={formLoading !== 'idle'}
-                        className="w-full inline-flex justify-center bg-linear-to-r from-acm-pink to-acm-orange text-white px-5 py-2.5 rounded-lg font-semibold hover:brightness-110 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-                      >
-                        {formLoading === 'demo' ? 'Verifying...' : `Verify with code ${DEMO_VERIFICATION_CODE}`}
-                      </button>
-                    </form>
-                  )}
-                  <p className="mt-3 text-center">
+              <div className="space-y-6 pt-2">
+                {formError && (
+                  <div className="p-3 rounded-lg bg-red-900/40 border border-red-500/60 text-red-200 text-sm">
+                    {formError}
+                  </div>
+                )}
+                {verifyMode === 'real' ? (
+                  <form onSubmit={handleRealCodeVerify} className="space-y-4">
+                    <label htmlFor="realCodeReg" className="block text-sm font-medium text-white/80 mb-1">
+                      Verification code from email
+                    </label>
+                    <input
+                      type="text"
+                      id="realCodeReg"
+                      title="Paste verification link or code from email"
+                      value={realCodeInput}
+                      onChange={(e) => setRealCodeInput(e.target.value)}
+                      className="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-acm-pink focus:border-transparent"
+                      placeholder="Paste link or code"
+                      disabled={formLoading !== 'idle'}
+                    />
                     <button
-                      type="button"
-                      onClick={() => {
-                        setVerifyMode(verifyMode === 'real' ? 'demo' : 'real');
-                        setFormError('');
-                      }}
-                      className="text-acm-pink hover:text-acm-pink/80 text-sm font-medium cursor-pointer"
+                      type="submit"
+                      title="Verify"
+                      disabled={formLoading !== 'idle'}
+                      className="w-full py-3 rounded-lg font-semibold text-white bg-gradient-to-r from-acm-pink to-acm-orange hover:brightness-110 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                     >
-                      {verifyMode === 'real' ? 'Use demo bypass' : 'Enter code from email'}
+                      {formLoading === 'realCode' ? 'Verifying...' : 'Verify'}
                     </button>
-                  </p>
-                </div>
-                <div className="space-y-2">
+                  </form>
+                ) : (
+                  <form onSubmit={handleDemoVerify} className="space-y-4">
+                    <label htmlFor="demoEmail" className="block text-sm font-medium text-white/80 mb-1">
+                      Your email (demo bypass)
+                    </label>
+                    <input
+                      type="email"
+                      id="demoEmail"
+                      title="Email used at registration"
+                      value={demoEmail}
+                      onChange={(e) => setDemoEmail(e.target.value)}
+                      className="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-acm-pink focus:border-transparent"
+                      placeholder="Your email"
+                      disabled={formLoading !== 'idle'}
+                    />
+                    <button
+                      type="submit"
+                      title="Verify with demo code"
+                      disabled={formLoading !== 'idle'}
+                      className="w-full py-3 rounded-lg font-semibold text-white bg-gradient-to-r from-acm-pink to-acm-orange hover:brightness-110 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                    >
+                      {formLoading === 'demo' ? 'Verifying...' : `Verify with code ${DEMO_VERIFICATION_CODE}`}
+                    </button>
+                  </form>
+                )}
+                <div className="text-center text-sm text-white/60 space-y-1 pt-2 border-t border-white/10">
                   <button
-                    title="Go to Login"
+                    type="button"
+                    onClick={() => {
+                      setVerifyMode(verifyMode === 'real' ? 'demo' : 'real');
+                      setFormError('');
+                    }}
+                    className="block w-full text-acm-pink hover:text-acm-pink/80 cursor-pointer"
+                  >
+                    {verifyMode === 'real' ? 'Use demo bypass' : 'Enter code from email'}
+                  </button>
+                  <Link
+                    href="/auth/resend-verification"
+                    className="block text-white/70 hover:text-acm-pink transition-colors cursor-pointer"
+                  >
+                    Resend verification email
+                  </Link>
+                  <button
                     type="button"
                     onClick={() => {
                       const loginUrl = redirectPath
@@ -552,17 +477,9 @@ function VerifyEmailContent() {
                         : '/auth/login';
                       router.push(loginUrl);
                     }}
-                    className="w-full inline-flex justify-center bg-linear-to-r from-acm-pink to-acm-orange text-white px-5 py-2.5 rounded-lg font-semibold hover:brightness-110 transition-all cursor-pointer"
+                    className="block w-full text-white/70 hover:text-acm-pink transition-colors cursor-pointer"
                   >
                     Go to Login
-                  </button>
-                  <button
-                    title="Resend Verification Email"
-                    type="button"
-                    onClick={() => router.push('/auth/resend-verification')}
-                    className="w-full bg-white/10 text-white py-3 rounded-lg hover:bg-white/20 transition-colors font-medium border border-white/20 cursor-pointer"
-                  >
-                    Resend Verification Email
                   </button>
                 </div>
               </div>

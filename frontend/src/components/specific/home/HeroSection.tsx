@@ -55,7 +55,7 @@ export default function HeroSection() {
           variants={titleVariants}
           initial="initial"
           animate="animate"
-          className="font-pacifico text-8xl bg-linear-to-r bg-clip-text text-transparent from-acm-pink to-acm-orange drop-shadow-lg"
+          className="font-pacifico text-8xl bg-linear-to-r bg-clip-text text-transparent hover:scale-105 transition-all duration-300 from-acm-pink to-acm-orange drop-shadow-lg"
         >
           ACM Cinema
         </motion.h1>
@@ -63,7 +63,7 @@ export default function HeroSection() {
           variants={subtitleVariants}
           initial="initial"
           animate="animate"
-          className="mt-3 font-red-rose font-extrabold text-2xl text-white/90 drop-shadow"
+          className="mt-3 font-red-rose font-extrabold text-2xl text-white/90 hover:scale-105 transition-all duration-300"
         >
           Absolute Cinema Movies
         </motion.p>
@@ -98,6 +98,19 @@ export default function HeroSection() {
             </Link>
           </div>
         </motion.div>
+
+        <motion.p
+          variants={subtitleVariants}
+          initial="initial"
+          animate="animate"
+          className="text-sm text-white/30 translate-y-[1rem] group hover:text-white/60 transition-all duration-300"
+        >
+          Hosted on{' '}
+          <span className="text-acm-orange/30 group-hover:text-acm-orange transition-all duration-300 font-medium">
+            Render
+          </span>
+          : server may take 1–3 min+ to cold-boot.
+        </motion.p>
       </div>
     </section>
   );

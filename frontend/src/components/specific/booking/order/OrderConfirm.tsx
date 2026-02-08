@@ -50,7 +50,7 @@ export default function OrderConfirm({
 
   return (
     <div className="min-h-screen bg-[#050506] text-white px-6 pt-28 pb-10 lg:px-16">
-      <div className="max-w-6xl mx-auto flex flex-col gap-10 lg:flex-row">
+      <div className="max-w-6xl mx-auto flex flex-col gap-10 lg:flex-row translate-y-[5rem]">
         {/* Copy deck */}
         <section className="flex-1">
           <h1 className="mt-4 text-5xl sm:text-6xl lg:text-7xl font-pacifico font-normal text-[#FF478B]">Thank You!</h1>

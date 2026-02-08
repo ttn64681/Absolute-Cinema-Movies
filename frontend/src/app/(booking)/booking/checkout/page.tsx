@@ -40,7 +40,9 @@ function CheckoutPageContent() {
     if (!isLoading && !isAuthenticated) {
       const currentPath = window.location.pathname + window.location.search;
       showToast('Please log in to checkout', 'info');
-      router.push(`/auth/login?redirect=${encodeURIComponent(currentPath)}&message=${encodeURIComponent('Please log in to complete your booking')}`);
+      router.push(
+        `/auth/login?redirect=${encodeURIComponent(currentPath)}&message=${encodeURIComponent('Please log in to complete your booking')}`
+      );
     }
   }, [isAuthenticated, isLoading, router, showToast]);
 
@@ -48,7 +50,15 @@ function CheckoutPageContent() {
   useEffect(() => {
     const showId = searchParams.get('showId');
     const seatIds = searchParams.get('seatIds');
-    if (showId && seatIds && !bookingId && !isCreatingBooking && !bookingCreatedRef.current && isAuthenticated && !isLoading) {
+    if (
+      showId &&
+      seatIds &&
+      !bookingId &&
+      !isCreatingBooking &&
+      !bookingCreatedRef.current &&
+      isAuthenticated &&
+      !isLoading
+    ) {
       bookingCreatedRef.current = true;
       createBooking();
     }
@@ -117,7 +127,7 @@ function CheckoutPageContent() {
       <NavBar />
 
       <div className="w-full flex flex-row gap-6 px-8 pt-28 items-start">
-        <div className="flex-1 flex flex-col">
+        <div className="flex-1 flex flex-col mt-3">
           <StepTracker steps={checkoutSteps} currentStep={currentStep} />
           <CheckoutSections
             currentStep={currentStep}
@@ -207,11 +217,13 @@ function StepTracker({ steps, currentStep }: StepTrackerProps) {
 
 export default function CheckoutPage() {
   return (
-    <Suspense fallback={
+    <Suspense
+      fallback={
         <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="text-white">Loading...</div>
+          <div className="text-white">Loading...</div>
         </div>
-    }>
+      }
+    >
       <CheckoutPageContent />
     </Suspense>
   );
