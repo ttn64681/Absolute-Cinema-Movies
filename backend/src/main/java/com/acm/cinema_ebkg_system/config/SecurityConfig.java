@@ -15,7 +15,10 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.beans.factory.annotation.Value;
 import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Security Configuration
@@ -31,6 +34,9 @@ public class SecurityConfig {
     @Autowired
     private JwtAuthenticationFilter jwtAuthenticationFilter;
 
+    @Value("${app.frontend.url:http://localhost:3000}")
+    private String frontendUrl;
+
     /**
      * CORS Configuration for Spring Security
      * 
@@ -39,12 +45,26 @@ public class SecurityConfig {
      * - Pre-flight OPTIONS requests need CORS headers before authentication
      * - This ensures CORS is handled at the security layer
      * 
-     * Allows requests from frontend origins: localhost:3000, localhost:3001
+     * Allows requests from:
+     * - Localhost origins (for local development)
+     * - Production frontend URL (from APP_FRONTEND_URL env var)
      */
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000", "http://localhost:3001"));
+        
+        // Always allow localhost for local development
+        List<String> allowedOrigins = new ArrayList<>(Arrays.asList(
+            "http://localhost:3000",
+            "http://localhost:3001"
+        ));
+        
+        // Add production frontend URL if set (from APP_FRONTEND_URL)
+        if (frontendUrl != null && !frontendUrl.isEmpty() && !frontendUrl.startsWith("http://localhost")) {
+            allowedOrigins.add(frontendUrl);
+        }
+        
+        configuration.setAllowedOrigins(allowedOrigins);
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true);
