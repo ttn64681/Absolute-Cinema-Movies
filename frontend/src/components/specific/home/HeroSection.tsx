@@ -55,7 +55,13 @@ export default function HeroSection() {
           variants={titleVariants}
           initial="initial"
           animate="animate"
-          className="font-pacifico text-8xl bg-linear-to-r bg-clip-text text-transparent hover:scale-105 transition-all duration-300 from-acm-pink to-acm-orange drop-shadow-lg"
+          className="font-pacifico text-8xl bg-linear-to-r bg-clip-text text-transparent from-acm-pink to-acm-orange drop-shadow-lg"
+          // drop shadow in color of acm pink and orange
+          whileHover={{
+            scale: 1.05,
+            filter: 'drop-shadow(0 0 10px rgba(255, 71, 139, 0.5))',
+          }}
+          transition={{ duration: 0.3, ease: 'easeInOut' }}
         >
           ACM Cinema
         </motion.h1>
@@ -63,7 +69,9 @@ export default function HeroSection() {
           variants={subtitleVariants}
           initial="initial"
           animate="animate"
-          className="mt-3 font-red-rose font-extrabold text-2xl text-white/90 hover:scale-105 transition-all duration-300"
+          className="mt-3 font-red-rose font-extrabold text-2xl text-white/90"
+          whileHover={{ scale: 1.05, filter: 'drop-shadow(0 0 10px rgba(255, 255, 255, 0.5))' }}
+          transition={{ duration: 0.3, ease: 'easeOut' }}
         >
           Absolute Cinema Movies
         </motion.p>
@@ -103,12 +111,16 @@ export default function HeroSection() {
           variants={subtitleVariants}
           initial="initial"
           animate="animate"
-          className="text-sm text-white/30 translate-y-[1rem] group hover:text-white/60 transition-all duration-300"
+          className="text-sm text-white/30 translate-y-[1rem] group hover:text-white/60 transition-colors duration-300"
         >
           Hosted on{' '}
-          <span className="text-acm-orange/30 group-hover:text-acm-orange transition-all duration-300 font-medium">
+          <Link
+            href="https://absolute-cinema-movies.onrender.com"
+            target="_blank"
+            className="text-acm-orange/30 group-hover:text-acm-orange transition-colors duration-300 hover:underline"
+          >
             Render
-          </span>
+          </Link>
           : server may take 1–3 min+ to cold-boot.
         </motion.p>
       </div>
