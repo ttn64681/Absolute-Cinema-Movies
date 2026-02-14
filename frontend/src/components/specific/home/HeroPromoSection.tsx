@@ -97,27 +97,27 @@ export default function HeroPromoSection() {
           {isLoading ? (
             <div className="w-full h-full bg-gray-800 animate-pulse rounded-lg"></div>
           ) : (
-          <AnimatePresence initial={false} mode="wait" custom={direction}>
-            <motion.div
-              key={currentPromo.id}
-              custom={direction}
-              variants={slideVariants}
-              initial="enter"
-              animate="center"
-              exit="exit"
-              transition={{ duration: 0.4, ease: 'easeOut' }}
-              whileHover={{ borderColor: 'rgba(236, 72, 153, 1)' }}
-              className="absolute inset-0 rounded-lg border-[0.5px] border-white/60 overflow-hidden"
-            >
-              <Image
-                src={currentPromo.image}
-                alt={currentPromo.title}
-                fill
-                className="object-cover"
-                sizes="(max-width: 1024px) 100vw, 50vw"
-              />
-            </motion.div>
-          </AnimatePresence>
+            <AnimatePresence initial={false} mode="wait" custom={direction}>
+              <motion.div
+                key={currentPromo.id}
+                custom={direction}
+                variants={slideVariants}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                transition={{ duration: 0.4, ease: 'easeOut' }}
+                whileHover={{ borderColor: 'rgba(236, 72, 153, 1)' }}
+                className="absolute inset-0 rounded-lg border-[0.5px] border-white/60 overflow-hidden"
+              >
+                <Image
+                  src={currentPromo.image}
+                  alt={currentPromo.title}
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 1024px) 100vw, 50vw"
+                />
+              </motion.div>
+            </AnimatePresence>
           )}
 
           {/* Carousel Indicators */}
@@ -159,18 +159,21 @@ export default function HeroPromoSection() {
             )}
             <div className="pt-2">
               {!isUsingFallback ? (
-              <Link
-                href={currentPromo.link}
-                aria-label={currentPromo.ctaText}
-                className="inline-flex items-center gap-2 rounded-full bg-linear-to-r from-acm-pink to-acm-orange px-5 py-2.5 text-white font-semibold shadow-lg ring-1 ring-white/20 hover:brightness-110 hover:-translate-y-0.5 active:translate-y-0 transition-transform drop-shadow-lg"
-              >
-                <span>{currentPromo.ctaText}</span>
-                <span className="text-xl leading-none">
-                  <RxDoubleArrowRight />
-                </span>
-              </Link>
+                <Link
+                  href={currentPromo.link}
+                  aria-label={currentPromo.ctaText}
+                  className="inline-flex items-center gap-2 rounded-full bg-linear-to-r from-acm-pink to-acm-orange px-5 py-2.5 text-white font-semibold shadow-lg ring-1 ring-white/20 hover:brightness-110 hover:-translate-y-0.5 active:translate-y-0 transition-transform drop-shadow-lg"
+                >
+                  <span>{currentPromo.ctaText}</span>
+                  <span className="text-xl leading-none">
+                    <RxDoubleArrowRight />
+                  </span>
+                </Link>
               ) : (
-                <button disabled className="inline-flex items-center gap-2 rounded-full bg-linear-to-r from-acm-pink/50 to-acm-orange/50 px-5 py-2.5 text-white/50 font-semibold shadow-lg ring-1 ring-white/20 active:translate-y-0 transition-transform drop-shadow-lg cursor-not-allowed">
+                <button
+                  disabled
+                  className="inline-flex items-center gap-2 rounded-full bg-linear-to-r from-acm-pink/50 to-acm-orange/50 px-5 py-2.5 text-white/50 font-semibold shadow-lg ring-1 ring-white/20 active:translate-y-0 transition-transform drop-shadow-lg cursor-not-allowed"
+                >
                   <span>{currentPromo.ctaText}</span>
                   <span className="text-xl leading-none">
                     <RxDoubleArrowRight />
