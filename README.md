@@ -10,7 +10,7 @@ A full-stack cinema booking application built with Next.js frontend and Spring B
 - **Backend API**: [Render](https://absolute-cinema-movies.onrender.com/)
 - **Project Management**: [Jira](https://csci-4050-mmbbfc.atlassian.net/jira/software/projects/SCRUM/summary?atlOrigin=eyJpIjoiNzk4MzY3MjBjNzBjNGI3N2FhYjkxZDNlYTRhOTQ5NGYiLCJwIjoiaiJ9)
 - **Design System**: [Figma](https://www.figma.com/community/file/1602290226089410310)
-- **Video Demo**" [YouTube](https://youtu.be/92fEVh5wNyI)
+- **Video Demo**: [YouTube](https://youtu.be/92fEVh5wNyI)
 
 ## Tech Stack
 
