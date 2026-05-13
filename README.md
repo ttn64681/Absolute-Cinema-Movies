@@ -6,8 +6,8 @@ A full-stack cinema booking application built with Next.js frontend and Spring B
 
 ## Project Links
 
-- **Frontend Deployment**: [Vercel](acm-movies.vercel.app)
-- **Backend API**: [TBD] _(Coming Soon)_
+- **Frontend Deployment**: [Vercel](https://acm-cinema.vercel.app/)
+- **Backend API**: [Render](https://absolute-cinema-movies.onrender.com/)
 - **Project Management**: [Jira](https://csci-4050-mmbbfc.atlassian.net/jira/software/projects/SCRUM/summary?atlOrigin=eyJpIjoiNzk4MzY3MjBjNzBjNGI3N2FhYjkxZDNlYTRhOTQ5NGYiLCJwIjoiaiJ9)
 - **Design System**: [Figma](https://www.figma.com/community/file/1602290226089410310)
 - **Video Demo**" [YouTube](https://youtu.be/92fEVh5wNyI)
@@ -226,8 +226,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **Frontend Development**: [Thai Nguyen, Kayla McGuinn, Sidhant Dash, Hilton DeVille]
 - **Backend Development**: [Thai Nguyen, Vishal Apparajav, Hilton DeVille, Sidhant Dash]
 - **Database Design**: [Hilton DeVille, Vishal Apparajav, Thai Nguyen]
-- **DevOps**: [Thai Nguyen]
+- **Scrum Master**: [Thai Nguyen]
+- **Maintenance:** [Thai Nguyen]
 
 ---
 
-Built by the ACM Cinema Team
+Built by the ACM Cinema Team (aka Mermaid Man & Barnacle Boy Fan Club)
