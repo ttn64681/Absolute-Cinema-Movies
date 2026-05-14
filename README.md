@@ -121,24 +121,6 @@ A full-stack cinema booking application built with Next.js frontend and Spring B
 
 ## Database Management
 
-### Schema Migrations (Flyway)
-
-Database schema changes are managed with Flyway migrations in `backend/src/main/resources/db/migration/`.
-
-**Create a new migration:**
-
-```bash
-# Example: V2__add_users_table.sql
-CREATE TABLE users (
-  user_id BIGSERIAL PRIMARY KEY,
-  email VARCHAR(255) UNIQUE NOT NULL,
-  password_hash VARCHAR(255) NOT NULL,
-  first_name VARCHAR(100) NOT NULL,
-  last_name VARCHAR(100) NOT NULL,
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
-```
-
 ### Database Backups
 
 **Manual backup:**
