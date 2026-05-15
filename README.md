@@ -29,7 +29,6 @@ A full-stack cinema booking application built with Next.js frontend and Spring B
 - **Language**: Java 17
 - **Database**: PostgreSQL (Neon Cloud)
 - **Authentication**: Spring Security with JWT
-- **Database Migration**: Flyway
 - **Email**: SMTP (Gmail)
 
 ### DevOps & Tools
